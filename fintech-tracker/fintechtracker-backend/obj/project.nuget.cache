@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "ZPOk1KTmcK0=",
+  "success": true,
+  "projectFilePath": "D:\\Workspace\\Project_.Net\\fintech\\fintech-tracker\\fintechtracker-backend\\fintechtracker-backend.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Administrator\\.nuget\\packages\\microsoft.aspnetcore.openapi\\9.0.3\\microsoft.aspnetcore.openapi.9.0.3.nupkg.sha512",
+    "C:\\Users\\Administrator\\.nuget\\packages\\microsoft.openapi\\1.6.17\\microsoft.openapi.1.6.17.nupkg.sha512"
+  ],
+  "logs": []
+}

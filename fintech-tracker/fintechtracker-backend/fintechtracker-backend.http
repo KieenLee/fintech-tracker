@@ -1,0 +1,6 @@
+@fintechtracker_backend_HostAddress = http://localhost:5013
+
+GET {{fintechtracker_backend_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
