@@ -1,0 +1,366 @@
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { MessageCircle, Send, Bot, User, ArrowLeft, Zap } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+
+interface Message {
+  id: number;
+  text: string;
+  sender: "user" | "bot";
+  timestamp: Date;
+}
+
+const QuickAdd = () => {
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: 1,
+      text: "Hi! I'm your financial assistant. You can tell me about your transactions in natural language. For example: 'I spent $25 on lunch at McDonald's today' or 'I received $500 salary payment'",
+      sender: "bot",
+      timestamp: new Date(),
+    },
+  ]);
+  const [inputText, setInputText] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [showQuickQuestions, setShowQuickQuestions] = useState(true);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  const quickQuestions = [
+    "Today's spending",
+    "This week's spending", 
+    "This month's spending",
+    "This month's income",
+    "Current balance",
+    "Which category spends the most?",
+    "Total food spending this month",
+    "Remaining budget",
+    "Evaluate this month's income and expenses"
+  ];
+
+  const handleQuickQuestion = (question: string) => {
+    const userMessage: Message = {
+      id: Date.now(),
+      text: question,
+      sender: "user",
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setIsProcessing(true);
+    setShowQuickQuestions(false);
+    
+    // Simulate bot response for analysis questions
+    setTimeout(() => {
+      let botResponse = "";
+      
+      if (question.includes("spending") || question.includes("income") || question.includes("balance") || question.includes("category") || question.includes("budget") || question.includes("Evaluate")) {
+        botResponse = `I'm analyzing your ${question.toLowerCase()}. Based on your transaction history, here's what I found: [This would show actual financial analysis in a real implementation with backend data]`;
+      } else {
+        botResponse = "I understand you're asking about your finances. Let me help you with that analysis.";
+      }
+
+      const botMessage: Message = {
+        id: Date.now() + 1,
+        text: botResponse,
+        sender: "bot",
+        timestamp: new Date(),
+      };
+
+      setMessages((prev) => [...prev, botMessage]);
+      setIsProcessing(false);
+    }, 1000);
+  };
+
+  const parseTransactionFromText = (text: string) => {
+    const lowerText = text.toLowerCase();
+
+    // Extract amount
+    const amountMatch = text.match(/\$?(\d+(?:\.\d{2})?)/);
+    const amount = amountMatch ? parseFloat(amountMatch[1]) : null;
+
+    if (!amount) {
+      return null;
+    }
+
+    // Determine transaction type
+    const isIncome =
+      lowerText.includes("received") ||
+      lowerText.includes("earned") ||
+      lowerText.includes("salary") ||
+      lowerText.includes("payment") ||
+      lowerText.includes("income");
+
+    const type = isIncome ? "income" : "expense";
+
+    // Extract description/vendor
+    let description = "";
+    const atMatch = text.match(/at\s+([^$\d]+?)(?:\s|$)/i);
+    const forMatch = text.match(/for\s+([^$\d]+?)(?:\s|$)/i);
+    const onMatch = text.match(/on\s+([^$\d]+?)(?:\s|$)/i);
+
+    if (atMatch) description = atMatch[1].trim();
+    else if (forMatch) description = forMatch[1].trim();
+    else if (onMatch) description = onMatch[1].trim();
+    else description = text.replace(/\$?\d+(?:\.\d{2})?/, "").trim();
+
+    // Categorize based on keywords
+    let category = "Other";
+    if (isIncome) {
+      if (lowerText.includes("salary") || lowerText.includes("work"))
+        category = "Salary";
+      else if (lowerText.includes("freelanc")) category = "Freelancing";
+      else category = "Income";
+    } else {
+      if (
+        lowerText.includes("food") ||
+        lowerText.includes("lunch") ||
+        lowerText.includes("dinner") ||
+        lowerText.includes("restaurant") ||
+        lowerText.includes("coffee") ||
+        lowerText.includes("mcdonald")
+      ) {
+        category = "Food & Dining";
+      } else if (
+        lowerText.includes("gas") ||
+        lowerText.includes("uber") ||
+        lowerText.includes("taxi") ||
+        lowerText.includes("bus") ||
+        lowerText.includes("transport")
+      ) {
+        category = "Transportation";
+      } else if (
+        lowerText.includes("movie") ||
+        lowerText.includes("netflix") ||
+        lowerText.includes("entertainment") ||
+        lowerText.includes("game")
+      ) {
+        category = "Entertainment";
+      } else if (
+        lowerText.includes("electric") ||
+        lowerText.includes("water") ||
+        lowerText.includes("internet") ||
+        lowerText.includes("phone") ||
+        lowerText.includes("bill")
+      ) {
+        category = "Bills & Utilities";
+      } else if (
+        lowerText.includes("shop") ||
+        lowerText.includes("amazon") ||
+        lowerText.includes("clothes")
+      ) {
+        category = "Shopping";
+      }
+    }
+
+    return {
+      type,
+      amount: type === "expense" ? amount : amount,
+      category,
+      description:
+        description ||
+        `${type === "income" ? "Income" : "Expense"} transaction`,
+      date: new Date().toISOString().split("T")[0],
+    };
+  };
+
+  const handleSendMessage = async () => {
+    if (!inputText.trim()) return;
+
+    const userMessage: Message = {
+      id: Date.now(),
+      text: inputText,
+      sender: "user",
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setIsProcessing(true);
+    setShowQuickQuestions(false);
+
+    // Try to parse transaction from user input
+    const transaction = parseTransactionFromText(inputText);
+
+    setTimeout(() => {
+      let botResponse = "";
+
+      if (transaction) {
+        botResponse = `Great! I understood that as a ${transaction.type} of $${transaction.amount} for "${transaction.description}" in the ${transaction.category} category. Should I add this transaction for you?`;
+
+        // Save to localStorage
+        const existingTransactions = JSON.parse(
+          localStorage.getItem("transactions") || "[]"
+        );
+        const newTransaction = {
+          ...transaction,
+          id: Date.now(),
+        };
+        existingTransactions.unshift(newTransaction);
+        localStorage.setItem(
+          "transactions",
+          JSON.stringify(existingTransactions)
+        );
+
+        toast({
+          title: "Transaction Added",
+          description: `Added ${transaction.type} of $${transaction.amount}`,
+        });
+
+        botResponse += " ✅ Transaction has been added successfully!";
+      } else {
+        botResponse =
+          "I couldn't parse that as a transaction. Please try something like: 'I spent $25 on lunch at McDonald's' or 'I received $500 from my job'. Make sure to include the amount and what it was for.";
+      }
+
+      const botMessage: Message = {
+        id: Date.now() + 1,
+        text: botResponse,
+        sender: "bot",
+        timestamp: new Date(),
+      };
+
+      setMessages((prev) => [...prev, botMessage]);
+      setIsProcessing(false);
+    }, 1000);
+
+    setInputText("");
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  return (
+    <div className="h-full flex flex-col animate-fade-in">
+      <div className="items-center gap-4 mb-6">
+        <h1 className="text-3xl font-bold pl-[24px] pt-[24px]">
+          Quick Add Assistant
+        </h1>
+        <p className="text-muted-foreground pl-[24px]">
+          Allows you to quickly add new transaction.
+        </p>
+      </div>
+
+      <div className="px-6 flex-1 flex flex-col min-h-0">
+        <Card className="flex-1 flex flex-col">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Bot className="h-5 w-5 text-primary" />
+              AI Financial Assistant
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Describe your transactions in natural language and I'll add them for
+              you
+            </p>
+          </CardHeader>
+
+          <CardContent className="flex flex-col flex-1 min-h-0">
+            <ScrollArea className="flex-1 pr-4 mb-4">
+              <div className="space-y-4">
+                {showQuickQuestions && (
+                  <div className="space-y-3 mb-4">
+                    <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                      <Zap className="h-4 w-4 text-primary" />
+                      Quick Questions - Click to ask instantly
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {quickQuestions.map((question, index) => (
+                        <Button
+                          key={index}
+                          variant="outline"
+                          size="sm"
+                          className="justify-start text-left h-auto py-2 px-3 hover:bg-primary/5 transition-colors text-xs"
+                          onClick={() => handleQuickQuestion(question)}
+                        >
+                          {question}
+                        </Button>
+                      ))}
+                    </div>
+                    <div className="border-b border-border"></div>
+                  </div>
+                )}
+                {messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`flex items-start gap-3 ${
+                      message.sender === "user" ? "justify-end" : "justify-start"
+                    }`}
+                  >
+                    {message.sender === "bot" && (
+                      <div className="bg-primary/10 p-2 rounded-full flex-shrink-0">
+                        <Bot className="h-4 w-4 text-primary" />
+                      </div>
+                    )}
+                    <div
+                      className={`max-w-[70%] p-3 rounded-lg text-sm ${
+                        message.sender === "user"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {message.text}
+                      <div className="text-xs opacity-70 mt-1">
+                        {message.timestamp.toLocaleTimeString()}
+                      </div>
+                    </div>
+                    {message.sender === "user" && (
+                      <div className="bg-primary/10 p-2 rounded-full flex-shrink-0">
+                        <User className="h-4 w-4 text-primary" />
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {isProcessing && (
+                  <div className="flex items-start gap-3">
+                    <div className="bg-primary/10 p-2 rounded-full">
+                      <Bot className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="bg-muted p-3 rounded-lg text-sm text-muted-foreground">
+                      <div className="flex gap-1">
+                        <div className="w-2 h-2 bg-current rounded-full animate-pulse"></div>
+                        <div
+                          className="w-2 h-2 bg-current rounded-full animate-pulse"
+                          style={{ animationDelay: "0.1s" }}
+                        ></div>
+                        <div
+                          className="w-2 h-2 bg-current rounded-full animate-pulse"
+                          style={{ animationDelay: "0.2s" }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+
+            <div className="flex gap-3 border-t pt-4">
+              <Input
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Type your transaction here... e.g., 'I spent $25 on coffee at Starbucks'"
+                className="flex-1"
+                disabled={isProcessing}
+              />
+              <Button
+                onClick={handleSendMessage}
+                disabled={!inputText.trim() || isProcessing}
+                className="px-6"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+export default QuickAdd;

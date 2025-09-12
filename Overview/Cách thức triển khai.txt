@@ -1,0 +1,121 @@
+
+### **Project Description – FinTech Mini App: AI-powered Personal Finance Management with Telegram Integration**
+
+#### **1. Giới thiệu dự án**
+
+Ngày nay, nhu cầu quản lý tài chính cá nhân ngày càng tăng, đặc biệt trong nhóm người trẻ, nhân viên văn phòng, freelancer tại Việt Nam. Người dùng thường khó kiểm soát chi tiêu hằng ngày, dễ vượt quá ngân sách, hoặc thiếu công cụ phân tích xu hướng chi tiêu dài hạn.
+
+Dự án này hướng đến việc xây dựng một **hệ sinh thái quản lý tài chính cá nhân thông minh đa nền tảng**, được vận hành trên một kiến trúc cloud-native hiện đại, đảm bảo tính ổn định, bảo mật và khả năng mở rộng.
+
+Các điểm nổi bật của hệ sinh thái bao gồm:
+*   **Ghi chú chi tiêu/thu nhập nhanh qua Telegram Bot:** Tương tác tiện lợi, không cần mở ứng dụng.
+*   **Ứng dụng di động (Android) chuyên sâu:** Cung cấp trải nghiệm quản lý toàn diện, chi tiết và có thể hoạt động ngoại tuyến.
+*   **Tích hợp AI:** Tự động phân loại giao dịch, dự báo xu hướng chi tiêu và đưa ra gợi ý tiết kiệm.
+*   **Web Dashboard trực quan:** Cung cấp báo cáo tài chính, biểu đồ và công cụ quản lý ngân sách.
+*   **Quy trình CI/CD tự động:** Đảm bảo việc phát triển, kiểm thử và triển khai diễn ra nhanh chóng và đáng tin cậy.
+
+#### **2. Mục tiêu dự án**
+
+*   Xây dựng một hệ sinh thái hỗ trợ quản lý thu chi cá nhân **nhanh chóng – thông minh – tiện lợi** trên nhiều nền tảng (Telegram, Web, Mobile).
+*   Ứng dụng AI để tự động hóa quá trình phân loại và phân tích chi tiêu.
+*   Hỗ trợ ra quyết định tài chính thông minh với tư vấn tự động.
+*   Đảm bảo dữ liệu được đồng bộ hóa liền mạch giữa các nền tảng.
+*   Triển khai và vận hành hệ thống trên nền tảng cloud Azure theo các phương pháp DevOps hiện đại.
+
+#### **3. Các tính năng chính (Trên toàn hệ sinh thái)**
+*(Phần này được giữ nguyên về mặt chức năng cốt lõi)*
+
+**3.1 Ghi chú chi tiêu qua Telegram**
+
+*   Người dùng nhập tin nhắn dạng tự nhiên: `"mua cafe 20k"`.
+*   Bot sử dụng AI/NLP để phân tích, phân loại và lưu vào database.
+*   Phản hồi nhanh: `✅ Ghi nhận chi tiêu “Cà phê – 20.000đ” (Danh mục: Ăn uống)`.
+
+**3.2 Dashboard Web/App**
+
+*   Tổng quan tài chính, biểu đồ chi tiêu, quản lý ngân sách và dự báo.
+
+**3.3 AI-powered Features**
+
+*   Phân loại tự động giao dịch, dự báo chi tiêu, cảnh báo vượt ngân sách, tư vấn tiết kiệm, và Chatbot Tài chính.
+
+#### **4. Đối tượng sử dụng**
+
+*   **Người dùng cá nhân:** Sinh viên, nhân viên văn phòng, freelancer.
+*   **Người dùng nâng cao:** Cần công cụ phân tích tài chính chi tiết.
+*   **Admin/Backend Dev:** Quản lý hệ thống, duy trì dịch vụ.
+
+#### **5. Kiến trúc hệ thống và Công nghệ**
+
+Hệ thống được thiết kế để hỗ trợ nhiều client (Telegram, Web, Mobile App) kết nối tới một backend tập trung.
+
+**5.1 Sơ đồ kiến trúc tổng thể**
+
+```
+[Clients]
+ ├─ Telegram Bot
+ ├─ Frontend (React on Azure SWA) ← www.yourdomain.com
+ └─ Mobile App (Android)
+        │
+        ▼ (Giao tiếp qua RESTful API)
+[Backend & Infrastructure]
+ ├─ .NET Core API (on Azure App Service) ← api.yourdomain.com
+ │      │
+ │      ▼ (Tích hợp)
+ │   [AI Services - OpenAI/Azure Cognitive Services]
+ │
+ └─ Database (Azure Database for MySQL)
+```
+
+**5.2 Thành phần Công nghệ và Hạ tầng**
+
+*   **Frontend (Web):** React, triển khai trên **Azure Static Web Apps**.
+*   **Backend:** ASP.NET Core (.NET 8), triển khai trên **Azure App Service**.
+*   **Mobile App (Android):**
+    *   **Ngôn ngữ:** **Kotlin** (chính thức được Google hỗ trợ).
+    *   **Kiến trúc:** **MVVM (Model-View-ViewModel)** để tách biệt logic và giao diện.
+    *   **Networking:** **Retrofit** để giao tiếp với Backend API.
+    *   **Database cục bộ:** **Room Database** để lưu trữ dữ liệu tạm thời, cho phép **hoạt động ngoại tuyến (offline mode)**.
+*   **Database (Production):** **Azure Database for MySQL (Flexible Server)**.
+*   **AI/ML:** ML.NET hoặc **OpenAI/Azure Cognitive Services**.
+*   **Messaging:** **Telegram Bot API**.
+
+#### **6. Quy trình Phát triển & Vận hành (DevOps)**
+*(Giữ nguyên quy trình CI/CD cho Web và Backend)*
+
+*   **Quản lý mã nguồn & Nhánh:** Git (main, dev, feat/*).
+*   **Môi trường:** Development (Local, Docker) và Production (Azure).
+*   **CI/CD:** **GitHub Actions** cho Web và API.
+
+---
+
+#### **7. Lộ trình Phát triển (Development Roadmap)**
+
+Dự án sẽ được phát triển theo từng giai đoạn để đảm bảo chất lượng và tập trung vào các tính năng cốt lõi.
+
+**Giai đoạn 1: Xây dựng Nền tảng Web và Telegram (Sản phẩm Khả dụng Tối thiểu - MVP)**
+
+*   Hoàn thiện các tính năng cốt lõi đã mô tả: Ghi chép qua Telegram, Backend API, Database, Web Dashboard.
+*   Thiết lập quy trình CI/CD tự động cho Web và Backend.
+*   Mục tiêu: Ra mắt phiên bản đầu tiên để người dùng có thể trải nghiệm và thu thập phản hồi.
+
+**Giai đoạn 2: Phát triển Ứng dụng Android chuyên dụng**
+
+Sau khi nền tảng web và Telegram hoạt động ổn định, đội ngũ sẽ phát triển ứng dụng Android gốc để mang lại trải nghiệm người dùng cao cấp hơn.
+
+*   **Mục tiêu:** Cung cấp một công cụ quản lý tài chính mạnh mẽ, tiện lợi ngay trên điện thoại, có khả năng hoạt động ngay cả khi không có kết nối mạng.
+*   **Các tính năng chính của ứng dụng Android:**
+    1.  **Giao diện Ghi chép Tối ưu:** Form nhập liệu thông minh, cho phép chọn danh mục, thêm ghi chú, hình ảnh hóa đơn.
+    2.  **Hoạt động Ngoại tuyến (Offline Mode):** Người dùng có thể ghi lại các giao dịch mà không cần internet. Dữ liệu sẽ tự động đồng bộ hóa với máy chủ ngay khi có kết nối trở lại.
+    3.  **Quản lý Tài khoản Chi tiết:** Cho phép người dùng tạo và quản lý nhiều loại tài khoản (ví dụ: Tiền mặt, Ngân hàng Vietcombank, Ví MoMo) và theo dõi số dư của từng tài khoản.
+    4.  **Lập Ngân sách và Theo dõi:** Thiết lập hạn mức chi tiêu cho từng danh mục (ví dụ: Ngân sách Ăn uống 2 triệu/tháng) và nhận cảnh báo trực quan khi sắp vượt.
+    5.  **Báo cáo và Phân tích Trực quan:** Cung cấp các biểu đồ (tròn, cột) để phân tích chi tiêu theo danh mục, theo thời gian ngay trên ứng dụng.
+    6.  **Tiện ích (Widgets) và Lối tắt:** Đặt widget trên màn hình chính để xem nhanh số dư hoặc thêm giao dịch chỉ với một chạm.
+    7.  **Đồng bộ hóa Liền mạch:** Mọi dữ liệu nhập trên ứng dụng Android sẽ ngay lập tức được cập nhật và có thể xem được trên Web Dashboard (và ngược lại).
+
+**Giai đoạn 3: Mở rộng Hệ sinh thái và Tích hợp Nâng cao**
+
+*   **Tích hợp Nền tảng Nhắn tin khác:** Xây dựng bot cho Zalo OA hoặc Messenger.
+*   **Nhận dạng Ký tự Quang học (OCR):** Cho phép người dùng chụp ảnh hóa đơn, AI sẽ tự động trích xuất thông tin (số tiền, nhà cung cấp, ngày tháng).
+*   **Tích hợp API Ngân hàng/Ví điện tử:** Kết nối với MoMo, ZaloPay, hoặc các ngân hàng hỗ trợ Open Banking để tự động đồng bộ hóa các giao dịch, giảm thiểu việc nhập liệu thủ công.
+*   **Mở rộng thành FinTech:** Phát triển các tính năng gợi ý đầu tư, tiết kiệm dựa trên phân tích thói quen tài chính của người dùng.

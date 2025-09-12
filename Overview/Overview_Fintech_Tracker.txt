@@ -1,0 +1,147 @@
+ FinTech Mini App: AI-powered Personal Finance Management
+
+## 1. Giới thiệu dự án
+
+Trong bối cảnh nhu cầu quản lý tài chính cá nhân ngày càng tăng, đặc biệt ở giới trẻ, nhân viên văn phòng, freelancer tại Việt Nam, nhiều người gặp khó khăn trong việc kiểm soát chi tiêu, thường xuyên vượt ngân sách, và thiếu công cụ phân tích tài chính trực quan.
+
+Dự án **FinTech Mini App** được xây dựng nhằm giải quyết vấn đề này với định hướng:
+
+* **Nhanh chóng**: Nhập liệu dễ dàng qua Telegram hoặc Mobile App.
+* **Thông minh**: Tích hợp AI để phân loại, dự báo, tư vấn.
+* **Tiện lợi**: Dashboard trực quan trên Web và App Mobile.
+
+---
+
+## 2. Mục tiêu
+
+* Xây dựng một hệ thống **mini app** quản lý thu/chi cá nhân thông minh, thân thiện, dễ dùng.
+* Ứng dụng **AI** để tự động hóa phân loại giao dịch, dự báo và cảnh báo vượt ngân sách.
+* **Tích hợp đa kênh** (Telegram, Web, Mobile) giúp người dùng dễ dàng cập nhật chi tiêu.
+* Hỗ trợ **ra quyết định tài chính** thông qua gợi ý tiết kiệm, báo cáo, và dự báo.
+
+---
+
+## 3. Đối tượng sử dụng
+
+* **Người dùng cá nhân**: Sinh viên, nhân viên văn phòng, freelancer muốn quản lý chi tiêu hằng ngày.
+* **Người dùng nâng cao**: Quan tâm phân tích tài chính chi tiết, dự báo chi tiêu.
+* **Admin/Dev**: Quản lý hệ thống, tối ưu AI model, vận hành & bảo trì.
+
+---
+
+## 4. Quy mô & Roadmap
+
+* **Giai đoạn 1 (MVP)**: Web Dashboard + Telegram Bot.
+* **Giai đoạn 2**: Phát triển **Mobile App Android** (tham khảo Money Lover, Money Manager).
+* **Tầm nhìn mở rộng**: Hỗ trợ iOS, tích hợp ví điện tử (MoMo, ZaloPay) và ngân hàng (Vietcombank).
+
+---
+
+## 5. Tính năng chính
+
+### 5.1 Telegram Bot (Ghi chú tức thì)
+
+* Nhập tin nhắn tự nhiên: “mua cafe 20k”, “lương tháng 15tr”.
+* AI/NLP phân tích → xác định thu/chi → phân loại (Ăn uống, Mua sắm, Lương...).
+* Lưu database → bot phản hồi xác nhận.
+* Chatbot hỗ trợ trả lời: “Tháng này chi bao nhiêu cho ăn uống?”, “Số dư hiện tại?”.
+
+### 5.2 Web Dashboard
+
+* Tổng quan tài chính: Tổng thu, chi, số dư.
+* Biểu đồ chi tiêu theo danh mục.
+* Quản lý ngân sách: đặt hạn mức & theo dõi % sử dụng.
+* Báo cáo tài chính cuối tháng & dự báo chi tiêu tháng tới.
+
+### 5.3 Mobile App Android (Giai đoạn 2)
+
+#### Quản lý thu/chi cơ bản
+
+* Thêm giao dịch nhanh (thu nhập/chi tiêu).
+* Danh mục mặc định: Ăn uống, Đi lại, Nhà ở, Hóa đơn, Mua sắm, Lương…
+* Tùy chỉnh danh mục, ghi chú chi tiết.
+* Quản lý nhiều **ví** (tiền mặt, ATM, ví điện tử).
+* Chuyển tiền giữa các ví.
+* Hoạt động **offline-first**: lưu local bằng SQLite/Room DB, đồng bộ cloud khi online.
+
+#### Quản lý tài chính nâng cao
+
+* Báo cáo theo ngày/tháng/danh mục.
+* Đặt ngân sách cho từng danh mục, cảnh báo khi sắp vượt.
+* Tích hợp **OCR** (chụp hóa đơn → AI nhận diện nội dung).
+* Push notification: nhắc nhở, cảnh báo, gợi ý tiết kiệm.
+
+#### AI-powered Features
+
+* Phân loại tự động khi nhập text.
+* Dự báo xu hướng chi tiêu (time series, regression).
+* Gợi ý tiết kiệm cá nhân hóa dựa trên hành vi chi tiêu.
+* Chatbot tài chính ngay trong app (giống Telegram).
+
+---
+
+## 6. Kiến trúc hệ thống & Công nghệ
+
+* **Backend**: ASP.NET Core (.NET 8).
+* **Frontend**:
+
+  * Giai đoạn 1: React (Vite/CRA) hoặc Blazor.
+  * Giai đoạn 2: Android App (Kotlin) / Flutter (nếu mở rộng iOS).
+* **Database**:
+
+  * Dev: MySQL (Docker).
+  * Prod: Azure Database for MySQL.
+* **AI/ML**:
+
+  * ML.NET (classification, regression).
+  * OpenAI API / Azure Cognitive Services (NLP, chatbot).
+* **Messaging**: Telegram Bot API.
+* **Mobile Push Notification**: Firebase Cloud Messaging (FCM).
+* **Triển khai**: Azure App Service (API), Azure Static Web Apps (UI), CI/CD GitHub Actions.
+* **Domain**: Namecheap (www & api).
+
+---
+
+## 7. Các nghiệp vụ chính
+
+1. **Ghi nhận giao dịch**: Thu/chi → phân loại → lưu DB.
+2. **Quản lý ngân sách**: Hạn mức từng danh mục, cảnh báo khi sắp vượt.
+3. **Theo dõi tài chính**: Báo cáo, biểu đồ, dự báo.
+4. **Tư vấn thông minh (AI)**: Gợi ý tiết kiệm, dự báo xu hướng.
+5. **Quản trị hệ thống**: Quản lý user, danh mục, logs, tối ưu AI.
+
+---
+
+## 8. So sánh tính năng theo kênh
+
+| Tính năng                  | Telegram Bot | Web Dashboard | Mobile App Android |
+| -------------------------- | ------------ | ------------- | ------------------ |
+| Ghi nhanh giao dịch        | ✅            | ❌             | ✅ (offline-first)  |
+| Phân loại tự động (AI)     | ✅            | ✅             | ✅                  |
+| Biểu đồ, báo cáo tài chính | ❌            | ✅             | ✅                  |
+| Quản lý ngân sách          | ❌            | ✅             | ✅                  |
+| Dự báo chi tiêu            | ❌            | ✅             | ✅                  |
+| Cảnh báo vượt ngân sách    | ✅ (Telegram) | ✅ (web notif) | ✅ (push mobile)    |
+| Chatbot tài chính          | ✅            | ❌             | ✅                  |
+| Quản lý nhiều ví           | ❌            | ❌             | ✅                  |
+| OCR hóa đơn                | ❌            | ❌             | ✅ (giai đoạn 2)    |
+
+---
+
+## 9. Tầm nhìn mở rộng
+
+* Tích hợp **Zalo OA / Messenger Bot** để tăng độ phủ.
+* Tích hợp API ngân hàng & ví điện tử (MoMo, ZaloPay, Vietcombank) để tự động đồng bộ giao dịch.
+* Xuất báo cáo Excel/PDF (Premium feature).
+* Gamification: thưởng “huy hiệu tiết kiệm”.
+* Mở rộng sang iOS với Flutter/React Native.
+
+---
+
+## 10. Lợi ích
+
+* **Đơn giản**: Ghi nhanh thu chi bằng Telegram hoặc Mobile.
+* **Thông minh**: AI phân tích & tư vấn.
+* **Trực quan**: Dashboard Web/App hiển thị báo cáo, biểu đồ.
+* **Đồng bộ đa nền tảng**: Telegram ↔ Web ↔ Mobile.
+* **Khác biệt**: So với Money Lover/Money Manager nhờ tích hợp AI & đa kênh nhắn tin.
