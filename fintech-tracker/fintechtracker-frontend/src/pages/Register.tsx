@@ -1,9 +1,22 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff, Wallet } from "lucide-react";
@@ -27,12 +40,12 @@ const Register = () => {
   const { toast } = useToast();
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (formData.password !== formData.confirmPassword) {
       toast({
         title: "Password mismatch",
@@ -55,20 +68,28 @@ const Register = () => {
 
     // Simulate registration
     setTimeout(() => {
-      if (formData.firstName && formData.lastName && formData.email && formData.password) {
+      if (
+        formData.firstName &&
+        formData.lastName &&
+        formData.email &&
+        formData.password
+      ) {
         // Store registration data temporarily for OTP verification
-        localStorage.setItem("pendingRegistration", JSON.stringify({
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          accountType: formData.accountType
-        }));
-        
+        localStorage.setItem(
+          "pendingRegistration",
+          JSON.stringify({
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: formData.email,
+            accountType: formData.accountType,
+          })
+        );
+
         toast({
           title: "Verification code sent!",
           description: `Please check your email at ${formData.email}`,
         });
-        
+
         navigate("/verify-otp");
       }
       setIsLoading(false);
@@ -79,7 +100,10 @@ const Register = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-accent/5 p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center space-x-2 text-2xl font-bold text-foreground">
+          <Link
+            to="/"
+            className="inline-flex items-center space-x-2 text-2xl font-bold text-foreground"
+          >
             <Wallet className="h-8 w-8 text-primary" />
             <span>FinanceTracker</span>
           </Link>
@@ -87,12 +111,14 @@ const Register = () => {
 
         <Card className="border-border/50 shadow-lg">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center">Create your account</CardTitle>
+            <CardTitle className="text-2xl text-center">
+              Create your account
+            </CardTitle>
             <CardDescription className="text-center">
               Start your journey to financial freedom
             </CardDescription>
           </CardHeader>
-          
+
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -102,7 +128,9 @@ const Register = () => {
                     id="firstName"
                     placeholder="John"
                     value={formData.firstName}
-                    onChange={(e) => handleInputChange("firstName", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("firstName", e.target.value)
+                    }
                     required
                   />
                 </div>
@@ -112,7 +140,9 @@ const Register = () => {
                     id="lastName"
                     placeholder="Doe"
                     value={formData.lastName}
-                    onChange={(e) => handleInputChange("lastName", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("lastName", e.target.value)
+                    }
                     required
                   />
                 </div>
@@ -132,13 +162,17 @@ const Register = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="accountType">Account Type</Label>
-                <Select value={formData.accountType} onValueChange={(value) => handleInputChange("accountType", value)}>
+                <Select
+                  value={formData.accountType}
+                  onValueChange={(value) =>
+                    handleInputChange("accountType", value)
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select account type" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="personal">Personal</SelectItem>
-                    <SelectItem value="business">Business</SelectItem>
                     <SelectItem value="family">Family</SelectItem>
                   </SelectContent>
                 </Select>
@@ -152,7 +186,9 @@ const Register = () => {
                     type={showPassword ? "text" : "password"}
                     placeholder="Create a password"
                     value={formData.password}
-                    onChange={(e) => handleInputChange("password", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("password", e.target.value)
+                    }
                     required
                   />
                   <Button
@@ -179,7 +215,9 @@ const Register = () => {
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="Confirm your password"
                     value={formData.confirmPassword}
-                    onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("confirmPassword", e.target.value)
+                    }
                     required
                   />
                   <Button
@@ -202,9 +240,14 @@ const Register = () => {
                 <Checkbox
                   id="terms"
                   checked={acceptTerms}
-                  onCheckedChange={(checked) => setAcceptTerms(checked as boolean)}
+                  onCheckedChange={(checked) =>
+                    setAcceptTerms(checked as boolean)
+                  }
                 />
-                <Label htmlFor="terms" className="text-sm text-muted-foreground">
+                <Label
+                  htmlFor="terms"
+                  className="text-sm text-muted-foreground"
+                >
                   I agree to the{" "}
                   <a href="#" className="text-primary hover:underline">
                     Terms of Service
@@ -216,14 +259,14 @@ const Register = () => {
                 </Label>
               </div>
             </CardContent>
-            
+
             <CardFooter className="flex flex-col space-y-4">
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Creating account..." : "Create account"}
               </Button>
-              
+
               <Separator />
-              
+
               <div className="text-center text-sm text-muted-foreground">
                 Already have an account?{" "}
                 <Link to="/login" className="text-primary hover:underline">
