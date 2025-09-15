@@ -1,25 +1,33 @@
+-- DROP DATABASE IF EXISTS FintechDB;
+
 -- Tạo database FintechDB
 CREATE DATABASE IF NOT EXISTS FintechDB;
 USE FintechDB;
 
--- Bảng Users - Quản lý Người dùng với thông tin cá nhân đầy đủ
+-- Bảng Users  - Quản lý Xác thực & Bảo mật
 CREATE TABLE Users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
     email VARCHAR(100) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL, -- **QUAN TRỌNG**: Luôn lưu mật khẩu đã được băm.
-    username VARCHAR(50) NOT NULL UNIQUE,
-    role ENUM('customer', 'admin') NOT NULL DEFAULT 'customer', -- Thêm role cho người dùng
+    role ENUM('customer', 'admin') NOT NULL DEFAULT 'customer',
+    telegram_user_id VARCHAR(50) NULL UNIQUE, -- Liên kết với tài khoản Telegram.
+    is_active BOOLEAN DEFAULT TRUE, -- Trạng thái tài khoản (kích hoạt/vô hiệu hóa).
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Bảng UserProfiles - Quản lý Thông tin Cá nhân
+CREATE TABLE UserProfiles (
+    user_id INT PRIMARY KEY, -- Khóa chính và cũng là khóa ngoại.
     first_name VARCHAR(50), -- Tên
     last_name VARCHAR(50), -- Họ
-    phone VARCHAR(20), -- Số điện thoại
+    phone VARCHAR(20) UNIQUE, -- Số điện thoại
     date_of_birth DATE, -- Ngày sinh
     address TEXT, -- Địa chỉ
     avatar_url VARCHAR(255), -- URL ảnh đại diện
-    telegram_user_id VARCHAR(50) NULL UNIQUE, -- Dùng để liên kết với tài khoản Telegram, có thể NULL.
-    is_email_verified BOOLEAN DEFAULT FALSE, -- Trạng thái xác thực email
-    is_active BOOLEAN DEFAULT TRUE, -- Trạng thái tài khoản (kích hoạt/vô hiệu hóa)
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE -- Nếu User bị xóa, Profile cũng bị xóa.
 );
 
 -- Bảng Accounts - Quản lý các Nguồn tiền
@@ -40,7 +48,7 @@ CREATE TABLE Accounts (
 -- Bảng Categories - Quản lý Danh mục Thu/Chi
 CREATE TABLE Categories (
     category_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL, -- Mỗi người dùng có bộ danh mục riêng.
+    user_id INT, -- Mỗi người dùng có bộ danh mục riêng.
     parent_category_id INT NULL, -- Dùng để tạo danh mục con (vd: Ăn uống -> Cafe).
     category_name VARCHAR(100) NOT NULL,
     category_icon VARCHAR(50), -- Tên icon hoặc class icon (dùng trong UI)
@@ -169,3 +177,11 @@ INSERT INTO Categories (user_id, category_name, transaction_type, is_default, is
 (NULL, 'Gift', 'income', TRUE, TRUE),
 (NULL, 'Other', 'expense', TRUE, TRUE),
 (NULL, 'Other', 'income', TRUE, TRUE);
+
+-- Dữ liệu test cho User 1 và Admin
+INSERT INTO Users (username, email, password_hash, role) VALUES 
+('user1', 'user1@example.com', 'kl123123', 'customer'),
+('admin', 'admin@fintech.app', 'admin123', 'admin');
+INSERT INTO UserProfiles (user_id, first_name, last_name, phone, date_of_birth) VALUES 
+(1, 'Văn', 'Nguyễn', '0901234567', '1995-08-15'),
+(2, 'Thị', 'Trần', '0987654321', '1990-01-20');
