@@ -38,7 +38,7 @@ const Login = () => {
       };
 
       const res = await axios.post(
-        "http://localhost:5013/api/controller/login",
+        "http://localhost:5013/api/Auth/login",
         payload
       );
 

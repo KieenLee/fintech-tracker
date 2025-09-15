@@ -1,4 +1,5 @@
 import { useState } from "react";
+import axios from "axios";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -27,6 +28,7 @@ const Register = () => {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
+    username: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -66,34 +68,30 @@ const Register = () => {
 
     setIsLoading(true);
 
-    // Simulate registration
-    setTimeout(() => {
-      if (
-        formData.firstName &&
-        formData.lastName &&
-        formData.email &&
-        formData.password
-      ) {
-        // Store registration data temporarily for OTP verification
-        localStorage.setItem(
-          "pendingRegistration",
-          JSON.stringify({
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            email: formData.email,
-            accountType: formData.accountType,
-          })
-        );
+    try {
+      await axios.post("http://localhost:5013/api/auth/register", {
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+      });
 
-        toast({
-          title: "Verification code sent!",
-          description: `Please check your email at ${formData.email}`,
-        });
+      toast({
+        title: "Registration successful!",
+        description: "You can now log in.",
+      });
 
-        navigate("/verify-otp");
-      }
-      setIsLoading(false);
-    }, 1000);
+      navigate("/login");
+    } catch (error: any) {
+      toast({
+        title: "Registration failed",
+        description: error.response?.data?.message || "Unknown error",
+        variant: "destructive",
+      });
+    }
+
+    setIsLoading(false);
   };
 
   return (
@@ -146,6 +144,19 @@ const Register = () => {
                     required
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  placeholder="johndoe123"
+                  value={formData.username}
+                  onChange={(e) =>
+                    handleInputChange("username", e.target.value)
+                  }
+                  required
+                />
               </div>
 
               <div className="space-y-2">

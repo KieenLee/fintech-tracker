@@ -1,3 +1,11 @@
+D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\obj\Debug\net9.0\fintechtracker-backend.csproj.AssemblyReference.cache
+D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\obj\Debug\net9.0\fintechtracker-backend.GeneratedMSBuildEditorConfig.editorconfig
+D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\obj\Debug\net9.0\fintechtracker-backend.AssemblyInfoInputs.cache
+D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\obj\Debug\net9.0\fintechtracker-backend.AssemblyInfo.cs
+D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\obj\Debug\net9.0\fintechtracker-backend.csproj.CoreCompileInputs.cache
+D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\obj\Debug\net9.0\fintechtracker-backend.MvcApplicationPartsAssemblyInfo.cs
+D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\obj\Debug\net9.0\fintechtracker-backend.MvcApplicationPartsAssemblyInfo.cache
+D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\obj\Debug\net9.0\fintechtracker-backend.sourcelink.json
 D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Debug\net9.0\appsettings.Development.json
 D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Debug\net9.0\appsettings.json
 D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Debug\net9.0\fintechtracker-backend.staticwebassets.endpoints.json
@@ -117,14 +125,6 @@ D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Deb
 D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Debug\net9.0\tr\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
 D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Debug\net9.0\zh-Hans\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
 D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Debug\net9.0\zh-Hant\Microsoft.CodeAnalysis.Workspaces.MSBuild.BuildHost.resources.dll
-D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\obj\Debug\net9.0\fintechtracker-backend.csproj.AssemblyReference.cache
-D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\obj\Debug\net9.0\fintechtracker-backend.GeneratedMSBuildEditorConfig.editorconfig
-D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\obj\Debug\net9.0\fintechtracker-backend.AssemblyInfoInputs.cache
-D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\obj\Debug\net9.0\fintechtracker-backend.AssemblyInfo.cs
-D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\obj\Debug\net9.0\fintechtracker-backend.csproj.CoreCompileInputs.cache
-D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\obj\Debug\net9.0\fintechtracker-backend.MvcApplicationPartsAssemblyInfo.cs
-D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\obj\Debug\net9.0\fintechtracker-backend.MvcApplicationPartsAssemblyInfo.cache
-D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\obj\Debug\net9.0\fintechtracker-backend.sourcelink.json
 D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\obj\Debug\net9.0\scopedcss\bundle\fintechtracker-backend.styles.css
 D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\obj\Debug\net9.0\staticwebassets.build.json
 D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\obj\Debug\net9.0\staticwebassets.build.json.cache
