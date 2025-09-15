@@ -1,12 +1,37 @@
 {
   "Version": 1,
   "WorkspaceRootPath": "D:\\Workspace\\Project_.Net\\fintech\\fintech-tracker\\",
-  "Documents": [],
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{32A72B81-F294-A050-45F6-C2954C0A7959}|fintechtracker-backend\\fintechtracker-backend.csproj|d:\\workspace\\project_.net\\fintech\\fintech-tracker\\fintechtracker-backend\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{32A72B81-F294-A050-45F6-C2954C0A7959}|fintechtracker-backend\\fintechtracker-backend.csproj|solutionrelative:fintechtracker-backend\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    }
+  ],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
       "VerticalTabListWidth": 256,
-      "DocumentGroups": []
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "appsettings.Development.json",
+              "DocumentMoniker": "D:\\Workspace\\Project_.Net\\fintech\\fintech-tracker\\fintechtracker-backend\\appsettings.Development.json",
+              "RelativeDocumentMoniker": "fintechtracker-backend\\appsettings.Development.json",
+              "ToolTip": "D:\\Workspace\\Project_.Net\\fintech\\fintech-tracker\\fintechtracker-backend\\appsettings.Development.json",
+              "RelativeToolTip": "fintechtracker-backend\\appsettings.Development.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-09-15T03:03:43.896Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
     }
   ]
 }

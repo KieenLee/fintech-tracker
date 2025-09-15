@@ -17,7 +17,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
-  const [email, setEmail] = useState("");
+  const [emailOrUsername, setEmailOrUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -28,58 +28,41 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate authentication
-
     try {
-      await axios.post("http://localhost:8080/login", {
-        email,
+      // Xác định là email hay username
+      const isEmail = emailOrUsername.includes("@");
+      const payload = {
+        email: isEmail ? emailOrUsername : undefined,
+        username: !isEmail ? emailOrUsername : undefined,
         password,
-      });
+      };
 
-      // Đăng nhập thành công
-      const userRole = email.includes("admin") ? "admin" : "customer";
-      localStorage.setItem("isAuthenticated", "true");
-      localStorage.setItem("userEmail", email);
+      const res = await axios.post(
+        "http://localhost:5013/api/controller/login",
+        payload
+      );
+
+      // Lưu token và thông tin user
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("userRole", res.data.role);
+      localStorage.setItem("userEmail", res.data.email);
+      localStorage.setItem("userName", res.data.username);
 
       toast({
         title: "Login successful!",
-        description: `Welcome back to FinanceTracker`,
+        description: `Welcome back, ${res.data.username}`,
       });
 
       navigate("/dashboard");
-    } catch (error) {
-      // Đăng nhập thất bại hoặc lỗi mạng
+    } catch (error: any) {
       toast({
         title: "Login failed",
         description: error.response?.data?.message || "Invalid credentials",
         variant: "destructive",
       });
+    } finally {
       setIsLoading(false);
     }
-
-    // setTimeout(() => {
-    //   if (email && password) {
-    //     // Set user role based on email for demo purposes
-    //     const userRole = email.includes("admin") ? "admin" : "customer";
-    //     localStorage.setItem("userRole", userRole);
-    //     localStorage.setItem("isAuthenticated", "true");
-    //     localStorage.setItem("userEmail", email);
-
-    //     toast({
-    //       title: "Login successful!",
-    //       description: `Welcome back to FinanceTracker`,
-    //     });
-
-    //     navigate("/dashboard");
-    //   } else {
-    //     toast({
-    //       title: "Login failed",
-    //       description: "Please enter valid credentials",
-    //       variant: "destructive",
-    //     });
-    //   }
-    //   setIsLoading(false);
-    // }, 1000);
   };
 
   return (
@@ -106,13 +89,13 @@ const Login = () => {
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="emailOrUsername">Email or Username</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="john@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="emailOrUsername"
+                  type="text"
+                  placeholder="john@example.com or john123"
+                  value={emailOrUsername}
+                  onChange={(e) => setEmailOrUsername(e.target.value)}
                   required
                 />
               </div>
