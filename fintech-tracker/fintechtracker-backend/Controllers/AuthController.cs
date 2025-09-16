@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Google.Apis.Auth;
 using fintechtracker_backend.Data;
 using fintechtracker_backend.DTOs;
 
@@ -121,6 +122,88 @@ namespace fintechtracker_backend.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new RegisterResponseDto { Message = "Registration successful" });
+        }
+
+        [HttpPost("google")]
+        public async Task<IActionResult> GoogleAuth([FromBody] GoogleAuthDto dto)
+        {
+            try
+            {
+                // Verify Google ID token
+                var clientId = _config["GoogleAuth:ClientId"];
+                var settings = new GoogleJsonWebSignature.ValidationSettings()
+                {
+                    Audience = string.IsNullOrWhiteSpace(clientId) ? null : new List<string> { clientId }
+                };
+
+                var payload = await GoogleJsonWebSignature.ValidateAsync(dto.IdToken, settings);
+
+                // Kiểm tra user đã tồn tại chưa
+                var existingUser = await _context.Users
+                    .Include(u => u.Userprofile)
+                    .FirstOrDefaultAsync(u => u.Email == payload.Email);
+
+                if (existingUser != null)
+                {
+                    // User đã tồn tại - đăng nhập
+                    var loginToken = GenerateJwtToken(existingUser);
+                    
+                    return Ok(new LoginResponseDto
+                    {
+                        UserId = existingUser.UserId,
+                        Username = existingUser.Username,
+                        Email = existingUser.Email,
+                        Role = existingUser.Role,
+                        FullName = existingUser.Userprofile?.FirstName + " " + existingUser.Userprofile?.LastName,
+                        Token = loginToken
+                    });
+                }
+                else
+                {
+                    // User chưa tồn tại - tạo mới (đăng ký)
+                    var newUser = new User
+                    {
+                        Username = payload.Email.Split('@')[0] + "_" + DateTime.Now.Ticks.ToString().Substring(0, 6),
+                        Email = payload.Email,
+                        PasswordHash = "", // Google user không cần password
+                        Role = "customer",
+                        IsActive = true,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+
+                    _context.Users.Add(newUser);
+                    await _context.SaveChangesAsync();
+
+                    // Tạo Userprofile
+                    var userProfile = new Userprofile
+                    {
+                        UserId = newUser.UserId,
+                        FirstName = payload.GivenName,
+                        LastName = payload.FamilyName,
+                        AvatarUrl = payload.Picture,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+                    _context.Userprofiles.Add(userProfile);
+                    await _context.SaveChangesAsync();
+
+                    var registerToken = GenerateJwtToken(newUser);
+
+                    return Ok(new LoginResponseDto
+                    {
+                        UserId = newUser.UserId,
+                        Username = newUser.Username,
+                        Email = newUser.Email,
+                        Role = newUser.Role,
+                        FullName = payload.Name,
+                        Token = registerToken
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = "Invalid Google token: " + ex.Message });
+            }
         }
 
 
