@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("fintechtracker-backend")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+52da6bdab5772c91a4f2d9be1ebf037552ac2cde")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1e7d60f04ded194002756804a6a5c675fc8bd6fa")]
 [assembly: System.Reflection.AssemblyProductAttribute("fintechtracker-backend")]
 [assembly: System.Reflection.AssemblyTitleAttribute("fintechtracker-backend")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
