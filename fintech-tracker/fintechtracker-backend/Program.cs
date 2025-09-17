@@ -11,6 +11,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+
 // Database
 builder.Services.AddDbContext<FinTechDbContext>(options =>
 {
@@ -18,6 +19,25 @@ builder.Services.AddDbContext<FinTechDbContext>(options =>
     options.UseMySql(connStr, ServerVersion.AutoDetect(connStr));
 });
 
+// JWT Authentication
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? ""))
+        };
+    });
+builder.Services.AddAuthorization();
+
+// CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
@@ -33,15 +53,24 @@ builder.Services.AddCors(options =>
 });
 
 
+
+
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
 app.UseCors("AllowFrontend");
+app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
+
+
 app.MapControllers();
 
 app.Run();

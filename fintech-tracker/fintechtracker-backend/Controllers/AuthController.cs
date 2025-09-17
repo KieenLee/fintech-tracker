@@ -47,8 +47,15 @@ namespace fintechtracker_backend.Controllers
                     return Unauthorized(new { message = "Account does not exist" });
                 }
 
-                // So sánh password (giả sử lưu plain text - thực tế nên hash)
-                if (user.PasswordHash != loginDto.Password)
+                // Hash password để so sánh
+                string inputPasswordHash;
+                using (var sha = SHA256.Create())
+                {
+                    var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(loginDto.Password));
+                    inputPasswordHash = BitConverter.ToString(bytes).Replace("-", "").ToLower();
+                }
+
+                if (user.PasswordHash != inputPasswordHash)
                 {
                     return Unauthorized(new { message = "Wrong password" });
                 }
@@ -147,7 +154,7 @@ namespace fintechtracker_backend.Controllers
                 {
                     // User đã tồn tại - đăng nhập
                     var loginToken = GenerateJwtToken(existingUser);
-                    
+
                     return Ok(new LoginResponseDto
                     {
                         UserId = existingUser.UserId,
@@ -207,15 +214,16 @@ namespace fintechtracker_backend.Controllers
         }
 
 
-        private string GenerateJwtToken(dynamic user)
+        private string GenerateJwtToken(User user)
         {
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),
-                new Claim(JwtRegisteredClaimNames.Email, user.Email ?? ""),
+                new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
                 new Claim(ClaimTypes.Name, user.Username ?? ""),
+                new Claim(ClaimTypes.Email, user.Email ?? ""),
                 new Claim(ClaimTypes.Role, user.Role ?? "Customer"),
-                new Claim("userId", user.UserId.ToString())
+                new Claim("userId", user.UserId.ToString()),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(

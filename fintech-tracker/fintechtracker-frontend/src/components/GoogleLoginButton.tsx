@@ -78,6 +78,7 @@ const GoogleLoginButton = ({
       localStorage.setItem("userRole", result.data.role);
       localStorage.setItem("userEmail", result.data.email);
       localStorage.setItem("userName", result.data.username);
+      localStorage.setItem("isAuthenticated", "true"); // Thêm dòng này
 
       toast({
         title: "Login successful!",

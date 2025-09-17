@@ -48,6 +48,7 @@ const Login = () => {
       localStorage.setItem("userRole", res.data.role);
       localStorage.setItem("userEmail", res.data.email);
       localStorage.setItem("userName", res.data.username);
+      localStorage.setItem("isAuthenticated", "true");
 
       toast({
         title: "Login successful!",
