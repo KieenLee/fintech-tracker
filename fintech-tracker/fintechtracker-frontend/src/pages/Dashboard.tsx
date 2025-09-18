@@ -33,6 +33,7 @@ import {
   Pie,
 } from "recharts";
 import { dashboardService } from "@/services/dashboardService";
+import { budgetService } from "@/services/budgetService";
 import { DashboardSummary, MonthlyTrend } from "@/types/dashboard";
 
 const Dashboard = () => {
@@ -46,9 +47,27 @@ const Dashboard = () => {
   const [monthlyTrendData, setMonthlyTrendData] = useState<MonthlyTrend[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const [budgets, setBudgets] = useState([]);
 
   useEffect(() => {
     fetchDashboardData();
+  }, []);
+
+  useEffect(() => {
+    const fetchBudgets = async () => {
+      try {
+        const data = await budgetService.getBudgets();
+        setBudgets(data.budgets);
+      } catch (error) {
+        console.error("Budget fetch error:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load budgets",
+          variant: "destructive",
+        });
+      }
+    };
+    fetchBudgets();
   }, []);
 
   const fetchDashboardData = async () => {
@@ -88,14 +107,21 @@ const Dashboard = () => {
     amount: trend.expense,
   }));
 
-  // Tạo budget data từ categories (giả sử budget cao hơn 20% so với chi tiêu thực tế)
   const budgetData =
-    dashboardData?.topExpenseCategories.map((cat) => ({
-      category: cat.categoryName,
-      spent: cat.totalAmount,
-      budget: cat.totalAmount * 1.2, // Giả sử budget cao hơn 20%
-      percentage: Math.round(cat.percentage),
-    })) || [];
+    dashboardData?.topExpenseCategories.map((cat) => {
+      const userBudget = budgets.find(
+        (b) => b.categoryName === cat.categoryName
+      );
+      return {
+        category: cat.categoryName,
+        spent: cat.totalAmount,
+        budget: userBudget ? userBudget.amount : 0,
+        percentage:
+          userBudget && userBudget.amount > 0
+            ? Math.round((cat.totalAmount / userBudget.amount) * 100)
+            : 0,
+      };
+    }) || [];
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("vi-VN", {

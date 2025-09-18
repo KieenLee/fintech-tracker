@@ -259,7 +259,6 @@ namespace fintechtracker_backend.Controllers
             }
         }
 
-        // ADD: Search endpoint
         [HttpGet("search")]
         public async Task<ActionResult<TransactionResponseDto>> SearchTransactions(
             [FromQuery] string? searchTerm = null,
