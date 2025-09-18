@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using fintechtracker_backend.Data;
+using fintechtracker_backend.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -53,9 +54,10 @@ builder.Services.AddCors(options =>
     });
 });
 
-
-
-
+// Dependency Injection for Repositories
+builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
+builder.Services.AddScoped<IAccountRepository, AccountRepository>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 
 var app = builder.Build();
 
