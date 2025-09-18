@@ -222,48 +222,57 @@ namespace fintechtracker_backend.Repositories
             return await query.CountAsync();
         }
 
-        // FIXED: Helper method using correct TransactionFilterDto properties
+        // Update ApplyFilters method with better logging and null handling
         private IQueryable<Transaction> ApplyFilters(IQueryable<Transaction> query, TransactionFilterDto filter)
         {
+            Console.WriteLine($"ApplyFilters - Input filter: CategoryId={filter.CategoryId}, AccountId={filter.AccountId}");
+
             // Filter by CategoryId (int?)
-            if (filter.CategoryId.HasValue)
+            if (filter.CategoryId.HasValue && filter.CategoryId.Value > 0)
             {
+                Console.WriteLine($"Applying CategoryId filter: {filter.CategoryId.Value}");
                 query = query.Where(t => t.CategoryId == filter.CategoryId.Value);
             }
 
             // Filter by AccountId (int?)
-            if (filter.AccountId.HasValue)
+            if (filter.AccountId.HasValue && filter.AccountId.Value > 0)
             {
+                Console.WriteLine($"Applying AccountId filter: {filter.AccountId.Value}");
                 query = query.Where(t => t.AccountId == filter.AccountId.Value);
             }
 
             // Filter by FromDate
             if (filter.FromDate.HasValue)
             {
+                Console.WriteLine($"Applying FromDate filter: {filter.FromDate.Value}");
                 query = query.Where(t => t.TransactionDate >= filter.FromDate.Value);
             }
 
             // Filter by ToDate
             if (filter.ToDate.HasValue)
             {
+                Console.WriteLine($"Applying ToDate filter: {filter.ToDate.Value}");
                 query = query.Where(t => t.TransactionDate <= filter.ToDate.Value);
             }
 
             // Filter by TransactionType
-            if (!string.IsNullOrEmpty(filter.TransactionType))
+            if (!string.IsNullOrEmpty(filter.TransactionType) && filter.TransactionType.ToLower() != "all")
             {
+                Console.WriteLine($"Applying TransactionType filter: {filter.TransactionType}");
                 query = query.Where(t => t.TransactionType.ToLower() == filter.TransactionType.ToLower());
             }
 
             // Filter by MinAmount
-            if (filter.MinAmount.HasValue)
+            if (filter.MinAmount.HasValue && filter.MinAmount.Value > 0)
             {
+                Console.WriteLine($"Applying MinAmount filter: {filter.MinAmount.Value}");
                 query = query.Where(t => t.Amount >= filter.MinAmount.Value);
             }
 
             // Filter by MaxAmount
-            if (filter.MaxAmount.HasValue)
+            if (filter.MaxAmount.HasValue && filter.MaxAmount.Value > 0)
             {
+                Console.WriteLine($"Applying MaxAmount filter: {filter.MaxAmount.Value}");
                 query = query.Where(t => t.Amount <= filter.MaxAmount.Value);
             }
 

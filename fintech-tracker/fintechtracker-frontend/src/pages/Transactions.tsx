@@ -34,6 +34,7 @@ import {
   Transaction,
   transactionService,
   TransactionFilter,
+  TransactionSearchFilter,
 } from "@/services/transactionService";
 import { accountService, Account } from "@/services/accountService";
 import { categoryService, Category } from "@/services/categoryService";
@@ -87,21 +88,46 @@ const Transactions = () => {
   const loadTransactions = async (page: number = 1) => {
     setLoading(true);
     try {
-      const filter: TransactionFilter = {
-        searchTerm: searchTerm || undefined,
-        category: categoryFilter !== "all" ? categoryFilter : undefined,
-        account: accountFilter !== "all" ? accountFilter : undefined,
-        transactionType: typeFilter !== "all" ? typeFilter : undefined,
-        page,
-        pageSize: 20,
-      };
+      const hasSearchTerm = searchTerm && searchTerm.trim() !== "";
 
-      const response = await transactionService.getTransactions(filter);
-      setTransactions(response.transactions);
-      setTotalCount(response.totalCount);
-      setCurrentPage(response.page);
-      setTotalPages(response.totalPages);
+      if (hasSearchTerm) {
+        const searchFilter: TransactionSearchFilter = {
+          searchTerm: searchTerm.trim(),
+          categoryId: getCategoryIdFromName(categoryFilter),
+          accountId: getAccountIdFromName(accountFilter),
+          transactionType: typeFilter !== "all" ? typeFilter : undefined,
+          page,
+          pageSize: 20,
+          sortBy: "TransactionDate",
+          sortOrder: "desc",
+        };
+
+        const response = await transactionService.searchTransactions(
+          searchFilter
+        );
+        setTransactions(response.transactions);
+        setTotalCount(response.totalCount);
+        setCurrentPage(response.page);
+        setTotalPages(response.totalPages);
+      } else {
+        const filter: TransactionFilter = {
+          categoryId: getCategoryIdFromName(categoryFilter),
+          accountId: getAccountIdFromName(accountFilter),
+          transactionType: typeFilter !== "all" ? typeFilter : undefined,
+          page,
+          pageSize: 20,
+          sortBy: "TransactionDate",
+          sortOrder: "desc",
+        };
+
+        const response = await transactionService.getTransactions(filter);
+        setTransactions(response.transactions);
+        setTotalCount(response.totalCount);
+        setCurrentPage(response.page);
+        setTotalPages(response.totalPages);
+      }
     } catch (error: any) {
+      console.error("❌ Error loading transactions:", error);
       toast({
         title: "Error",
         description: "Failed to load transactions",
@@ -110,6 +136,24 @@ const Transactions = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const getCategoryIdFromName = (categoryName: string): number | undefined => {
+    if (categoryName === "all" || !categoryName) return undefined;
+
+    const category = categories.find(
+      (cat) => cat.categoryName.toLowerCase() === categoryName.toLowerCase()
+    );
+    return category?.categoryId;
+  };
+
+  const getAccountIdFromName = (accountName: string): number | undefined => {
+    if (accountName === "all" || !accountName) return undefined;
+
+    const account = accounts.find(
+      (acc) => acc.accountName.toLowerCase() === accountName.toLowerCase()
+    );
+    return account?.accountId;
   };
 
   const handleTransactionSave = () => {

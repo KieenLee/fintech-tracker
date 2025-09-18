@@ -19,7 +19,18 @@ namespace fintechtracker_backend.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<TransactionResponseDto>> GetTransactions([FromQuery] TransactionFilterDto filter)
+        public async Task<ActionResult<TransactionResponseDto>> GetTransactions(
+            [FromQuery] int? categoryId = null,
+            [FromQuery] int? accountId = null,
+            [FromQuery] DateTime? fromDate = null,
+            [FromQuery] DateTime? toDate = null,
+            [FromQuery] string? transactionType = null,
+            [FromQuery] decimal? minAmount = null,
+            [FromQuery] decimal? maxAmount = null,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? sortBy = "TransactionDate",
+            [FromQuery] string? sortOrder = "desc")
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (!int.TryParse(userIdClaim, out int userId))
@@ -29,6 +40,27 @@ namespace fintechtracker_backend.Controllers
 
             try
             {
+                // CRITICAL: Create filter object with all parameters
+                var filter = new TransactionFilterDto
+                {
+                    CategoryId = categoryId,
+                    AccountId = accountId,
+                    FromDate = fromDate,
+                    ToDate = toDate,
+                    TransactionType = transactionType,
+                    MinAmount = minAmount,
+                    MaxAmount = maxAmount,
+                    Page = page,
+                    PageSize = pageSize,
+                    SortBy = sortBy,
+                    SortOrder = sortOrder
+                };
+
+                // Log filter parameters for debugging
+                Console.WriteLine($"Filter - CategoryId: {filter.CategoryId}, AccountId: {filter.AccountId}, Type: {filter.TransactionType}");
+                Console.WriteLine($"Filter - FromDate: {filter.FromDate}, ToDate: {filter.ToDate}");
+                Console.WriteLine($"Filter - MinAmount: {filter.MinAmount}, MaxAmount: {filter.MaxAmount}");
+
                 var result = await _transactionService.GetUserTransactionsAsync(userId, filter);
                 return Ok(result);
             }
@@ -224,6 +256,52 @@ namespace fintechtracker_backend.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "Error checking budget impact", error = ex.Message });
+            }
+        }
+
+        // ADD: Search endpoint
+        [HttpGet("search")]
+        public async Task<ActionResult<TransactionResponseDto>> SearchTransactions(
+            [FromQuery] string? searchTerm = null,
+            [FromQuery] int? categoryId = null,
+            [FromQuery] int? accountId = null,
+            [FromQuery] DateTime? fromDate = null,
+            [FromQuery] DateTime? toDate = null,
+            [FromQuery] string? transactionType = null,
+            [FromQuery] decimal? minAmount = null,
+            [FromQuery] decimal? maxAmount = null,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int userId))
+            {
+                return Unauthorized(new { message = "Invalid user token" });
+            }
+
+            try
+            {
+                var filter = new TransactionFilterDto
+                {
+                    CategoryId = categoryId,
+                    AccountId = accountId,
+                    FromDate = fromDate,
+                    ToDate = toDate,
+                    TransactionType = transactionType,
+                    MinAmount = minAmount,
+                    MaxAmount = maxAmount,
+                    Page = page,
+                    PageSize = pageSize
+                };
+
+                Console.WriteLine($"🔍 Search request - SearchTerm: '{searchTerm}', Filter: {System.Text.Json.JsonSerializer.Serialize(filter)}");
+
+                var result = await _transactionService.SearchTransactionsAsync(userId, searchTerm ?? string.Empty, filter);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error searching transactions", error = ex.Message });
             }
         }
     }

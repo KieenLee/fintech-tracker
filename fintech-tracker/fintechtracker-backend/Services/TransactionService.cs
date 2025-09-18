@@ -8,7 +8,9 @@ namespace fintechtracker_backend.Services
         private readonly ITransactionRepository _transactionRepository;
         private readonly IBudgetRepository _budgetRepository;
 
-        public TransactionService(ITransactionRepository transactionRepository, IBudgetRepository budgetRepository)
+        public TransactionService(
+            ITransactionRepository transactionRepository,
+            IBudgetRepository budgetRepository)
         {
             _transactionRepository = transactionRepository;
             _budgetRepository = budgetRepository;
@@ -16,7 +18,24 @@ namespace fintechtracker_backend.Services
 
         public async Task<TransactionResponseDto> GetUserTransactionsAsync(int userId, TransactionFilterDto filter)
         {
-            return await _transactionRepository.GetUserTransactionsAsync(userId, filter);
+            try
+            {
+                // Log incoming filter for debugging
+                Console.WriteLine($"TransactionService - Received filter: CategoryId={filter.CategoryId}, AccountId={filter.AccountId}, Type={filter.TransactionType}");
+                Console.WriteLine($"TransactionService - Date range: {filter.FromDate} to {filter.ToDate}");
+                Console.WriteLine($"TransactionService - Amount range: {filter.MinAmount} to {filter.MaxAmount}");
+
+                var result = await _transactionRepository.GetUserTransactionsAsync(userId, filter);
+
+                Console.WriteLine($"TransactionService - Returned {result.Transactions.Count()} transactions");
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in TransactionService.GetUserTransactionsAsync: {ex.Message}");
+                throw;
+            }
         }
 
         public async Task<TransactionDto?> GetTransactionByIdAsync(int transactionId, int userId)
@@ -26,36 +45,12 @@ namespace fintechtracker_backend.Services
 
         public async Task<TransactionDto> CreateTransactionAsync(int userId, CreateTransactionDto dto)
         {
-            // Create transaction first
-            var transaction = await _transactionRepository.CreateTransactionAsync(userId, dto);
-
-            // Check budget impact if it's an expense
-            if (dto.TransactionType.ToLower() == "expense" && dto.CategoryId.HasValue)
-            {
-                // We don't await this as it's just for notification purposes
-                _ = CheckBudgetAfterTransactionAsync(userId, dto.CategoryId.Value, dto.Amount, dto.TransactionDate);
-            }
-
-            return transaction;
+            return await _transactionRepository.CreateTransactionAsync(userId, dto);
         }
 
         public async Task<TransactionDto?> UpdateTransactionAsync(int transactionId, int userId, UpdateTransactionDto dto)
         {
-            // Get original transaction for budget recalculation
-            var originalTransaction = await _transactionRepository.GetTransactionByIdAsync(transactionId, userId);
-            if (originalTransaction == null) return null;
-
-            // Update transaction
-            var updatedTransaction = await _transactionRepository.UpdateTransactionAsync(transactionId, userId, dto);
-            if (updatedTransaction == null) return null;
-
-            // Check budget impact if it's an expense
-            if (dto.TransactionType.ToLower() == "expense" && dto.CategoryId.HasValue)
-            {
-                _ = CheckBudgetAfterTransactionAsync(userId, dto.CategoryId.Value, dto.Amount, dto.TransactionDate);
-            }
-
-            return updatedTransaction;
+            return await _transactionRepository.UpdateTransactionAsync(transactionId, userId, dto);
         }
 
         public async Task<bool> DeleteTransactionAsync(int transactionId, int userId)
@@ -63,101 +58,107 @@ namespace fintechtracker_backend.Services
             return await _transactionRepository.DeleteTransactionAsync(transactionId, userId);
         }
 
-        public async Task<BudgetWarningDto?> CheckBudgetAfterTransactionAsync(int userId, int categoryId, decimal amount, DateTime transactionDate)
+        public async Task<TransactionResponseDto> SearchTransactionsAsync(int userId, string searchTerm, TransactionFilterDto filter)
         {
             try
             {
-                // Find active budget for this category and date
-                var budgets = await _budgetRepository.GetUserBudgetsAsync(userId, new BudgetFilterDto
-                {
-                    CategoryId = categoryId,
-                    StartDate = transactionDate,
-                    EndDate = transactionDate,
-                    IsActive = true
-                });
+                // Get all transactions first
+                var allTransactions = await _transactionRepository.GetUserTransactionsAsync(userId, filter);
 
-                var activeBudget = budgets.Budgets.FirstOrDefault();
-                if (activeBudget == null) return null;
-
-                var newSpent = activeBudget.SpentAmount + amount;
-                var progressPercentage = activeBudget.Amount > 0 ? (newSpent / activeBudget.Amount) * 100 : 0;
-
-                string warningLevel = "Normal";
-                string message = "";
-
-                if (progressPercentage >= 100)
+                if (string.IsNullOrEmpty(searchTerm))
                 {
-                    warningLevel = "Exceeded";
-                    var overAmount = newSpent - activeBudget.Amount;
-                    message = $"Budget exceeded! You've overspent by {overAmount:C} in {activeBudget.CategoryName}";
-                }
-                else if (progressPercentage >= activeBudget.NotificationThreshold)
-                {
-                    warningLevel = "Critical";
-                    message = $"Critical warning! You've spent {progressPercentage:F1}% of your {activeBudget.CategoryName} budget";
-                }
-                else if (progressPercentage >= 80)
-                {
-                    warningLevel = "Warning";
-                    message = $"Approaching budget limit: {progressPercentage:F1}% spent on {activeBudget.CategoryName}";
+                    return allTransactions;
                 }
 
-                if (warningLevel != "Normal")
-                {
-                    return new BudgetWarningDto
-                    {
-                        BudgetId = activeBudget.BudgetId,
-                        CategoryName = activeBudget.CategoryName,
-                        BudgetAmount = activeBudget.Amount,
-                        CurrentSpent = activeBudget.SpentAmount,
-                        NewSpent = newSpent,
-                        ProgressPercentage = progressPercentage,
-                        WarningLevel = warningLevel,
-                        Message = message
-                    };
-                }
+                // Filter by search term (description, location, category name)
+                var filteredTransactions = allTransactions.Transactions.Where(t =>
+                    (!string.IsNullOrEmpty(t.Description) && t.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
+                    (!string.IsNullOrEmpty(t.Location) && t.Location.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
+                    (!string.IsNullOrEmpty(t.CategoryName) && t.CategoryName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
+                    (!string.IsNullOrEmpty(t.AccountName) && t.AccountName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                ).ToList();
 
-                return null;
+                return new TransactionResponseDto
+                {
+                    Transactions = filteredTransactions,
+                    TotalCount = filteredTransactions.Count,
+                    Page = filter.Page,
+                    PageSize = filter.PageSize,
+                    TotalPages = (int)Math.Ceiling((double)filteredTransactions.Count / filter.PageSize)
+                };
             }
             catch (Exception ex)
             {
-                // Log error but don't fail the transaction
-                Console.WriteLine($"Error checking budget: {ex.Message}");
-                return null;
+                Console.WriteLine($"Error in SearchTransactionsAsync: {ex.Message}");
+                throw;
             }
         }
 
-        public async Task<List<BudgetAlertDto>> GetBudgetAlertsAsync(int userId)
+        public async Task<List<TransactionDto>> GetTransactionsByCategoryAsync(int userId, int categoryId)
         {
-            try
+            var filter = new TransactionFilterDto
             {
-                var budgets = await _budgetRepository.GetActiveBudgetsAsync(userId);
-                var alerts = new List<BudgetAlertDto>();
+                CategoryId = categoryId,
+                Page = 1,
+                PageSize = int.MaxValue
+            };
 
-                foreach (var budget in budgets)
-                {
-                    if (budget.ProgressPercentage >= budget.NotificationThreshold)
-                    {
-                        alerts.Add(new BudgetAlertDto
-                        {
-                            BudgetId = budget.BudgetId,
-                            CategoryName = budget.CategoryName,
-                            BudgetAmount = budget.Amount,
-                            SpentAmount = budget.SpentAmount,
-                            ProgressPercentage = budget.ProgressPercentage,
-                            AlertType = budget.ProgressPercentage >= 100 ? "Exceeded" : "Threshold",
-                            AlertDate = DateTime.UtcNow
-                        });
-                    }
-                }
+            var result = await _transactionRepository.GetUserTransactionsAsync(userId, filter);
+            return result.Transactions.ToList();
+        }
 
-                return alerts;
-            }
-            catch (Exception ex)
+        public async Task<List<TransactionDto>> GetTransactionsByAccountAsync(int userId, int accountId)
+        {
+            var filter = new TransactionFilterDto
             {
-                Console.WriteLine($"Error getting budget alerts: {ex.Message}");
-                return new List<BudgetAlertDto>();
-            }
+                AccountId = accountId,
+                Page = 1,
+                PageSize = int.MaxValue
+            };
+
+            var result = await _transactionRepository.GetUserTransactionsAsync(userId, filter);
+            return result.Transactions.ToList();
+        }
+
+        public async Task<List<TransactionDto>> GetTransactionsByDateRangeAsync(int userId, DateTime fromDate, DateTime toDate)
+        {
+            var filter = new TransactionFilterDto
+            {
+                FromDate = fromDate,
+                ToDate = toDate,
+                Page = 1,
+                PageSize = int.MaxValue
+            };
+
+            var result = await _transactionRepository.GetUserTransactionsAsync(userId, filter);
+            return result.Transactions.ToList();
+        }
+
+        public async Task<List<TransactionDto>> GetTransactionsByAmountRangeAsync(int userId, decimal minAmount, decimal maxAmount)
+        {
+            var filter = new TransactionFilterDto
+            {
+                MinAmount = minAmount,
+                MaxAmount = maxAmount,
+                Page = 1,
+                PageSize = int.MaxValue
+            };
+
+            var result = await _transactionRepository.GetUserTransactionsAsync(userId, filter);
+            return result.Transactions.ToList();
+        }
+
+        // TODO: Implement budget-related methods
+        public Task<BudgetWarningDto?> CheckBudgetAfterTransactionAsync(int userId, int categoryId, decimal amount, DateTime transactionDate)
+        {
+            // TODO: Implement when IBudgetRepository is available
+            return Task.FromResult<BudgetWarningDto?>(null);
+        }
+
+        public Task<List<BudgetAlertDto>> GetBudgetAlertsAsync(int userId)
+        {
+            // TODO: Implement when IBudgetRepository is available
+            return Task.FromResult(new List<BudgetAlertDto>());
         }
     }
 }
