@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using fintechtracker_backend.Data;
 using fintechtracker_backend.DTOs;
 using System.Security.Claims;
+using fintechtracker_backend.Services;
 
 namespace fintechtracker_backend.Controllers
 {
@@ -12,11 +13,91 @@ namespace fintechtracker_backend.Controllers
     [Authorize]
     public class DashboardController : ControllerBase
     {
-        private readonly FinTechDbContext _context;
+        private readonly IDashboardService _dashboardService;
 
-        public DashboardController(FinTechDbContext context)
+        public DashboardController(IDashboardService dashboardService)
         {
-            _context = context;
+            _dashboardService = dashboardService;
+        }
+
+        [HttpGet("overview")]
+        public async Task<ActionResult<DashboardOverviewDto>> GetDashboardOverview()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int userId))
+            {
+                return Unauthorized(new { message = "Invalid user token" });
+            }
+
+            try
+            {
+                var overview = await _dashboardService.GetDashboardOverviewAsync(userId);
+                return Ok(overview);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error retrieving dashboard overview", error = ex.Message });
+            }
+        }
+
+        [HttpGet("financial-summary")]
+        public async Task<ActionResult<FinancialSummaryDto>> GetFinancialSummary()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int userId))
+            {
+                return Unauthorized(new { message = "Invalid user token" });
+            }
+
+            try
+            {
+                var summary = await _dashboardService.GetFinancialSummaryAsync(userId);
+                return Ok(summary);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error retrieving financial summary", error = ex.Message });
+            }
+        }
+
+        [HttpGet("budget-progress")]
+        public async Task<ActionResult<List<BudgetProgressDto>>> GetBudgetProgress()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int userId))
+            {
+                return Unauthorized(new { message = "Invalid user token" });
+            }
+
+            try
+            {
+                var progress = await _dashboardService.GetBudgetProgressAsync(userId);
+                return Ok(progress);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error retrieving budget progress", error = ex.Message });
+            }
+        }
+
+        [HttpGet("top-categories")]
+        public async Task<ActionResult<List<CategorySpendingDto>>> GetTopCategories([FromQuery] int months = 1)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out int userId))
+            {
+                return Unauthorized(new { message = "Invalid user token" });
+            }
+
+            try
+            {
+                var categories = await _dashboardService.GetTopCategoriesAsync(userId, months);
+                return Ok(categories);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error retrieving top categories", error = ex.Message });
+            }
         }
 
         [HttpGet("summary")]
@@ -25,161 +106,37 @@ namespace fintechtracker_backend.Controllers
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (!int.TryParse(userIdClaim, out int userId))
             {
-                return Unauthorized();
+                return Unauthorized(new { message = "Invalid user token" });
             }
 
             try
             {
-                // Lấy tất cả accounts của user
-                var accounts = await _context.Accounts
-                    .Where(a => a.UserId == userId)
-                    .Select(a => new AccountSummaryDto
-                    {
-                        AccountId = a.AccountId,
-                        AccountName = a.AccountName,
-                        AccountType = a.AccountType,
-                        CurrentBalance = a.CurrentBalance
-                    })
-                    .ToListAsync();
-
-                // Lấy transactions trong 30 ngày gần nhất
-                var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
-                var transactions = await _context.Transactions
-                    .Include(t => t.Category)
-                    .Include(t => t.Account)
-                    .Where(t => t.Account.UserId == userId && t.TransactionDate >= thirtyDaysAgo)
-                    .ToListAsync();
-
-                // Tính toán summary
-                var totalIncome = transactions
-                    .Where(t => t.TransactionType.ToLower() == "income")
-                    .Sum(t => t.Amount);
-
-                var totalExpense = transactions
-                    .Where(t => t.TransactionType.ToLower() == "expense")
-                    .Sum(t => t.Amount);
-
-                // Top expense categories
-                var topCategories = transactions
-                    .Where(t => t.TransactionType.ToLower() == "expense" && t.Category != null)
-                    .GroupBy(t => new { CategoryId = t.Category!.CategoryId, CategoryName = t.Category!.CategoryName })
-                    .Select(g => new CategoryExpenseDto
-                    {
-                        CategoryId = g.Key.CategoryId,
-                        CategoryName = g.Key.CategoryName,
-                        TotalAmount = g.Sum(t => t.Amount),
-                        Percentage = totalExpense > 0 ? Math.Round((g.Sum(t => t.Amount) / totalExpense) * 100, 2) : 0
-                    })
-                    .OrderByDescending(c => c.TotalAmount)
-                    .Take(5)
-                    .ToList();
-
-                // Recent transactions
-                var recentTransactions = transactions
-                    .OrderByDescending(t => t.TransactionDate)
-                    .Take(10)
-                    .Select(t => new RecentTransactionDto
-                    {
-                        TransactionId = t.TransactionId,
-                        Description = t.Description ?? "",
-                        Amount = t.Amount,
-                        TransactionType = t.TransactionType,
-                        CategoryName = t.Category?.CategoryName ?? "Uncategorized",
-                        AccountName = t.Account.AccountName,
-                        TransactionDate = t.TransactionDate
-                    })
-                    .ToList();
-
-                var dashboardSummary = new DashboardSummaryDto
-                {
-                    TotalIncome = totalIncome,
-                    TotalExpense = totalExpense,
-                    NetBalance = totalIncome - totalExpense,
-                    TransactionCount = transactions.Count,
-                    Accounts = accounts,
-                    TopExpenseCategories = topCategories,
-                    RecentTransactions = recentTransactions
-                };
-
-                return Ok(dashboardSummary);
+                var summary = await _dashboardService.GetDashboardSummaryAsync(userId);
+                return Ok(summary);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Internal server error", details = ex.Message });
+                return StatusCode(500, new { message = "Error retrieving dashboard summary", error = ex.Message });
             }
         }
 
         [HttpGet("monthly-trend")]
-        public async Task<ActionResult<List<MonthlyTrendDto>>> GetMonthlyTrend()
+        public async Task<ActionResult<List<MonthlyTrendDto>>> GetMonthlyTrend([FromQuery] int months = 6)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (!int.TryParse(userIdClaim, out int userId))
             {
-                return Unauthorized();
+                return Unauthorized(new { message = "Invalid user token" });
             }
 
             try
             {
-                var sixMonthsAgo = DateTime.UtcNow.AddMonths(-6);
-                
-                var transactions = await _context.Transactions
-                    .Include(t => t.Account)
-                    .Where(t => t.Account.UserId == userId && t.TransactionDate >= sixMonthsAgo)
-                    .ToListAsync();
-
-                var monthlyTrend = transactions
-                    .GroupBy(t => new { Year = t.TransactionDate.Year, Month = t.TransactionDate.Month })
-                    .Select(g => new MonthlyTrendDto
-                    {
-                        Month = $"{g.Key.Year}-{g.Key.Month:D2}",
-                        Income = g.Where(t => t.TransactionType.ToLower() == "income").Sum(t => t.Amount),
-                        Expense = g.Where(t => t.TransactionType.ToLower() == "expense").Sum(t => t.Amount)
-                    })
-                    .OrderBy(m => m.Month)
-                    .ToList();
-
-                return Ok(monthlyTrend);
+                var trends = await _dashboardService.GetMonthlyTrendAsync(userId, months);
+                return Ok(trends);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Internal server error", details = ex.Message });
-            }
-        }
-
-        [HttpGet("stats")]
-        public async Task<ActionResult<object>> GetDashboardStats()
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (!int.TryParse(userIdClaim, out int userId))
-            {
-                return Unauthorized();
-            }
-
-            try
-            {
-                var totalAccounts = await _context.Accounts
-                    .CountAsync(a => a.UserId == userId);
-
-                var totalCategories = await _context.Categories
-                    .CountAsync(c => c.UserId == userId);
-
-                var thisMonthTransactions = await _context.Transactions
-                    .Include(t => t.Account)
-                    .Where(t => t.Account.UserId == userId && 
-                               t.TransactionDate.Month == DateTime.UtcNow.Month &&
-                               t.TransactionDate.Year == DateTime.UtcNow.Year)
-                    .CountAsync();
-
-                return Ok(new
-                {
-                    totalAccounts,
-                    totalCategories,
-                    thisMonthTransactions
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "Internal server error", details = ex.Message });
+                return StatusCode(500, new { message = "Error retrieving monthly trends", error = ex.Message });
             }
         }
     }

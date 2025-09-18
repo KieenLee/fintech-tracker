@@ -35,14 +35,17 @@ namespace fintechtracker_backend.DTOs
 
     public class TransactionFilterDto
     {
-        public string? SearchTerm { get; set; }
-        public string? Category { get; set; }
-        public string? Account { get; set; }
+        public int? CategoryId { get; set; }
+        public int? AccountId { get; set; }
         public DateTime? FromDate { get; set; }
         public DateTime? ToDate { get; set; }
         public string? TransactionType { get; set; }
+        public decimal? MinAmount { get; set; }
+        public decimal? MaxAmount { get; set; }
         public int Page { get; set; } = 1;
-        public int PageSize { get; set; } = 20;
+        public int PageSize { get; set; } = 10;
+        public string? SortBy { get; set; } = "TransactionDate";
+        public string? SortOrder { get; set; } = "desc";
     }
 
     public class TransactionResponseDto

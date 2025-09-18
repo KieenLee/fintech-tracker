@@ -17,70 +17,46 @@ namespace fintechtracker_backend.Repositories
         public async Task<TransactionResponseDto> GetUserTransactionsAsync(int userId, TransactionFilterDto filter)
         {
             var query = _context.Transactions
-                .Include(t => t.Account)
                 .Include(t => t.Category)
-                .Where(t => t.Account.UserId == userId);
+                .Include(t => t.Account)
+                .Where(t => t.UserId == userId);
 
-            // Apply filters
-            if (!string.IsNullOrEmpty(filter.SearchTerm))
-            {
-                query = query.Where(t => t.Description != null && t.Description.Contains(filter.SearchTerm));
-            }
+            // FIXED: Apply filters using correct properties from TransactionFilterDto
+            query = ApplyFilters(query, filter);
 
-            if (!string.IsNullOrEmpty(filter.Category) && filter.Category != "all")
-            {
-                query = query.Where(t => t.Category != null &&
-                    t.Category.CategoryName.ToLower() == filter.Category.ToLower());
-            }
+            // FIXED: Apply sorting using SortBy and SortOrder from DTO
+            query = ApplySorting(query, filter);
 
-            if (!string.IsNullOrEmpty(filter.Account) && filter.Account != "all")
-            {
-                query = query.Where(t => t.Account.AccountName.ToLower().Contains(filter.Account.ToLower()));
-            }
+            // Get total count before pagination
+            var totalCount = await query.CountAsync();
 
-            if (filter.FromDate.HasValue)
-            {
-                query = query.Where(t => t.TransactionDate >= filter.FromDate.Value);
-            }
-
-            if (filter.ToDate.HasValue)
-            {
-                query = query.Where(t => t.TransactionDate <= filter.ToDate.Value);
-            }
-
-            if (!string.IsNullOrEmpty(filter.TransactionType) && filter.TransactionType != "all")
-            {
-                query = query.Where(t => t.TransactionType.ToLower() == filter.TransactionType.ToLower());
-            }
-
+            // Apply pagination
             var transactions = await query
-                .OrderByDescending(t => t.TransactionDate)
                 .Skip((filter.Page - 1) * filter.PageSize)
                 .Take(filter.PageSize)
-                .Select(t => new TransactionDto
-                {
-                    TransactionId = t.TransactionId,
-                    UserId = t.UserId,
-                    AccountId = t.AccountId,
-                    AccountName = t.Account.AccountName,
-                    CategoryId = t.CategoryId,
-                    CategoryName = t.Category != null ? t.Category.CategoryName : null,
-                    Amount = t.Amount,
-                    TransactionType = t.TransactionType,
-                    Description = t.Description,
-                    TransactionDate = t.TransactionDate,
-                    Location = t.Location,
-                    CreatedAt = t.CreatedAt,
-                    UpdatedAt = t.UpdatedAt
-                })
                 .ToListAsync();
 
-            var totalCount = await GetTotalCountAsync(userId, filter);
+            // Map to DTOs
+            var transactionDtos = transactions.Select(t => new TransactionDto
+            {
+                TransactionId = t.TransactionId,
+                UserId = t.UserId,
+                AccountId = t.AccountId,
+                AccountName = t.Account.AccountName,
+                CategoryId = t.CategoryId,
+                CategoryName = t.Category?.CategoryName ?? "Uncategorized",
+                Amount = t.Amount,
+                TransactionType = t.TransactionType,
+                TransactionDate = t.TransactionDate,
+                Description = t.Description,
+                Location = t.Location,
+                CreatedAt = t.CreatedAt ?? DateTime.UtcNow,
+                UpdatedAt = t.UpdatedAt ?? DateTime.UtcNow
+            }).ToList();
 
-            // Build and return response DTO (populate commonly expected paging fields)
             return new TransactionResponseDto
             {
-                Transactions = transactions,
+                Transactions = transactionDtos,
                 TotalCount = totalCount,
                 Page = filter.Page,
                 PageSize = filter.PageSize,
@@ -240,39 +216,101 @@ namespace fintechtracker_backend.Repositories
                 .Include(t => t.Category)
                 .Where(t => t.Account.UserId == userId);
 
-            // Apply same filters as GetUserTransactionsAsync
-            if (!string.IsNullOrEmpty(filter.SearchTerm))
+            // FIXED: Apply same filters as GetUserTransactionsAsync method
+            query = ApplyFilters(query, filter);
+
+            return await query.CountAsync();
+        }
+
+        // FIXED: Helper method using correct TransactionFilterDto properties
+        private IQueryable<Transaction> ApplyFilters(IQueryable<Transaction> query, TransactionFilterDto filter)
+        {
+            // Filter by CategoryId (int?)
+            if (filter.CategoryId.HasValue)
             {
-                query = query.Where(t => t.Description != null && t.Description.Contains(filter.SearchTerm));
+                query = query.Where(t => t.CategoryId == filter.CategoryId.Value);
             }
 
-            if (!string.IsNullOrEmpty(filter.Category) && filter.Category != "all")
+            // Filter by AccountId (int?)
+            if (filter.AccountId.HasValue)
             {
-                query = query.Where(t => t.Category != null &&
-                    t.Category.CategoryName.ToLower() == filter.Category.ToLower());
+                query = query.Where(t => t.AccountId == filter.AccountId.Value);
             }
 
-            if (!string.IsNullOrEmpty(filter.Account) && filter.Account != "all")
-            {
-                query = query.Where(t => t.Account.AccountName.ToLower().Contains(filter.Account.ToLower()));
-            }
-
+            // Filter by FromDate
             if (filter.FromDate.HasValue)
             {
                 query = query.Where(t => t.TransactionDate >= filter.FromDate.Value);
             }
 
+            // Filter by ToDate
             if (filter.ToDate.HasValue)
             {
                 query = query.Where(t => t.TransactionDate <= filter.ToDate.Value);
             }
 
-            if (!string.IsNullOrEmpty(filter.TransactionType) && filter.TransactionType != "all")
+            // Filter by TransactionType
+            if (!string.IsNullOrEmpty(filter.TransactionType))
             {
                 query = query.Where(t => t.TransactionType.ToLower() == filter.TransactionType.ToLower());
             }
 
-            return await query.CountAsync();
+            // Filter by MinAmount
+            if (filter.MinAmount.HasValue)
+            {
+                query = query.Where(t => t.Amount >= filter.MinAmount.Value);
+            }
+
+            // Filter by MaxAmount
+            if (filter.MaxAmount.HasValue)
+            {
+                query = query.Where(t => t.Amount <= filter.MaxAmount.Value);
+            }
+
+            return query;
+        }
+
+        // NEW: Helper method for sorting
+        private IQueryable<Transaction> ApplySorting(IQueryable<Transaction> query, TransactionFilterDto filter)
+        {
+            var sortBy = filter.SortBy?.ToLower() ?? "transactiondate";
+            var sortOrder = filter.SortOrder?.ToLower() ?? "desc";
+
+            switch (sortBy)
+            {
+                case "amount":
+                    query = sortOrder == "asc"
+                        ? query.OrderBy(t => t.Amount)
+                        : query.OrderByDescending(t => t.Amount);
+                    break;
+                case "transactiontype":
+                    query = sortOrder == "asc"
+                        ? query.OrderBy(t => t.TransactionType)
+                        : query.OrderByDescending(t => t.TransactionType);
+                    break;
+                case "category":
+                    query = sortOrder == "asc"
+                        ? query.OrderBy(t => t.Category != null ? t.Category.CategoryName : "")
+                        : query.OrderByDescending(t => t.Category != null ? t.Category.CategoryName : "");
+                    break;
+                case "account":
+                    query = sortOrder == "asc"
+                        ? query.OrderBy(t => t.Account.AccountName)
+                        : query.OrderByDescending(t => t.Account.AccountName);
+                    break;
+                case "description":
+                    query = sortOrder == "asc"
+                        ? query.OrderBy(t => t.Description ?? "")
+                        : query.OrderByDescending(t => t.Description ?? "");
+                    break;
+                default: // transactiondate
+                    query = sortOrder == "asc"
+                        ? query.OrderBy(t => t.TransactionDate)
+                        : query.OrderByDescending(t => t.TransactionDate);
+                    break;
+            }
+
+            return query;
         }
     }
 }

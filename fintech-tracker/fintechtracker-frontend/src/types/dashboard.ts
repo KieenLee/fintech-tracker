@@ -1,11 +1,9 @@
 export interface DashboardSummary {
+  netBalance: number;
   totalIncome: number;
   totalExpense: number;
-  netBalance: number;
   transactionCount: number;
-  accounts: AccountSummary[];
-  topExpenseCategories: CategoryExpense[];
-  recentTransactions: RecentTransaction[];
+  topExpenseCategories: TopExpenseCategory[];
 }
 
 export interface AccountSummary {
@@ -15,8 +13,7 @@ export interface AccountSummary {
   currentBalance: number;
 }
 
-export interface CategoryExpense {
-  categoryId: number;
+export interface TopExpenseCategory {
   categoryName: string;
   totalAmount: number;
   percentage: number;
@@ -33,13 +30,62 @@ export interface RecentTransaction {
 }
 
 export interface MonthlyTrend {
-  month: string;
+  month: string; // Format: "2024-01"
   income: number;
   expense: number;
+  netIncome: number;
+}
+
+export interface DashboardOverview {
+  financialSummary: FinancialSummary;
+  budgetProgress: BudgetProgress[];
+  topCategories: CategorySpending[];
+  budgetAlerts: BudgetAlert[];
+  stats: DashboardStats;
+}
+
+export interface FinancialSummary {
+  totalBalance: number;
+  monthlyIncome: number;
+  monthlyExpense: number;
+  monthlyBudget: number;
+  budgetUsed: number;
+}
+
+export interface BudgetProgress {
+  budgetId: number;
+  categoryName: string;
+  budgetAmount: number;
+  spentAmount: number;
+  progressPercentage: number;
+  status: string;
+  statusColor: string;
+}
+
+export interface CategorySpending {
+  categoryName: string;
+  amount: number;
+  percentage: number;
+  hasBudget: boolean;
+  budgetAmount?: number;
+  budgetProgress?: number;
+  budgetStatus?: string;
+}
+
+export interface BudgetAlert {
+  budgetId: number;
+  categoryName: string;
+  budgetAmount: number;
+  spentAmount: number;
+  progressPercentage: number;
+  alertType: string;
+  alertDate: string;
 }
 
 export interface DashboardStats {
-  totalAccounts: number;
-  totalCategories: number;
-  thisMonthTransactions: number;
+  totalTransactions: number;
+  activeBudgets: number;
+  overBudgetCount: number;
+  accountsCount: number;
+  averageDailySpending: number;
 }

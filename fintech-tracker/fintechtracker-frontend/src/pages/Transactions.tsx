@@ -172,7 +172,7 @@ const Transactions = () => {
 
   const formatAmount = (amount: number, type: string) => {
     const prefix = type === "income" ? "+" : "-";
-    return `${prefix}$${Math.abs(amount).toFixed(2)}`;
+    return `${prefix}${Math.abs(amount).toLocaleString("vi-VN")} đ`;
   };
 
   // Get unique categories and accounts for filters
