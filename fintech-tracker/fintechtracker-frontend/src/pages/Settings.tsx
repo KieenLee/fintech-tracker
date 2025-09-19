@@ -29,11 +29,15 @@ import {
   Shield,
   Save,
   Loader2,
+  Lock,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   settingsService,
   type UpdateProfileRequest,
+  type ChangePasswordRequest,
   type NotificationSettings,
   type PrivacySettings,
 } from "@/services/settingsService";
@@ -43,12 +47,22 @@ const Settings = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [profile, setProfile] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     currency: "USD",
     language: "en",
+  });
+
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
   });
 
   const [notifications, setNotifications] = useState<NotificationSettings>({
@@ -72,7 +86,8 @@ const Settings = () => {
         const settings = await settingsService.getUserSettings();
 
         setProfile({
-          name: settings.name,
+          firstName: settings.firstName,
+          lastName: settings.lastName,
           email: settings.email,
           currency: settings.currency,
           language: settings.language,
@@ -82,7 +97,8 @@ const Settings = () => {
         setPrivacy(settings.privacy);
 
         // Cập nhật localStorage để sync với sidebar
-        localStorage.setItem("userName", settings.name);
+        const fullName = `${settings.firstName} ${settings.lastName}`.trim();
+        localStorage.setItem("userName", fullName);
         localStorage.setItem("userEmail", settings.email);
       } catch (error: any) {
         console.error("Failed to fetch settings:", error);
@@ -93,8 +109,11 @@ const Settings = () => {
         });
 
         // Fallback to localStorage values
+        const savedName = localStorage.getItem("userName") || "User";
+        const nameParts = savedName.split(" ");
         setProfile({
-          name: localStorage.getItem("userName") || "User",
+          firstName: nameParts[0] || "",
+          lastName: nameParts.slice(1).join(" ") || "",
           email: localStorage.getItem("userEmail") || "user@example.com",
           currency: "USD",
           language: "en",
@@ -112,7 +131,8 @@ const Settings = () => {
       setSubmitting(true);
 
       const updateData: UpdateProfileRequest = {
-        name: profile.name,
+        firstName: profile.firstName,
+        lastName: profile.lastName,
         email: profile.email,
         currency: profile.currency,
         language: profile.language,
@@ -121,14 +141,15 @@ const Settings = () => {
       await settingsService.updateProfile(updateData);
 
       // Cập nhật localStorage để sync với sidebar
-      localStorage.setItem("userName", profile.name);
+      const fullName = `${profile.firstName} ${profile.lastName}`.trim();
+      localStorage.setItem("userName", fullName);
       localStorage.setItem("userEmail", profile.email);
 
       // Trigger storage event để sidebar cập nhật
       window.dispatchEvent(
         new StorageEvent("storage", {
           key: "userName",
-          newValue: profile.name,
+          newValue: fullName,
         })
       );
 
@@ -142,6 +163,60 @@ const Settings = () => {
         title: "Error",
         description:
           error.response?.data?.message || "Failed to update profile.",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast({
+        title: "Error",
+        description: "New password and confirm password do not match.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      toast({
+        title: "Error",
+        description: "New password must be at least 6 characters long.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      const changePasswordRequest: ChangePasswordRequest = {
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+        confirmPassword: passwordData.confirmPassword,
+      };
+
+      await settingsService.changePassword(changePasswordRequest);
+
+      // Reset form
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+
+      toast({
+        title: "Password changed",
+        description: "Your password has been updated successfully.",
+      });
+    } catch (error: any) {
+      console.error("Failed to change password:", error);
+      toast({
+        title: "Error",
+        description:
+          error.response?.data?.message || "Failed to change password.",
         variant: "destructive",
       });
     } finally {
@@ -263,26 +338,36 @@ const Settings = () => {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="firstName">First Name</Label>
                 <Input
-                  id="name"
-                  value={profile.name}
+                  id="firstName"
+                  value={profile.firstName}
                   onChange={(e) =>
-                    setProfile({ ...profile, name: e.target.value })
+                    setProfile({ ...profile, firstName: e.target.value })
                   }
                 />
               </div>
               <div>
-                <Label htmlFor="email">Email Address</Label>
+                <Label htmlFor="lastName">Last Name</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  value={profile.email}
+                  id="lastName"
+                  value={profile.lastName}
                   onChange={(e) =>
-                    setProfile({ ...profile, email: e.target.value })
+                    setProfile({ ...profile, lastName: e.target.value })
                   }
                 />
               </div>
+            </div>
+            <div>
+              <Label htmlFor="email">Email Address</Label>
+              <Input
+                id="email"
+                type="email"
+                value={profile.email}
+                onChange={(e) =>
+                  setProfile({ ...profile, email: e.target.value })
+                }
+              />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -300,7 +385,7 @@ const Settings = () => {
                     <SelectItem value="USD">USD - US Dollar</SelectItem>
                     <SelectItem value="EUR">EUR - Euro</SelectItem>
                     <SelectItem value="GBP">GBP - British Pound</SelectItem>
-                    <SelectItem value="JPY">JPY - Japanese Yen</SelectItem>
+                    <SelectItem value="CNY">CNY - Chinese Yuan</SelectItem>
                     <SelectItem value="VND">VND - Vietnamese Dong</SelectItem>
                   </SelectContent>
                 </Select>
@@ -336,6 +421,125 @@ const Settings = () => {
                 <Save className="h-4 w-4 mr-2" />
               )}
               Save Profile
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Change Password */}
+        <Card className="transition-all hover:shadow-md">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Lock className="h-5 w-5" />
+              Change Password
+            </CardTitle>
+            <CardDescription>Update your account password</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="currentPassword">Current Password</Label>
+              <div className="relative">
+                <Input
+                  id="currentPassword"
+                  type={showCurrentPassword ? "text" : "password"}
+                  value={passwordData.currentPassword}
+                  onChange={(e) =>
+                    setPasswordData({
+                      ...passwordData,
+                      currentPassword: e.target.value,
+                    })
+                  }
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                >
+                  {showCurrentPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="newPassword">New Password</Label>
+                <div className="relative">
+                  <Input
+                    id="newPassword"
+                    type={showNewPassword ? "text" : "password"}
+                    value={passwordData.newPassword}
+                    onChange={(e) =>
+                      setPasswordData({
+                        ...passwordData,
+                        newPassword: e.target.value,
+                      })
+                    }
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                  >
+                    {showNewPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={passwordData.confirmPassword}
+                    onChange={(e) =>
+                      setPasswordData({
+                        ...passwordData,
+                        confirmPassword: e.target.value,
+                      })
+                    }
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+            <Button
+              onClick={handleChangePassword}
+              className="w-fit"
+              disabled={
+                submitting ||
+                !passwordData.currentPassword ||
+                !passwordData.newPassword ||
+                !passwordData.confirmPassword
+              }
+            >
+              {submitting ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Lock className="h-4 w-4 mr-2" />
+              )}
+              Change Password
             </Button>
           </CardContent>
         </Card>

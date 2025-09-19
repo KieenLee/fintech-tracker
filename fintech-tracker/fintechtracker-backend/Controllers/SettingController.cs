@@ -6,6 +6,7 @@ using fintechtracker_backend.Data;
 using fintechtracker_backend.DTOs;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
+using BCrypt.Net;
 
 namespace fintechtracker_backend.Controllers
 {
@@ -72,7 +73,8 @@ namespace fintechtracker_backend.Controllers
 
             var response = new UserSettingsResponseDto
             {
-                Name = userProfile?.FirstName ?? user.Username,
+                FirstName = userProfile?.FirstName ?? "",
+                LastName = userProfile?.LastName ?? "",
                 Email = user.Email,
                 Currency = settings["currency"]?.ToString() ?? "USD",
                 Language = settings["language"]?.ToString() ?? "en",
@@ -104,7 +106,8 @@ namespace fintechtracker_backend.Controllers
             // Cập nhật profile
             if (userProfile != null)
             {
-                userProfile.FirstName = updateDto.Name;
+                userProfile.FirstName = updateDto.FirstName;
+                userProfile.LastName = updateDto.LastName;
 
                 // Parse settings hiện tại
                 var settings = new JObject();
@@ -120,6 +123,13 @@ namespace fintechtracker_backend.Controllers
                     }
                 }
 
+                // Validate currency
+                var validCurrencies = new[] { "USD", "EUR", "GBP", "CNY", "VND" };
+                if (!validCurrencies.Contains(updateDto.Currency))
+                {
+                    return BadRequest("Invalid currency code.");
+                }
+
                 // Cập nhật currency và language
                 settings["currency"] = updateDto.Currency;
                 settings["language"] = updateDto.Language;
@@ -130,6 +140,45 @@ namespace fintechtracker_backend.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Profile updated successfully." });
+        }
+
+        // PUT: api/Setting/change-password
+        [HttpPut("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto changePasswordDto)
+        {
+            var userId = GetCurrentUserId();
+            var user = await _context.Users.FindAsync(userId);
+
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+
+            // Kiểm tra mật khẩu hiện tại
+            if (!BCrypt.Net.BCrypt.Verify(changePasswordDto.CurrentPassword, user.PasswordHash))
+            {
+                return BadRequest("Current password is incorrect.");
+            }
+
+            // Kiểm tra mật khẩu mới và xác nhận
+            if (changePasswordDto.NewPassword != changePasswordDto.ConfirmPassword)
+            {
+                return BadRequest("New password and confirm password do not match.");
+            }
+
+            // Validate độ mạnh mật khẩu (tối thiểu 6 ký tự)
+            if (changePasswordDto.NewPassword.Length < 6)
+            {
+                return BadRequest("New password must be at least 6 characters long.");
+            }
+
+            // Cập nhật mật khẩu mới
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(changePasswordDto.NewPassword);
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Password changed successfully." });
         }
 
         // PUT: api/Setting/notifications

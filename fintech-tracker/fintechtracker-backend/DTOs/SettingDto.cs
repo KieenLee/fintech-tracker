@@ -2,10 +2,19 @@ namespace fintechtracker_backend.DTOs
 {
     public class UpdateProfileDto
     {
-        public required string Name { get; set; }
+        public required string FirstName { get; set; }
+        public required string LastName { get; set; }
         public required string Email { get; set; }
         public required string Currency { get; set; }
         public required string Language { get; set; }
+    }
+
+    // Thêm DTO cho đổi mật khẩu
+    public class ChangePasswordDto
+    {
+        public required string CurrentPassword { get; set; }
+        public required string NewPassword { get; set; }
+        public required string ConfirmPassword { get; set; }
     }
 
     public class NotificationSettingsDto
@@ -31,7 +40,8 @@ namespace fintechtracker_backend.DTOs
 
     public class UserSettingsResponseDto
     {
-        public required string Name { get; set; }
+        public required string FirstName { get; set; }
+        public required string LastName { get; set; }
         public required string Email { get; set; }
         public required string Currency { get; set; }
         public required string Language { get; set; }

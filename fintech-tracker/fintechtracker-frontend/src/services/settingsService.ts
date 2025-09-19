@@ -3,10 +3,17 @@ import axios from "axios";
 const API_BASE_URL = "http://localhost:5013/api";
 
 export interface UpdateProfileRequest {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   currency: string;
   language: string;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
 }
 
 export interface NotificationSettings {
@@ -23,7 +30,8 @@ export interface PrivacySettings {
 }
 
 export interface UserSettingsResponse {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   currency: string;
   language: string;
@@ -52,6 +60,12 @@ export const settingsService = {
 
   updateProfile: async (profileData: UpdateProfileRequest): Promise<void> => {
     await api.put("/Setting/profile", profileData);
+  },
+
+  changePassword: async (
+    passwordData: ChangePasswordRequest
+  ): Promise<void> => {
+    await api.put("/Setting/change-password", passwordData);
   },
 
   updateNotifications: async (
