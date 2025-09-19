@@ -413,10 +413,12 @@ const Goals = () => {
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="text-2xl font-bold">
-                        ${goal.currentAmount.toLocaleString()}
+                        {/* ${goal.currentAmount.toLocaleString()} */}
+                        {goal.currentAmount.toLocaleString("vi-VN")} đ
                       </span>
                       <span className="text-sm text-muted-foreground">
-                        of ${goal.targetAmount.toLocaleString()}
+                        {/* of ${goal.targetAmount.toLocaleString()} */}
+                        of {goal.targetAmount.toLocaleString("vi-VN")} đ
                       </span>
                     </div>
                     <Progress
@@ -424,11 +426,11 @@ const Goals = () => {
                       className="h-3"
                     />
                     <div className="text-sm text-muted-foreground">
-                      {percentage.toFixed(1)}% complete • $
-                      {(
-                        goal.targetAmount - goal.currentAmount
-                      ).toLocaleString()}{" "}
-                      remaining
+                      {percentage.toFixed(1)}% complete •{" "}
+                      {(goal.targetAmount - goal.currentAmount).toLocaleString(
+                        "vi-VN"
+                      )}{" "}
+                      đ remaining
                     </div>
                   </div>
 
@@ -454,29 +456,38 @@ const Goals = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleAddMoney(goal.goalId, 100)}
+                      onClick={() => handleAddMoney(goal.goalId, 50000)}
                       disabled={isCompleted}
                     >
                       <DollarSign className="h-4 w-4 mr-1" />
-                      +$100
+                      +50.000 đ
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleAddMoney(goal.goalId, 250)}
+                      onClick={() => handleAddMoney(goal.goalId, 100000)}
                       disabled={isCompleted}
                     >
                       <DollarSign className="h-4 w-4 mr-1" />
-                      +$250
+                      +100.000 đ
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleAddMoney(goal.goalId, 500)}
+                      onClick={() => handleAddMoney(goal.goalId, 200000)}
                       disabled={isCompleted}
                     >
                       <DollarSign className="h-4 w-4 mr-1" />
-                      +$500
+                      +250.000 đ
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleAddMoney(goal.goalId, 500000)}
+                      disabled={isCompleted}
+                    >
+                      <DollarSign className="h-4 w-4 mr-1" />
+                      +500.000 đ
                     </Button>
                   </div>
                 </CardContent>
