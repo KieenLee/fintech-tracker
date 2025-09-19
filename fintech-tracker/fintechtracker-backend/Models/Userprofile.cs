@@ -21,5 +21,7 @@ public partial class Userprofile
 
     public DateTime? UpdatedAt { get; set; }
 
+    public string? Settings { get; set; }
+
     public virtual User User { get; set; } = null!;
 }

@@ -27,6 +27,7 @@ CREATE TABLE UserProfiles (
     address TEXT, -- Địa chỉ
     avatar_url VARCHAR(255), -- URL ảnh đại diện
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    settings TEXT NULL,
     FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE -- Nếu User bị xóa, Profile cũng bị xóa.
 );
 
