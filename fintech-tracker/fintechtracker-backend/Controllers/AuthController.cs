@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using BCrypt.Net;
 using Google.Apis.Auth;
 using fintechtracker_backend.Data;
 using fintechtracker_backend.DTOs;
@@ -47,15 +48,10 @@ namespace fintechtracker_backend.Controllers
                     return Unauthorized(new { message = "Account does not exist" });
                 }
 
-                // Hash password để so sánh
-                string inputPasswordHash;
-                using (var sha = SHA256.Create())
-                {
-                    var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(loginDto.Password));
-                    inputPasswordHash = BitConverter.ToString(bytes).Replace("-", "").ToLower();
-                }
+                // Kiểm tra password bằng BCrypt
+                bool isPasswordValid = BCrypt.Net.BCrypt.Verify(loginDto.Password, user.PasswordHash);
 
-                if (user.PasswordHash != inputPasswordHash)
+                if (!isPasswordValid)
                 {
                     return Unauthorized(new { message = "Wrong password" });
                 }
@@ -95,13 +91,8 @@ namespace fintechtracker_backend.Controllers
             if (await _context.Users.AnyAsync(u => u.Username == registerDto.Username))
                 return Conflict(new { message = "Username already exists" });
 
-            // Hash password (SHA256 demo, nên dùng BCrypt thực tế)
-            string passwordHash;
-            using (var sha = SHA256.Create())
-            {
-                var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(registerDto.Password));
-                passwordHash = BitConverter.ToString(bytes).Replace("-", "").ToLower();
-            }
+            // Hash password bằng BCrypt
+            string passwordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password);
 
             var user = new User
             {

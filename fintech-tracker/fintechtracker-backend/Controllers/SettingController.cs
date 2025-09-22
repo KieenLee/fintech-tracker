@@ -154,25 +154,25 @@ namespace fintechtracker_backend.Controllers
                 return NotFound("User not found.");
             }
 
-            // Kiểm tra mật khẩu hiện tại
+            // Check current password
             if (!BCrypt.Net.BCrypt.Verify(changePasswordDto.CurrentPassword, user.PasswordHash))
             {
                 return BadRequest("Current password is incorrect.");
             }
 
-            // Kiểm tra mật khẩu mới và xác nhận
+            // Check new password and verifi
             if (changePasswordDto.NewPassword != changePasswordDto.ConfirmPassword)
             {
                 return BadRequest("New password and confirm password do not match.");
             }
 
-            // Validate độ mạnh mật khẩu (tối thiểu 6 ký tự)
+            // Validate strong password (at least 6)
             if (changePasswordDto.NewPassword.Length < 6)
             {
                 return BadRequest("New password must be at least 6 characters long.");
             }
 
-            // Cập nhật mật khẩu mới
+            // Update new password
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(changePasswordDto.NewPassword);
             user.UpdatedAt = DateTime.UtcNow;
 
@@ -193,7 +193,7 @@ namespace fintechtracker_backend.Controllers
                 return NotFound("User profile not found.");
             }
 
-            // Parse settings hiện tại
+            // Parse current settings
             var settings = new JObject();
             if (!string.IsNullOrEmpty(userProfile.Settings))
             {
@@ -207,7 +207,7 @@ namespace fintechtracker_backend.Controllers
                 }
             }
 
-            // Cập nhật notifications
+            // Update notifications
             settings["notifications"] = JObject.FromObject(notificationDto);
             userProfile.Settings = settings.ToString(Formatting.None);
 
