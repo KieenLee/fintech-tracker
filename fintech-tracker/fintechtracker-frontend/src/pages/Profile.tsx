@@ -1,5 +1,11 @@
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,13 +13,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { 
-  User, 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Calendar, 
-  Edit2, 
+import { Loader2 } from "lucide-react";
+import {
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  Calendar,
+  Edit2,
   Camera,
   Trophy,
   Target,
@@ -21,95 +28,125 @@ import {
   Award,
   Star,
   Crown,
-  CreditCard
+  CreditCard,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { profileService, ProfileResponse } from "@/services/profileService";
+
+const iconMap = {
+  Target,
+  TrendingUp,
+  Trophy,
+  Award,
+  Star,
+  User,
+  Mail,
+};
 
 const Profile = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  
+
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [profileData, setProfileData] = useState<ProfileResponse | null>(null);
   const userRole = localStorage.getItem("userRole") || "customer";
   const userSubscription = localStorage.getItem("userSubscription") || "basic";
-  
-  const [profile, setProfile] = useState({
-    name: localStorage.getItem("userName") || "John Doe",
-    email: localStorage.getItem("userEmail") || "john@example.com",
-    phone: "+1 (555) 123-4567",
-    location: "New York, NY",
-    bio: "Passionate about personal finance and building wealth through smart investments and budgeting.",
-    joinDate: "January 2023",
-    avatar: "/placeholder.svg"
+
+  const [editForm, setEditForm] = useState({
+    username: "",
+    email: "",
+    firstName: "",
+    lastName: "",
+    phone: "",
   });
 
-  const achievements = [
-    { 
-      id: 1, 
-      title: "First Budget Created", 
-      description: "Created your first budget category",
-      icon: Target,
-      earned: true,
-      date: "2024-01-15"
-    },
-    { 
-      id: 2, 
-      title: "Savings Streak", 
-      description: "Saved money for 3 consecutive months",
-      icon: TrendingUp,
-      earned: true,
-      date: "2024-03-20"
-    },
-    { 
-      id: 3, 
-      title: "Goal Achiever", 
-      description: "Completed your first financial goal",
-      icon: Trophy,
-      earned: true,
-      date: "2024-05-10"
-    },
-    { 
-      id: 4, 
-      title: "Budget Master", 
-      description: "Stayed under budget for 6 months",
-      icon: Award,
-      earned: false,
-      progress: 83
-    },
-    { 
-      id: 5, 
-      title: "Investment Pioneer", 
-      description: "Made your first investment",
-      icon: Star,
-      earned: false,
-      progress: 0
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
+      const data = await profileService.getProfile();
+      setProfileData(data);
+
+      // Cập nhật form với dữ liệu từ API
+      setEditForm({
+        username: data.username,
+        email: data.email,
+        firstName: data.firstName || "",
+        lastName: data.lastName || "",
+        phone: data.phone || "",
+      });
+
+      // Cập nhật localStorage để sync với sidebar
+      const fullName =
+        `${data.firstName || ""} ${data.lastName || ""}`.trim() ||
+        data.username;
+      localStorage.setItem("userName", fullName);
+      localStorage.setItem("userEmail", data.email);
+    } catch (error: any) {
+      console.error("Failed to load profile:", error);
+      toast({
+        title: "Error",
+        description:
+          error.response?.data?.message || "Failed to load profile data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
-  const stats = [
-    { label: "Total Transactions", value: "1,247", change: "+12%" },
-    { label: "Budgets Created", value: "8", change: "+2" },
-    { label: "Goals Achieved", value: "3", change: "+1" },
-    { label: "Days Active", value: "156", change: "+30" }
-  ];
+  const handleSave = async () => {
+    try {
+      setSubmitting(true);
+      await profileService.updateProfile(editForm);
 
-  const handleSave = () => {
-    localStorage.setItem("userName", profile.name);
-    localStorage.setItem("userEmail", profile.email);
-    setIsEditing(false);
-    toast({
-      title: "Profile updated",
-      description: "Your profile information has been saved successfully.",
-    });
+      // Refresh data
+      await fetchProfile();
+
+      setIsEditing(false);
+      toast({
+        title: "Profile updated",
+        description: "Your profile information has been saved successfully.",
+      });
+
+      // Trigger storage event để sidebar cập nhật
+      window.dispatchEvent(
+        new StorageEvent("storage", {
+          key: "userName",
+          newValue:
+            `${editForm.firstName} ${editForm.lastName}`.trim() ||
+            editForm.username,
+        })
+      );
+    } catch (error: any) {
+      console.error("Failed to update profile:", error);
+      toast({
+        title: "Error",
+        description:
+          error.response?.data?.message || "Failed to update profile",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleCancel = () => {
-    setProfile({
-      ...profile,
-      name: localStorage.getItem("userName") || "John Doe",
-      email: localStorage.getItem("userEmail") || "john@example.com"
-    });
+    if (profileData) {
+      setEditForm({
+        username: profileData.username,
+        email: profileData.email,
+        firstName: profileData.firstName || "",
+        lastName: profileData.lastName || "",
+        phone: profileData.phone || "",
+      });
+    }
     setIsEditing(false);
   };
 
@@ -117,11 +154,56 @@ const Profile = () => {
     navigate("/upgrade");
   };
 
+  const getLevelColor = (level: string) => {
+    switch (level) {
+      case "Bronze":
+        return "text-amber-600";
+      case "Silver":
+        return "text-gray-500";
+      case "Gold":
+        return "text-yellow-500";
+      case "Platinum":
+        return "text-purple-500";
+      case "Diamond":
+        return "text-blue-500";
+      default:
+        return "text-primary";
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="p-6 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Loading profile...</span>
+      </div>
+    );
+  }
+
+  if (!profileData) {
+    return (
+      <div className="p-6">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold">Failed to load profile</h2>
+          <Button onClick={fetchProfile} className="mt-4">
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const displayName =
+    `${profileData.firstName || ""} ${profileData.lastName || ""}`.trim() ||
+    profileData.username;
+
   return (
     <div className="p-6 space-y-6 animate-fade-in">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Profile</h1>
-        <p className="text-muted-foreground">Manage your personal information and track your achievements</p>
+        <p className="text-muted-foreground">
+          Manage your personal information and track your achievements
+        </p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
@@ -134,10 +216,13 @@ const Profile = () => {
                   <User className="h-5 w-5" />
                   Personal Information
                 </CardTitle>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
-                  onClick={() => isEditing ? handleCancel() : setIsEditing(true)}
+                  onClick={() =>
+                    isEditing ? handleCancel() : setIsEditing(true)
+                  }
+                  disabled={submitting}
                 >
                   <Edit2 className="h-4 w-4 mr-2" />
                   {isEditing ? "Cancel" : "Edit"}
@@ -149,15 +234,22 @@ const Profile = () => {
               <div className="flex items-center space-x-4">
                 <div className="relative">
                   <Avatar className="h-20 w-20">
-                    <AvatarImage src={profile.avatar} alt={profile.name} />
+                    <AvatarImage
+                      src={profileData.avatarUrl || "/placeholder.svg"}
+                      alt={displayName}
+                    />
                     <AvatarFallback className="text-lg">
-                      {profile.name.split(' ').map(n => n[0]).join('')}
+                      {displayName
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   {isEditing && (
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
+                    <Button
+                      size="sm"
+                      variant="outline"
                       className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0"
                     >
                       <Camera className="h-4 w-4" />
@@ -165,8 +257,10 @@ const Profile = () => {
                   )}
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold">{profile.name}</h3>
-                  <p className="text-muted-foreground">Member since {profile.joinDate}</p>
+                  <h3 className="text-lg font-semibold">{displayName}</h3>
+                  <p className="text-muted-foreground">
+                    Member since {profileData.joinDate}
+                  </p>
                   <div className="flex gap-2 mt-1">
                     <Badge variant="secondary">
                       {userRole === "admin" ? "Administrator" : "Customer"}
@@ -177,9 +271,7 @@ const Profile = () => {
                         Premium
                       </Badge>
                     ) : (
-                      <Badge variant="outline">
-                        Basic Plan
-                      </Badge>
+                      <Badge variant="outline">Basic Plan</Badge>
                     )}
                   </div>
                 </div>
@@ -188,17 +280,55 @@ const Profile = () => {
               {/* Profile Fields */}
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <Label htmlFor="name">Full Name</Label>
+                  <Label htmlFor="firstName">First Name</Label>
                   {isEditing ? (
                     <Input
-                      id="name"
-                      value={profile.name}
-                      onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+                      id="firstName"
+                      value={editForm.firstName}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, firstName: e.target.value })
+                      }
                     />
                   ) : (
                     <div className="flex items-center gap-2 mt-1">
                       <User className="h-4 w-4 text-muted-foreground" />
-                      <span>{profile.name}</span>
+                      <span>{profileData.firstName || "Not set"}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="lastName">Last Name</Label>
+                  {isEditing ? (
+                    <Input
+                      id="lastName"
+                      value={editForm.lastName}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, lastName: e.target.value })
+                      }
+                    />
+                  ) : (
+                    <div className="flex items-center gap-2 mt-1">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      <span>{profileData.lastName || "Not set"}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="username">Username</Label>
+                  {isEditing ? (
+                    <Input
+                      id="username"
+                      value={editForm.username}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, username: e.target.value })
+                      }
+                    />
+                  ) : (
+                    <div className="flex items-center gap-2 mt-1">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      <span>{profileData.username}</span>
                     </div>
                   )}
                 </div>
@@ -209,68 +339,57 @@ const Profile = () => {
                     <Input
                       id="email"
                       type="email"
-                      value={profile.email}
-                      onChange={(e) => setProfile({ ...profile, email: e.target.value })}
+                      value={editForm.email}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, email: e.target.value })
+                      }
                     />
                   ) : (
                     <div className="flex items-center gap-2 mt-1">
                       <Mail className="h-4 w-4 text-muted-foreground" />
-                      <span>{profile.email}</span>
+                      <span>{profileData.email}</span>
                     </div>
                   )}
                 </div>
 
-                <div>
+                <div className="md:col-span-2">
                   <Label htmlFor="phone">Phone Number</Label>
                   {isEditing ? (
                     <Input
                       id="phone"
-                      value={profile.phone}
-                      onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                      value={editForm.phone}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, phone: e.target.value })
+                      }
                     />
                   ) : (
                     <div className="flex items-center gap-2 mt-1">
                       <Phone className="h-4 w-4 text-muted-foreground" />
-                      <span>{profile.phone}</span>
+                      <span>{profileData.phone || "Not set"}</span>
                     </div>
                   )}
                 </div>
-
-                <div>
-                  <Label htmlFor="location">Location</Label>
-                  {isEditing ? (
-                    <Input
-                      id="location"
-                      value={profile.location}
-                      onChange={(e) => setProfile({ ...profile, location: e.target.value })}
-                    />
-                  ) : (
-                    <div className="flex items-center gap-2 mt-1">
-                      <MapPin className="h-4 w-4 text-muted-foreground" />
-                      <span>{profile.location}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="bio">Bio</Label>
-                {isEditing ? (
-                  <Textarea
-                    id="bio"
-                    value={profile.bio}
-                    onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-                    className="mt-1"
-                  />
-                ) : (
-                  <p className="mt-1 text-sm text-muted-foreground">{profile.bio}</p>
-                )}
               </div>
 
               {isEditing && (
                 <div className="flex gap-2">
-                  <Button onClick={handleSave}>Save Changes</Button>
-                  <Button variant="outline" onClick={handleCancel}>Cancel</Button>
+                  <Button onClick={handleSave} disabled={submitting}>
+                    {submitting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      "Save Changes"
+                    )}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleCancel}
+                    disabled={submitting}
+                  >
+                    Cancel
+                  </Button>
                 </div>
               )}
             </CardContent>
@@ -283,50 +402,64 @@ const Profile = () => {
                 <Trophy className="h-5 w-5" />
                 Achievements
               </CardTitle>
-              <CardDescription>Your financial milestones and accomplishments</CardDescription>
+              <CardDescription>
+                Your financial milestones and accomplishments
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid gap-4">
-                {achievements.map((achievement) => {
-                  const Icon = achievement.icon;
+                {profileData.achievements.map((achievement) => {
+                  const IconComponent =
+                    iconMap[achievement.icon as keyof typeof iconMap] || Star;
                   return (
-                    <div 
-                      key={achievement.id} 
+                    <div
+                      key={achievement.id}
                       className={`flex items-center gap-4 p-4 rounded-lg border transition-colors ${
-                        achievement.earned 
-                          ? 'bg-success/10 border-success/20' 
-                          : 'bg-muted/50 border-muted'
+                        achievement.earned
+                          ? "bg-success/10 border-success/20"
+                          : "bg-muted/50 border-muted"
                       }`}
                     >
-                      <div className={`p-2 rounded-full ${
-                        achievement.earned 
-                          ? 'bg-success text-success-foreground' 
-                          : 'bg-muted text-muted-foreground'
-                      }`}>
-                        <Icon className="h-5 w-5" />
+                      <div
+                        className={`p-2 rounded-full ${
+                          achievement.earned
+                            ? "bg-success text-success-foreground"
+                            : "bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        <IconComponent className="h-5 w-5" />
                       </div>
                       <div className="flex-1">
                         <h4 className="font-medium">{achievement.title}</h4>
-                        <p className="text-sm text-muted-foreground">{achievement.description}</p>
-                        {achievement.earned && (
+                        <p className="text-sm text-muted-foreground">
+                          {achievement.description}
+                        </p>
+                        {achievement.earned && achievement.date && (
                           <div className="flex items-center gap-1 mt-1">
                             <Calendar className="h-3 w-3" />
                             <span className="text-xs text-muted-foreground">
-                              Earned on {new Date(achievement.date).toLocaleDateString()}
+                              Earned on{" "}
+                              {new Date(achievement.date).toLocaleDateString()}
                             </span>
                           </div>
                         )}
                         {!achievement.earned && achievement.progress > 0 && (
                           <div className="mt-2">
-                            <Progress value={achievement.progress} className="h-2" />
+                            <Progress
+                              value={achievement.progress}
+                              className="h-2"
+                            />
                             <span className="text-xs text-muted-foreground">
-                              {achievement.progress}% complete
+                              {Math.round(achievement.progress)}% complete
                             </span>
                           </div>
                         )}
                       </div>
                       {achievement.earned && (
-                        <Badge variant="secondary" className="bg-success/20 text-success">
+                        <Badge
+                          variant="secondary"
+                          className="bg-success/20 text-success"
+                        >
                           Earned
                         </Badge>
                       )}
@@ -346,15 +479,38 @@ const Profile = () => {
               <CardDescription>Your activity at a glance</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {stats.map((stat, index) => (
-                <div key={index} className="flex items-center justify-between">
-                  <span className="text-sm font-medium">{stat.label}</span>
-                  <div className="text-right">
-                    <div className="font-bold">{stat.value}</div>
-                    <div className="text-xs text-success">{stat.change}</div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Total Transactions</span>
+                <div className="text-right">
+                  <div className="font-bold">
+                    {profileData.stats.totalTransactions.toLocaleString()}
                   </div>
                 </div>
-              ))}
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Budgets Created</span>
+                <div className="text-right">
+                  <div className="font-bold">
+                    {profileData.stats.budgetsCreated}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Goals Achieved</span>
+                <div className="text-right">
+                  <div className="font-bold">
+                    {profileData.stats.goalsAchieved}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Days Active</span>
+                <div className="text-right">
+                  <div className="font-bold">
+                    {profileData.stats.daysActive}
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -366,21 +522,33 @@ const Profile = () => {
             <CardContent>
               <div className="space-y-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-primary">Gold</div>
-                  <div className="text-sm text-muted-foreground">Current Level</div>
+                  <div
+                    className={`text-2xl font-bold ${getLevelColor(
+                      profileData.accountLevel.currentLevel
+                    )}`}
+                  >
+                    {profileData.accountLevel.currentLevel}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Current Level
+                  </div>
                 </div>
-                <Progress value={75} className="h-3" />
+                <Progress
+                  value={profileData.accountLevel.progress}
+                  className="h-3"
+                />
                 <div className="text-center text-sm text-muted-foreground">
-                  75% to Platinum Level
+                  {profileData.accountLevel.progress}% to{" "}
+                  {profileData.accountLevel.nextLevel} Level
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  Complete 2 more goals to reach Platinum and unlock exclusive features!
+                <div className="text-xs text-muted-foreground text-center">
+                  {profileData.accountLevel.points} points earned
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Subscription Card */}
+          {/* Subscription Card - Demo */}
           <Card className="transition-all hover:shadow-md">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -397,8 +565,8 @@ const Profile = () => {
                 )}
               </CardTitle>
               <CardDescription>
-                {userSubscription === "premium" 
-                  ? "You have access to all premium features" 
+                {userSubscription === "premium"
+                  ? "You have access to all premium features"
                   : "Upgrade to unlock more features"}
               </CardDescription>
             </CardHeader>
@@ -434,7 +602,8 @@ const Profile = () => {
                       Upgrade to Premium
                     </Button>
                     <p className="text-xs text-muted-foreground text-center">
-                      Unlock unlimited transactions, advanced analytics, and investment tracking
+                      Unlock unlimited transactions, advanced analytics, and
+                      investment tracking
                     </p>
                   </>
                 )}
