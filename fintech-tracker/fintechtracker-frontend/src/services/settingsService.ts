@@ -5,7 +5,9 @@ const API_BASE_URL = "http://localhost:5013/api";
 export interface UpdateProfileRequest {
   firstName: string;
   lastName: string;
+  username: string;
   email: string;
+  phoneNumber: string;
   currency: string;
   language: string;
 }
@@ -32,7 +34,9 @@ export interface PrivacySettings {
 export interface UserSettingsResponse {
   firstName: string;
   lastName: string;
+  username: string;
   email: string;
+  phoneNumber: string;
   currency: string;
   language: string;
   notifications: NotificationSettings;

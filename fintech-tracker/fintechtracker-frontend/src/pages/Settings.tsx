@@ -54,7 +54,9 @@ const Settings = () => {
   const [profile, setProfile] = useState({
     firstName: "",
     lastName: "",
+    username: "",
     email: "",
+    phoneNumber: "",
     currency: "USD",
     language: "en",
   });
@@ -88,7 +90,9 @@ const Settings = () => {
         setProfile({
           firstName: settings.firstName,
           lastName: settings.lastName,
+          username: settings.username,
           email: settings.email,
+          phoneNumber: settings.phoneNumber,
           currency: settings.currency,
           language: settings.language,
         });
@@ -114,7 +118,9 @@ const Settings = () => {
         setProfile({
           firstName: nameParts[0] || "",
           lastName: nameParts.slice(1).join(" ") || "",
+          username: "",
           email: localStorage.getItem("userEmail") || "user@example.com",
+          phoneNumber: "",
           currency: "USD",
           language: "en",
         });
@@ -133,7 +139,9 @@ const Settings = () => {
       const updateData: UpdateProfileRequest = {
         firstName: profile.firstName,
         lastName: profile.lastName,
+        username: profile.username,
         email: profile.email,
+        phoneNumber: profile.phoneNumber,
         currency: profile.currency,
         language: profile.language,
       };
@@ -357,6 +365,30 @@ const Settings = () => {
                   }
                 />
               </div>
+            </div>
+            <div>
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                value={profile.username}
+                onChange={(e) =>
+                  setProfile({ ...profile, username: e.target.value })
+                }
+                pattern="^[a-zA-Z0-9_]+$"
+                title="No special characters allowed"
+              />
+            </div>
+            <div>
+              <Label htmlFor="phoneNumber">Phone Number</Label>
+              <Input
+                id="phoneNumber"
+                value={profile.phoneNumber}
+                onChange={(e) =>
+                  setProfile({ ...profile, phoneNumber: e.target.value })
+                }
+                pattern="^\d{9,15}$"
+                title="Enter a valid phone number"
+              />
             </div>
             <div>
               <Label htmlFor="email">Email Address</Label>

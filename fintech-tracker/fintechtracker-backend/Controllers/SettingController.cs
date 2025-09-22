@@ -93,13 +93,25 @@ namespace fintechtracker_backend.Controllers
 
             var user = await _context.Users.FindAsync(userId);
             if (user == null)
-            {
                 return NotFound("User not found.");
-            }
+
+            // Validate username: không chứa ký tự đặc biệt, không trùng
+            if (!System.Text.RegularExpressions.Regex.IsMatch(updateDto.Username, @"^[a-zA-Z0-9_]+$"))
+                return BadRequest("Username must not contain special characters.");
+
+            var usernameExists = await _context.Users
+                .AnyAsync(u => u.Username == updateDto.Username && u.UserId != userId);
+            if (usernameExists)
+                return BadRequest("Username already exists.");
+
+            // Validate phone (ví dụ: chỉ số, độ dài 9-15)
+            if (!System.Text.RegularExpressions.Regex.IsMatch(updateDto.PhoneNumber, @"^\d{9,15}$"))
+                return BadRequest("Invalid phone number format.");
 
             var userProfile = await _context.Userprofiles.FirstOrDefaultAsync(p => p.UserId == userId);
 
             // Cập nhật thông tin user
+            user.Username = updateDto.Username;
             user.Email = updateDto.Email;
             user.UpdatedAt = DateTime.UtcNow;
 
@@ -108,37 +120,25 @@ namespace fintechtracker_backend.Controllers
             {
                 userProfile.FirstName = updateDto.FirstName;
                 userProfile.LastName = updateDto.LastName;
+                userProfile.Phone = updateDto.PhoneNumber; // <-- Đúng chuẩn
 
-                // Parse settings hiện tại
                 var settings = new JObject();
                 if (!string.IsNullOrEmpty(userProfile.Settings))
                 {
-                    try
-                    {
-                        settings = JObject.Parse(userProfile.Settings);
-                    }
-                    catch
-                    {
-                        settings = new JObject();
-                    }
+                    try { settings = JObject.Parse(userProfile.Settings); }
+                    catch { settings = new JObject(); }
                 }
 
-                // Validate currency
                 var validCurrencies = new[] { "USD", "EUR", "GBP", "CNY", "VND" };
                 if (!validCurrencies.Contains(updateDto.Currency))
-                {
                     return BadRequest("Invalid currency code.");
-                }
 
-                // Cập nhật currency và language
                 settings["currency"] = updateDto.Currency;
                 settings["language"] = updateDto.Language;
-
                 userProfile.Settings = settings.ToString(Formatting.None);
             }
 
             await _context.SaveChangesAsync();
-
             return Ok(new { message = "Profile updated successfully." });
         }
 
