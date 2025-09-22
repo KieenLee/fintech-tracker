@@ -9,6 +9,8 @@ export interface ProfileResponse {
   firstName?: string;
   lastName?: string;
   phone?: string;
+  address?: string;
+  dateOfBirth?: string;
   avatarUrl?: string;
   joinDate?: string;
   role: string;
@@ -23,6 +25,8 @@ export interface UpdateProfileRequest {
   firstName?: string;
   lastName?: string;
   phone?: string;
+  address?: string;
+  dateOfBirth?: string;
 }
 
 export interface QuickStats {
@@ -69,5 +73,23 @@ export const profileService = {
 
   updateProfile: async (profileData: UpdateProfileRequest): Promise<void> => {
     await api.put("/Profile", profileData);
+  },
+
+  uploadAvatar: async (
+    avatarFile: File
+  ): Promise<{ avatarUrl: string; message: string }> => {
+    const formData = new FormData();
+    formData.append("avatarFile", avatarFile);
+
+    const response = await api.post("/Profile/upload-avatar", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  },
+
+  deleteAvatar: async (): Promise<void> => {
+    await api.delete("/Profile/avatar");
   },
 };

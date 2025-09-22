@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Card,
   CardContent,
@@ -29,6 +29,8 @@ import {
   Star,
   Crown,
   CreditCard,
+  Trash2,
+  Upload,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
@@ -47,9 +49,11 @@ const iconMap = {
 const Profile = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState<ProfileResponse | null>(null);
   const userRole = localStorage.getItem("userRole") || "customer";
@@ -61,6 +65,8 @@ const Profile = () => {
     firstName: "",
     lastName: "",
     phone: "",
+    address: "",
+    dateOfBirth: "",
   });
 
   useEffect(() => {
@@ -80,6 +86,8 @@ const Profile = () => {
         firstName: data.firstName || "",
         lastName: data.lastName || "",
         phone: data.phone || "",
+        address: data.address || "",
+        dateOfBirth: data.dateOfBirth || "",
       });
 
       // Cập nhật localStorage để sync với sidebar
@@ -145,9 +153,99 @@ const Profile = () => {
         firstName: profileData.firstName || "",
         lastName: profileData.lastName || "",
         phone: profileData.phone || "",
+        address: profileData.address || "",
+        dateOfBirth: profileData.dateOfBirth || "",
       });
     }
     setIsEditing(false);
+  };
+
+  const handleAvatarUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select a valid image file (JPG, PNG, GIF)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (5MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image smaller than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setUploadingAvatar(true);
+      const result = await profileService.uploadAvatar(file);
+
+      // Refresh profile data to get new avatar URL
+      await fetchProfile();
+
+      toast({
+        title: "Avatar updated",
+        description: "Your profile picture has been updated successfully.",
+      });
+    } catch (error: any) {
+      console.error("Failed to upload avatar:", error);
+
+      // **FIX: Better error handling**
+      let errorMessage = "Failed to upload avatar";
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.status === 500) {
+        errorMessage =
+          "Server error. Please check if the uploads folder exists.";
+      }
+
+      toast({
+        title: "Upload failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingAvatar(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleDeleteAvatar = async () => {
+    try {
+      setUploadingAvatar(true);
+      await profileService.deleteAvatar();
+
+      // Refresh profile data
+      await fetchProfile();
+
+      toast({
+        title: "Avatar removed",
+        description: "Your profile picture has been removed.",
+      });
+    } catch (error: any) {
+      console.error("Failed to delete avatar:", error);
+      toast({
+        title: "Delete failed",
+        description: error.response?.data?.message || "Failed to delete avatar",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingAvatar(false);
+    }
   };
 
   const handleUpgrade = () => {
@@ -169,6 +267,11 @@ const Profile = () => {
       default:
         return "text-primary";
     }
+  };
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "Not set";
+    return new Date(dateString).toLocaleDateString();
   };
 
   if (loading) {
@@ -235,7 +338,11 @@ const Profile = () => {
                 <div className="relative">
                   <Avatar className="h-20 w-20">
                     <AvatarImage
-                      src={profileData.avatarUrl || "/placeholder.svg"}
+                      src={
+                        profileData.avatarUrl
+                          ? `http://localhost:5013${profileData.avatarUrl}`
+                          : "/placeholder.svg"
+                      }
                       alt={displayName}
                     />
                     <AvatarFallback className="text-lg">
@@ -247,13 +354,32 @@ const Profile = () => {
                     </AvatarFallback>
                   </Avatar>
                   {isEditing && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0"
-                    >
-                      <Camera className="h-4 w-4" />
-                    </Button>
+                    <div className="absolute -bottom-2 -right-2 flex gap-1">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 w-8 rounded-full p-0"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploadingAvatar}
+                      >
+                        {uploadingAvatar ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Camera className="h-4 w-4" />
+                        )}
+                      </Button>
+                      {profileData.avatarUrl && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 w-8 rounded-full p-0 text-destructive hover:text-destructive"
+                          onClick={handleDeleteAvatar}
+                          disabled={uploadingAvatar}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
                   )}
                 </div>
                 <div>
@@ -276,6 +402,15 @@ const Profile = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Hidden file input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/gif"
+                onChange={handleAvatarUpload}
+                className="hidden"
+              />
 
               {/* Profile Fields */}
               <div className="grid gap-4 md:grid-cols-2">
@@ -352,7 +487,7 @@ const Profile = () => {
                   )}
                 </div>
 
-                <div className="md:col-span-2">
+                <div>
                   <Label htmlFor="phone">Phone Number</Label>
                   {isEditing ? (
                     <Input
@@ -366,6 +501,47 @@ const Profile = () => {
                     <div className="flex items-center gap-2 mt-1">
                       <Phone className="h-4 w-4 text-muted-foreground" />
                       <span>{profileData.phone || "Not set"}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                  {isEditing ? (
+                    <Input
+                      id="dateOfBirth"
+                      type="date"
+                      value={editForm.dateOfBirth}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          dateOfBirth: e.target.value,
+                        })
+                      }
+                    />
+                  ) : (
+                    <div className="flex items-center gap-2 mt-1">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span>{formatDate(profileData.dateOfBirth)}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="md:col-span-2">
+                  <Label htmlFor="address">Address</Label>
+                  {isEditing ? (
+                    <Textarea
+                      id="address"
+                      value={editForm.address}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, address: e.target.value })
+                      }
+                      rows={3}
+                    />
+                  ) : (
+                    <div className="flex items-center gap-2 mt-1">
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                      <span>{profileData.address || "Not set"}</span>
                     </div>
                   )}
                 </div>

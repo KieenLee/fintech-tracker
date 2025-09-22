@@ -1,5 +1,6 @@
 D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Debug\net9.0\appsettings.Development.json
 D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Debug\net9.0\appsettings.json
+D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Debug\net9.0\fintechtracker-backend.staticwebassets.runtime.json
 D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Debug\net9.0\fintechtracker-backend.staticwebassets.endpoints.json
 D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Debug\net9.0\fintechtracker-backend.exe
 D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Debug\net9.0\fintechtracker-backend.deps.json

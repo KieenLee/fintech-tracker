@@ -8,6 +8,8 @@ namespace fintechtracker_backend.DTOs
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
         public string? Phone { get; set; }
+        public string? Address { get; set; }
+        public DateOnly? DateOfBirth { get; set; }
         public string? AvatarUrl { get; set; }
         public string? JoinDate { get; set; }
         public string Role { get; set; } = null!;
@@ -23,6 +25,13 @@ namespace fintechtracker_backend.DTOs
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
         public string? Phone { get; set; }
+        public string? Address { get; set; }
+        public DateOnly? DateOfBirth { get; set; }
+    }
+
+    public class UploadAvatarDto
+    {
+        public IFormFile AvatarFile { get; set; } = null!;
     }
 
     public class QuickStatsDto
