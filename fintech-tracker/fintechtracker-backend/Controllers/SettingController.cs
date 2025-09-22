@@ -75,7 +75,9 @@ namespace fintechtracker_backend.Controllers
             {
                 FirstName = userProfile?.FirstName ?? "",
                 LastName = userProfile?.LastName ?? "",
+                Username = user.Username,
                 Email = user.Email,
+                PhoneNumber = userProfile?.Phone ?? "",
                 Currency = settings["currency"]?.ToString() ?? "USD",
                 Language = settings["language"]?.ToString() ?? "en",
                 Notifications = notificationSettings,
