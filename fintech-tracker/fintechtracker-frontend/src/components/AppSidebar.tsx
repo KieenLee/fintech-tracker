@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
-import { 
-  BarChart3, 
-  CreditCard, 
-  DollarSign, 
-  Home, 
-  PieChart, 
-  Settings, 
-  Target, 
-  TrendingUp, 
-  Users, 
+import {
+  BarChart3,
+  CreditCard,
+  DollarSign,
+  Home,
+  PieChart,
+  Settings,
+  Target,
+  TrendingUp,
+  Users,
   Wallet,
   LogOut,
   User,
@@ -17,11 +17,17 @@ import {
   Sun,
   Monitor,
   Crown,
-  MessageCircle
+  MessageCircle,
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { profileService, ProfileResponse } from "@/services/profileService";
 
 import {
   Sidebar,
@@ -65,38 +71,42 @@ export function AppSidebar() {
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
   const currentPath = location.pathname;
-  
-  // State cho thông tin người dùng
-  const [userRole, setUserRole] = useState(localStorage.getItem("userRole") || "customer");
-  const [userName, setUserName] = useState(localStorage.getItem("userName") || "User");
-  const [userEmail, setUserEmail] = useState(localStorage.getItem("userEmail") || "user@example.com");
-  const [userSubscription, setUserSubscription] = useState(localStorage.getItem("userSubscription") || "basic");
-  
-  const items = userRole === "admin" ? adminItems : customerItems;
 
-  // Theo dõi sự thay đổi trong localStorage
+  // State cho thông tin user từ API
+  const [profile, setProfile] = useState<ProfileResponse | null>(null);
+
   useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "userRole") {
-        setUserRole(localStorage.getItem("userRole") || "customer");
-      } else if (e.key === "userName") {
-        setUserName(localStorage.getItem("userName") || "User");
-      } else if (e.key === "userEmail") {
-        setUserEmail(localStorage.getItem("userEmail") || "user@example.com");
-      } else if (e.key === "userSubscription") {
-        setUserSubscription(localStorage.getItem("userSubscription") || "basic");
+    // Gọi API lấy profile khi sidebar mount
+    const fetchProfile = async () => {
+      try {
+        const data = await profileService.getProfile();
+        setProfile(data);
+      } catch (error) {
+        // Có thể fallback về localStorage nếu muốn
+        setProfile(null);
       }
     };
-
-    window.addEventListener("storage", handleStorageChange);
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-    };
+    fetchProfile();
   }, []);
+
+  // Tạo displayName từ profile API
+  const displayName = profile
+    ? `${profile.firstName || ""} ${profile.lastName || ""}`.trim() ||
+      profile.username
+    : localStorage.getItem("userName") || "User";
+  const userEmail =
+    profile?.email || localStorage.getItem("userEmail") || "user@example.com";
+  const userRole =
+    profile?.role || localStorage.getItem("userRole") || "customer";
+  const userSubscription = localStorage.getItem("userSubscription") || "basic";
+
+  const items = userRole === "admin" ? adminItems : customerItems;
 
   const isActive = (path: string) => currentPath === path;
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
-    isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/50";
+    isActive
+      ? "bg-sidebar-accent text-sidebar-accent-foreground"
+      : "hover:bg-sidebar-accent/50";
 
   const handleLogout = () => {
     localStorage.removeItem("userRole");
@@ -104,21 +114,17 @@ export function AppSidebar() {
     localStorage.removeItem("userEmail");
     localStorage.removeItem("userName");
     localStorage.removeItem("userSubscription");
-    
+
     // Cập nhật state
-    setUserRole("customer");
-    setUserName("User");
-    setUserEmail("user@example.com");
-    setUserSubscription("basic");
-    
+    setProfile(null);
+
     toast({
       title: "Logged out",
       description: "You have been successfully logged out",
     });
-    
+
     navigate("/");
   };
-
 
   return (
     <Sidebar className={collapsed ? "w-14" : "w-64"} collapsible="icon">
@@ -127,8 +133,12 @@ export function AppSidebar() {
           <Wallet className="h-8 w-8 text-sidebar-primary" />
           {!collapsed && (
             <div className="flex flex-col">
-              <span className="font-bold text-sidebar-foreground">FinanceTracker</span>
-              <span className="text-xs text-sidebar-foreground/70 capitalize">{userRole}</span>
+              <span className="font-bold text-sidebar-foreground">
+                FinanceTracker
+              </span>
+              <span className="text-xs text-sidebar-foreground/70 capitalize">
+                {userRole}
+              </span>
             </div>
           )}
         </div>
@@ -149,13 +159,17 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
-              
+
               {/* Upgrade button for customers */}
               {userRole !== "admin" && (
                 <SidebarMenuItem>
-                  <SidebarMenuButton 
-                    asChild 
-                    className={currentPath === "/upgrade" ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/50"}
+                  <SidebarMenuButton
+                    asChild
+                    className={
+                      currentPath === "/upgrade"
+                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                        : "hover:bg-sidebar-accent/50"
+                    }
                   >
                     <NavLink to="/upgrade">
                       <Crown className="h-4 w-4" />
@@ -181,22 +195,26 @@ export function AppSidebar() {
       <SidebarFooter className="border-t border-sidebar-border">
         {/* Profile link at the bottom */}
         <SidebarMenuItem className="px-2">
-          <SidebarMenuButton 
-            asChild 
+          <SidebarMenuButton
+            asChild
             className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent"
           >
             <NavLink to="/profile" className="flex items-center">
               <User className="h-4 w-4" />
               {!collapsed && (
                 <div className="flex flex-col flex-1 overflow-hidden ml-2">
-                  <div className="text-sm font-medium text-sidebar-foreground truncate">{userName}</div>
-                  <div className="text-xs text-sidebar-foreground/70 truncate">{userEmail}</div>
+                  <div className="text-sm font-medium text-sidebar-foreground truncate">
+                    {displayName}
+                  </div>
+                  <div className="text-xs text-sidebar-foreground/70 truncate">
+                    {userEmail}
+                  </div>
                 </div>
               )}
             </NavLink>
           </SidebarMenuButton>
         </SidebarMenuItem>
-        
+
         <div className="px-2 pb-2 space-y-1">
           {!collapsed && (
             <>
@@ -207,22 +225,26 @@ export function AppSidebar() {
                     size="sm"
                     className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent"
                   >
-                    {theme === 'dark' ? <Moon className="h-4 w-4" /> : 
-                     theme === 'light' ? <Sun className="h-4 w-4" /> : 
-                     <Monitor className="h-4 w-4" />}
+                    {theme === "dark" ? (
+                      <Moon className="h-4 w-4" />
+                    ) : theme === "light" ? (
+                      <Sun className="h-4 w-4" />
+                    ) : (
+                      <Monitor className="h-4 w-4" />
+                    )}
                     <span className="ml-2">Theme</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setTheme('light')}>
+                  <DropdownMenuItem onClick={() => setTheme("light")}>
                     <Sun className="h-4 w-4 mr-2" />
                     Light
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setTheme('dark')}>
+                  <DropdownMenuItem onClick={() => setTheme("dark")}>
                     <Moon className="h-4 w-4 mr-2" />
                     Dark
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setTheme('system')}>
+                  <DropdownMenuItem onClick={() => setTheme("system")}>
                     <Monitor className="h-4 w-4 mr-2" />
                     System
                   </DropdownMenuItem>
@@ -248,21 +270,25 @@ export function AppSidebar() {
                     size="sm"
                     className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent"
                   >
-                    {theme === 'dark' ? <Moon className="h-4 w-4" /> : 
-                     theme === 'light' ? <Sun className="h-4 w-4" /> : 
-                     <Monitor className="h-4 w-4" />}
+                    {theme === "dark" ? (
+                      <Moon className="h-4 w-4" />
+                    ) : theme === "light" ? (
+                      <Sun className="h-4 w-4" />
+                    ) : (
+                      <Monitor className="h-4 w-4" />
+                    )}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setTheme('light')}>
+                  <DropdownMenuItem onClick={() => setTheme("light")}>
                     <Sun className="h-4 w-4 mr-2" />
                     Light
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setTheme('dark')}>
+                  <DropdownMenuItem onClick={() => setTheme("dark")}>
                     <Moon className="h-4 w-4 mr-2" />
                     Dark
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setTheme('system')}>
+                  <DropdownMenuItem onClick={() => setTheme("system")}>
                     <Monitor className="h-4 w-4 mr-2" />
                     System
                   </DropdownMenuItem>
@@ -280,7 +306,6 @@ export function AppSidebar() {
           )}
         </div>
       </SidebarFooter>
-
     </Sidebar>
   );
 }
