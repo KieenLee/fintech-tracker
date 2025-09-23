@@ -58,6 +58,10 @@
               "target": "Package",
               "version": "[1.71.0, )"
             },
+            "MailKit": {
+              "target": "Package",
+              "version": "[4.13.0, )"
+            },
             "Microsoft.AspNetCore.Authentication.Google": {
               "target": "Package",
               "version": "[9.0.9, )"
@@ -81,6 +85,10 @@
               "suppressParent": "All",
               "target": "Package",
               "version": "[9.0.9, )"
+            },
+            "MimeKit": {
+              "target": "Package",
+              "version": "[4.13.0, )"
             },
             "Pomelo.EntityFrameworkCore.MySql": {
               "target": "Package",

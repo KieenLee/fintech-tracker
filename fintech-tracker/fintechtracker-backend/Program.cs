@@ -63,8 +63,11 @@ builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 
 
 // Add services
+builder.Services.AddMemoryCache();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IOtpService, OtpService>();
 
 var app = builder.Build();
 

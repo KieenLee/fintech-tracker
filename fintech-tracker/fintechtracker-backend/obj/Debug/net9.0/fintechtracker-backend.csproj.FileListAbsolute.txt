@@ -145,3 +145,6 @@ D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\obj\Deb
 D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\obj\Debug\net9.0\fintechtracker-backend.pdb
 D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\obj\Debug\net9.0\fintechtracker-backend.genruntimeconfig.cache
 D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\obj\Debug\net9.0\ref\fintechtracker-backend.dll
+D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Debug\net9.0\BouncyCastle.Cryptography.dll
+D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Debug\net9.0\MailKit.dll
+D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Debug\net9.0\MimeKit.dll
