@@ -538,22 +538,30 @@
   "reports": {
     "title": "Reports & Analytics",
     "subtitle": "Comprehensive business insights and metrics",
+    "loading": "Loading reports...",
+    "load_failed": "Failed to load report data",
+    "export_success": "Report exported successfully",
+    "export_failed": "Failed to export report",
     "time_periods": {
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly",
       "yearly": "Yearly"
     },
     "metrics": {
       "total_revenue": "Total Revenue",
+      "total_users": "Total Users",
       "premium_users": "Premium Users",
-      "avg_session": "Avg. Session",
+      "avg_session": "Avg Session",
       "from_last_period": "from last period"
     },
     "charts": {
       "revenue_trend": "Revenue Trend",
       "revenue_trend_desc": "Monthly revenue and user growth",
       "user_growth": "User Growth",
-      "user_growth_desc": "New vs active users",
+      "user_growth_desc": "New users vs active users",
       "subscription_distribution": "Subscription Distribution",
-      "subscription_distribution_desc": "Breakdown of user subscriptions",
+      "subscription_distribution_desc": "User subscription analysis",
       "revenue_vs_users": "Revenue vs Users",
       "revenue_vs_users_desc": "Correlation between revenue and user count",
       "revenue": "Revenue",
@@ -565,7 +573,7 @@
     },
     "detailed_metrics": {
       "title": "Detailed Metrics",
-      "description": "Comprehensive data breakdown",
+      "description": "Comprehensive data analysis",
       "month": "Month",
       "revenue": "Revenue",
       "new_users": "New Users",
@@ -579,7 +587,13 @@
       "mar": "Mar",
       "apr": "Apr",
       "may": "May",
-      "jun": "Jun"
+      "jun": "Jun",
+      "jul": "Jul",
+      "aug": "Aug",
+      "sep": "Sep",
+      "oct": "Oct",
+      "nov": "Nov",
+      "dec": "Dec"
     },
     "days": {
       "mon": "Mon",

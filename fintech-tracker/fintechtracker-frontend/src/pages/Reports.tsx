@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -28,8 +29,7 @@ import {
   Area,
   AreaChart,
 } from "recharts";
-import { useState } from "react";
-import { useCurrency } from "@/contexts/CurrencyContext";
+import { Button } from "@/components/ui/button";
 import {
   DollarSign,
   TrendingUp,
@@ -37,39 +37,111 @@ import {
   CreditCard,
   Calendar,
   Download,
+  Loader2,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+import { reportService, ReportDashboardDto } from "@/services/reportService";
+import { formatCurrencyAmount } from "../../Utils/currencyUtils";
 
 const Reports = () => {
   const [timeRange, setTimeRange] = useState("monthly");
-  const { formatCurrency } = useCurrency();
+  const [loading, setLoading] = useState(true);
+  const [reportData, setReportData] = useState<ReportDashboardDto | null>(null);
+  const [exporting, setExporting] = useState(false);
+
   const { t } = useTranslation();
+  const currency = localStorage.getItem("userCurrency") || "USD";
 
-  // Sample data for different time periods
-  const revenueData = [
-    { month: t("reports.months.jan"), revenue: 4500, users: 120, premium: 45 },
-    { month: t("reports.months.feb"), revenue: 4200, users: 115, premium: 42 },
-    { month: t("reports.months.mar"), revenue: 4800, users: 140, premium: 52 },
-    { month: t("reports.months.apr"), revenue: 4600, users: 135, premium: 49 },
-    { month: t("reports.months.may"), revenue: 5000, users: 150, premium: 58 },
-    { month: t("reports.months.jun"), revenue: 4700, users: 145, premium: 55 },
-  ];
+  const formatCurrency = (amount: number) => {
+    return formatCurrencyAmount(amount, currency);
+  };
 
-  const userData = [
-    { day: t("reports.days.mon"), newUsers: 12, activeUsers: 85 },
-    { day: t("reports.days.tue"), newUsers: 18, activeUsers: 92 },
-    { day: t("reports.days.wed"), newUsers: 15, activeUsers: 88 },
-    { day: t("reports.days.thu"), newUsers: 22, activeUsers: 105 },
-    { day: t("reports.days.fri"), newUsers: 25, activeUsers: 110 },
-    { day: t("reports.days.sat"), newUsers: 30, activeUsers: 125 },
-    { day: t("reports.days.sun"), newUsers: 20, activeUsers: 95 },
-  ];
+  useEffect(() => {
+    loadReportData();
+  }, []);
 
-  const subscriptionData = [
-    { name: t("common.basic"), value: 65, color: "hsl(var(--chart-1))" },
-    { name: t("common.premium"), value: 35, color: "hsl(var(--chart-2))" },
-  ];
+  useEffect(() => {
+    if (reportData) {
+      loadReportData();
+    }
+  }, [timeRange]);
+
+  const loadReportData = async () => {
+    try {
+      setLoading(true);
+      const data = await reportService.getDashboard(timeRange);
+      setReportData(data);
+    } catch (error: any) {
+      console.error("Error loading report data:", error);
+      toast.error(t("reports.load_failed"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+      const blob = await reportService.exportReport(timeRange, "csv");
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.style.display = "none";
+      a.href = url;
+      a.download = `reports-${timeRange}-${new Date().getTime()}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.success(t("reports.export_success"));
+    } catch (error: any) {
+      console.error("Error exporting report:", error);
+      toast.error(t("reports.export_failed"));
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  // Chart colors consistent with project theme
+  const chartColors = {
+    primary: "hsl(var(--primary))",
+    chart1: "#8884d8",
+    chart2: "#82ca9d",
+    chart3: "#ffc658",
+    chart4: "#ff7300",
+  };
+
+  // Prepare subscription data for pie chart
+  const subscriptionChartData =
+    reportData?.subscriptionData.map((item, index) => ({
+      ...item,
+      color: index === 0 ? chartColors.chart1 : chartColors.chart2,
+    })) || [];
+
+  if (loading) {
+    return (
+      <div className="p-6 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">{t("reports.loading")}</span>
+      </div>
+    );
+  }
+
+  if (!reportData) {
+    return (
+      <div className="p-6">
+        <div className="text-center py-12">
+          <h2 className="text-2xl font-bold mb-4">
+            {t("reports.load_failed")}
+          </h2>
+          <Button onClick={loadReportData}>{t("common.try_again")}</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -86,16 +158,26 @@ const Reports = () => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="daily">{t("analytics.daily")}</SelectItem>
-              <SelectItem value="weekly">{t("analytics.weekly")}</SelectItem>
-              <SelectItem value="monthly">{t("analytics.monthly")}</SelectItem>
+              <SelectItem value="daily">
+                {t("reports.time_periods.daily")}
+              </SelectItem>
+              <SelectItem value="weekly">
+                {t("reports.time_periods.weekly")}
+              </SelectItem>
+              <SelectItem value="monthly">
+                {t("reports.time_periods.monthly")}
+              </SelectItem>
               <SelectItem value="yearly">
                 {t("reports.time_periods.yearly")}
               </SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline">
-            <Download className="h-4 w-4 mr-2" />
+          <Button variant="outline" onClick={handleExport} disabled={exporting}>
+            {exporting ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4 mr-2" />
+            )}
             {t("common.export")}
           </Button>
         </div>
@@ -111,9 +193,13 @@ const Reports = () => {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(27800)}</div>
+            <div className="text-2xl font-bold">
+              {formatCurrency(reportData.metrics.totalRevenue)}
+            </div>
             <p className="text-xs text-muted-foreground">
-              <span className="text-success">+12.5%</span>{" "}
+              <span className="text-green-600">
+                {reportData.metrics.revenueGrowth}
+              </span>{" "}
               {t("reports.metrics.from_last_period")}
             </p>
           </CardContent>
@@ -121,14 +207,18 @@ const Reports = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {t("dashboard.total_users")}
+              {t("reports.metrics.total_users")}
             </CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1,245</div>
+            <div className="text-2xl font-bold">
+              {reportData.metrics.totalUsers}
+            </div>
             <p className="text-xs text-muted-foreground">
-              <span className="text-success">+8.2%</span>{" "}
+              <span className="text-green-600">
+                {reportData.metrics.usersGrowth}
+              </span>{" "}
               {t("reports.metrics.from_last_period")}
             </p>
           </CardContent>
@@ -141,9 +231,13 @@ const Reports = () => {
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">423</div>
+            <div className="text-2xl font-bold">
+              {reportData.metrics.premiumUsers}
+            </div>
             <p className="text-xs text-muted-foreground">
-              <span className="text-success">+15.3%</span>{" "}
+              <span className="text-green-600">
+                {reportData.metrics.premiumGrowth}
+              </span>{" "}
               {t("reports.metrics.from_last_period")}
             </p>
           </CardContent>
@@ -156,9 +250,13 @@ const Reports = () => {
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12m 35s</div>
+            <div className="text-2xl font-bold">
+              {reportData.metrics.avgSessionTime}
+            </div>
             <p className="text-xs text-muted-foreground">
-              <span className="text-success">+2.1%</span>{" "}
+              <span className="text-green-600">
+                {reportData.metrics.sessionGrowth}
+              </span>{" "}
               {t("reports.metrics.from_last_period")}
             </p>
           </CardContent>
@@ -177,27 +275,23 @@ const Reports = () => {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={revenueData}>
+              <AreaChart data={reportData.revenueData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis />
                 <Tooltip
                   formatter={(value, name) => [
-                    name === t("reports.charts.revenue_label")
-                      ? formatCurrency(Number(value))
-                      : value,
-                    name === t("reports.charts.revenue_label")
-                      ? t("reports.charts.revenue")
-                      : name,
+                    name === "revenue" ? formatCurrency(Number(value)) : value,
+                    name === "revenue" ? t("reports.charts.revenue") : name,
                   ]}
                 />
                 <Area
                   type="monotone"
                   dataKey="revenue"
-                  stroke="hsl(var(--primary))"
-                  fill="hsl(var(--primary))"
+                  stroke={chartColors.primary}
+                  fill={chartColors.primary}
                   fillOpacity={0.6}
-                  name={t("reports.charts.revenue_label")}
+                  name="revenue"
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -214,28 +308,19 @@ const Reports = () => {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={userData}>
+              <BarChart data={reportData.userGrowthData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="day" />
                 <YAxis />
-                <Tooltip
-                  formatter={(value, name) => [
-                    name === t("reports.charts.revenue_label")
-                      ? formatCurrency(Number(value))
-                      : value,
-                    name === t("reports.charts.revenue_label")
-                      ? t("reports.charts.revenue")
-                      : name,
-                  ]}
-                />
+                <Tooltip />
                 <Bar
                   dataKey="newUsers"
-                  fill="hsl(var(--chart-1))"
+                  fill={chartColors.chart1}
                   name={t("reports.charts.new_users")}
                 />
                 <Bar
                   dataKey="activeUsers"
-                  fill="hsl(var(--chart-2))"
+                  fill={chartColors.chart2}
                   name={t("reports.charts.active_users")}
                 />
               </BarChart>
@@ -257,7 +342,7 @@ const Reports = () => {
             <ResponsiveContainer width="100%" height={300}>
               <RechartsPieChart>
                 <Pie
-                  data={subscriptionData}
+                  data={subscriptionChartData}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
@@ -266,15 +351,12 @@ const Reports = () => {
                   dataKey="value"
                   nameKey="name"
                 >
-                  {subscriptionData.map((entry, index) => (
+                  {subscriptionChartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
                 <Tooltip
-                  formatter={(value) => [
-                    `${value}%`,
-                    t("reports.charts.percentage"),
-                  ]}
+                  formatter={(value) => [`${value}`, t("reports.charts.users")]}
                 />
               </RechartsPieChart>
             </ResponsiveContainer>
@@ -291,27 +373,34 @@ const Reports = () => {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={revenueData}>
+              <LineChart data={reportData.revenueData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis yAxisId="left" />
                 <YAxis yAxisId="right" orientation="right" />
-                <Tooltip />
+                <Tooltip
+                  formatter={(value, name) => [
+                    name === "revenue" ? formatCurrency(Number(value)) : value,
+                    name === "revenue"
+                      ? t("reports.charts.revenue")
+                      : t("reports.charts.users"),
+                  ]}
+                />
                 <Line
                   yAxisId="left"
                   type="monotone"
                   dataKey="revenue"
-                  stroke="hsl(var(--primary))"
+                  stroke={chartColors.primary}
                   strokeWidth={3}
-                  name={t("reports.charts.revenue_label")}
+                  name="revenue"
                 />
                 <Line
                   yAxisId="right"
                   type="monotone"
                   dataKey="users"
-                  stroke="hsl(var(--chart-2))"
+                  stroke={chartColors.chart2}
                   strokeWidth={3}
-                  name={t("reports.charts.users")}
+                  name="users"
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -353,16 +442,16 @@ const Reports = () => {
                 </tr>
               </thead>
               <tbody>
-                {revenueData.map((data, index) => (
+                {reportData.detailedMetrics.map((data, index) => (
                   <tr key={index} className="border-b">
                     <td className="py-3">{data.month}</td>
                     <td className="text-right py-3">
                       {formatCurrency(data.revenue)}
                     </td>
-                    <td className="text-right py-3">{data.users}</td>
-                    <td className="text-right py-3">{data.premium}</td>
-                    <td className="text-right py-3">3.2%</td>
-                    <td className="text-right py-3">1.8%</td>
+                    <td className="text-right py-3">{data.newUsers}</td>
+                    <td className="text-right py-3">{data.premiumUsers}</td>
+                    <td className="text-right py-3">{data.conversionRate}</td>
+                    <td className="text-right py-3">{data.churnRate}</td>
                   </tr>
                 ))}
               </tbody>

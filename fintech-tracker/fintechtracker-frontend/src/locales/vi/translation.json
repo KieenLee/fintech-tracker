@@ -531,11 +531,19 @@
   "reports": {
     "title": "Báo cáo & Phân tích",
     "subtitle": "Thông tin kinh doanh và số liệu toàn diện",
+    "loading": "Đang tải báo cáo...",
+    "load_failed": "Không thể tải dữ liệu báo cáo",
+    "export_success": "Xuất báo cáo thành công",
+    "export_failed": "Không thể xuất báo cáo",
     "time_periods": {
+      "daily": "Hàng ngày",
+      "weekly": "Hàng tuần",
+      "monthly": "Hàng tháng",
       "yearly": "Hàng năm"
     },
     "metrics": {
       "total_revenue": "Tổng doanh thu",
+      "total_users": "Tổng người dùng",
       "premium_users": "Người dùng cao cấp",
       "avg_session": "Phiên trung bình",
       "from_last_period": "từ kỳ trước"
@@ -550,7 +558,7 @@
       "revenue_vs_users": "Doanh thu vs Người dùng",
       "revenue_vs_users_desc": "Mối tương quan giữa doanh thu và số lượng người dùng",
       "revenue": "Doanh thu",
-      "revenue_label": "Doanh thu ($)",
+      "revenue_label": "Doanh thu (VND)",
       "new_users": "Người dùng mới",
       "active_users": "Người dùng hoạt động",
       "users": "Người dùng",
@@ -572,7 +580,13 @@
       "mar": "Th3",
       "apr": "Th4",
       "may": "Th5",
-      "jun": "Th6"
+      "jun": "Th6",
+      "jul": "Th7",
+      "aug": "Th8",
+      "sep": "Th9",
+      "oct": "Th10",
+      "nov": "Th11",
+      "dec": "Th12"
     },
     "days": {
       "mon": "T2",
