@@ -47,25 +47,6 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 
-const customerItems = [
-  { title: "Dashboard", url: "/dashboard", icon: Home },
-  { title: "Quick Add", url: "/quick-add", icon: MessageCircle },
-  { title: "Transactions", url: "/transactions", icon: CreditCard },
-  { title: "Budgets", url: "/budgets", icon: Target },
-  { title: "Analytics", url: "/analytics", icon: BarChart3 },
-  { title: "Goals", url: "/goals", icon: TrendingUp },
-  { title: "Settings", url: "/settings", icon: Settings },
-];
-
-const adminItems = [
-  { title: "Dashboard", url: "/dashboard", icon: Home },
-  { title: "Quick Add", url: "/quick-add", icon: MessageCircle },
-  { title: "Users", url: "/users", icon: Users },
-  { title: "Analytics", url: "/analytics", icon: BarChart3 },
-  { title: "Reports", url: "/reports", icon: PieChart },
-  { title: "Settings", url: "/settings", icon: Settings },
-];
-
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
@@ -97,53 +78,102 @@ export function AppSidebar() {
   const displayName = profile
     ? `${profile.firstName || ""} ${profile.lastName || ""}`.trim() ||
       profile.username
-    : localStorage.getItem("userName") || "User";
+    : localStorage.getItem("userName") || t("sidebar.default_user");
+
   const userEmail =
     profile?.email || localStorage.getItem("userEmail") || "user@example.com";
+
   const userRole =
     profile?.role || localStorage.getItem("userRole") || "customer";
+
   const userSubscription = localStorage.getItem("userSubscription") || "basic";
 
-  const items = userRole === "admin" ? adminItems : customerItems;
-
-  const navigationItems = [
+  // ✅ FIX: Localize navigation items
+  const customerItems = [
     {
       title: t("navigation.dashboard"),
       url: "/dashboard",
       icon: LayoutDashboard,
-      badge: null,
+    },
+    {
+      title: t("navigation.quick_add"),
+      url: "/quick-add",
+      icon: MessageCircle,
     },
     {
       title: t("navigation.transactions"),
       url: "/transactions",
       icon: CreditCard,
-      badge: null,
     },
     {
       title: t("navigation.budget"),
       url: "/budget",
       icon: PiggyBank,
-      badge: null,
+    },
+    {
+      title: t("navigation.analytics"),
+      url: "/analytics",
+      icon: BarChart3,
     },
     {
       title: t("navigation.goals"),
       url: "/goals",
       icon: Target,
-      badge: null,
+    },
+    {
+      title: t("navigation.settings"),
+      url: "/settings",
+      icon: Settings,
+    },
+  ];
+
+  const adminItems = [
+    {
+      title: t("navigation.dashboard"),
+      url: "/dashboard",
+      icon: LayoutDashboard,
+    },
+    {
+      title: t("navigation.quick_add"),
+      url: "/quick-add",
+      icon: MessageCircle,
+    },
+    {
+      title: t("sidebar.users"),
+      url: "/users",
+      icon: Users,
     },
     {
       title: t("navigation.analytics"),
       url: "/analytics",
-      icon: TrendingUp,
-      badge: null,
+      icon: BarChart3,
+    },
+    {
+      title: t("sidebar.reports"),
+      url: "/reports",
+      icon: PieChart,
+    },
+    {
+      title: t("navigation.settings"),
+      url: "/settings",
+      icon: Settings,
     },
   ];
+
+  const items = userRole === "admin" ? adminItems : customerItems;
 
   const isActive = (path: string) => currentPath === path;
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
     isActive
       ? "bg-sidebar-accent text-sidebar-accent-foreground"
       : "hover:bg-sidebar-accent/50";
+
+  // ✅ FIX: Localize user role display
+  const getUserRoleDisplay = (role: string) => {
+    return role === "admin"
+      ? t("sidebar.administrator")
+      : t("sidebar.customer");
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("userRole");
@@ -155,9 +185,10 @@ export function AppSidebar() {
     // Cập nhật state
     setProfile(null);
 
+    // ✅ FIX: Localize toast messages
     toast({
-      title: "Logged out",
-      description: "You have been successfully logged out",
+      title: t("sidebar.logged_out"),
+      description: t("sidebar.logged_out_desc"),
     });
 
     navigate("/");
@@ -171,10 +202,10 @@ export function AppSidebar() {
           {!collapsed && (
             <div className="flex flex-col">
               <span className="font-bold text-sidebar-foreground">
-                FinanceTracker
+                {t("sidebar.app_name")}
               </span>
               <span className="text-xs text-sidebar-foreground/70 capitalize">
-                {userRole}
+                {getUserRoleDisplay(userRole)}
               </span>
             </div>
           )}
@@ -183,7 +214,7 @@ export function AppSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupLabel>{t("sidebar.navigation")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
@@ -197,7 +228,7 @@ export function AppSidebar() {
                 </SidebarMenuItem>
               ))}
 
-              {/* Upgrade button for customers */}
+              {/* ✅ FIX: Localize upgrade button */}
               {userRole !== "admin" && (
                 <SidebarMenuItem>
                   <SidebarMenuButton
@@ -212,10 +243,10 @@ export function AppSidebar() {
                       <Crown className="h-4 w-4" />
                       {!collapsed && (
                         <span className="flex items-center justify-between w-full">
-                          <span>Upgrade</span>
+                          <span>{t("navigation.upgrade")}</span>
                           {userSubscription === "basic" && (
                             <span className="bg-primary text-primary-foreground text-xs px-1.5 py-0.5 rounded">
-                              Pro
+                              {t("sidebar.pro_badge")}
                             </span>
                           )}
                         </span>
@@ -230,7 +261,7 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border">
-        {/* Profile link at the bottom */}
+        {/* ✅ FIX: Profile link - no text changes needed, already using displayName variable */}
         <SidebarMenuItem className="px-2">
           <SidebarMenuButton
             asChild
@@ -255,6 +286,7 @@ export function AppSidebar() {
         <div className="px-2 pb-2 space-y-1">
           {!collapsed && (
             <>
+              {/* ✅ FIX: Localize theme dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -269,21 +301,21 @@ export function AppSidebar() {
                     ) : (
                       <Monitor className="h-4 w-4" />
                     )}
-                    <span className="ml-2">Theme</span>
+                    <span className="ml-2">{t("sidebar.theme")}</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => setTheme("light")}>
                     <Sun className="h-4 w-4 mr-2" />
-                    Light
+                    {t("sidebar.light")}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setTheme("dark")}>
                     <Moon className="h-4 w-4 mr-2" />
-                    Dark
+                    {t("sidebar.dark")}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setTheme("system")}>
                     <Monitor className="h-4 w-4 mr-2" />
-                    System
+                    {t("sidebar.system")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -294,18 +326,20 @@ export function AppSidebar() {
                 className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent"
               >
                 <LogOut className="h-4 w-4" />
-                <span className="ml-2">Logout</span>
+                <span className="ml-2">{t("sidebar.logout")}</span>
               </Button>
             </>
           )}
           {collapsed && (
             <>
+              {/* ✅ FIX: Localize collapsed theme dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
                     size="sm"
                     className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent"
+                    title={t("sidebar.theme")}
                   >
                     {theme === "dark" ? (
                       <Moon className="h-4 w-4" />
@@ -319,15 +353,15 @@ export function AppSidebar() {
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => setTheme("light")}>
                     <Sun className="h-4 w-4 mr-2" />
-                    Light
+                    {t("sidebar.light")}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setTheme("dark")}>
                     <Moon className="h-4 w-4 mr-2" />
-                    Dark
+                    {t("sidebar.dark")}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setTheme("system")}>
                     <Monitor className="h-4 w-4 mr-2" />
-                    System
+                    {t("sidebar.system")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -336,6 +370,7 @@ export function AppSidebar() {
                 size="sm"
                 onClick={handleLogout}
                 className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent"
+                title={t("sidebar.logout")}
               >
                 <LogOut className="h-4 w-4" />
               </Button>

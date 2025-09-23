@@ -92,7 +92,6 @@ const Profile = () => {
         dateOfBirth: data.dateOfBirth || "",
       });
 
-      // Cập nhật localStorage để sync với sidebar
       const fullName =
         `${data.firstName || ""} ${data.lastName || ""}`.trim() ||
         data.username;
@@ -121,7 +120,7 @@ const Profile = () => {
 
       setIsEditing(false);
       toast({
-        title: t("profile.profile_updated"),
+        title: t("common.success"),
         description: t("profile.profile_updated_desc"),
       });
 
@@ -179,7 +178,7 @@ const Profile = () => {
       return;
     }
 
-    // Validate file size (5MB)
+    // Validate file size (2MB instead of 5MB for better UX)
     if (file.size > 2 * 1024 * 1024) {
       toast({
         title: t("profile.file_too_large"),
@@ -197,13 +196,13 @@ const Profile = () => {
       await fetchProfile();
 
       toast({
-        title: t("profile.avatar_updated"),
+        title: t("common.success"),
         description: t("profile.avatar_updated_desc"),
       });
     } catch (error: any) {
       console.error("Failed to upload avatar:", error);
 
-      // **FIX: Better error handling**
+      // Better error handling
       let errorMessage = t("profile.upload_failed");
       if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
@@ -234,13 +233,13 @@ const Profile = () => {
       await fetchProfile();
 
       toast({
-        title: t("profile.avatar_removed"),
+        title: t("common.success"),
         description: t("profile.avatar_removed_desc"),
       });
     } catch (error: any) {
       console.error("Failed to delete avatar:", error);
       toast({
-        title: t("profile.delete_failed"),
+        title: t("common.error"),
         description:
           error.response?.data?.message || t("profile.delete_failed"),
         variant: "destructive",
@@ -252,6 +251,17 @@ const Profile = () => {
 
   const handleUpgrade = () => {
     navigate("/upgrade");
+  };
+
+  const getLevelText = (level: string) => {
+    const levelMap: Record<string, string> = {
+      Bronze: t("profile.level_bronze"),
+      Silver: t("profile.level_silver"),
+      Gold: t("profile.level_gold"),
+      Platinum: t("profile.level_platinum"),
+      Diamond: t("profile.level_diamond"),
+    };
+    return levelMap[level] || level;
   };
 
   const getLevelColor = (level: string) => {
@@ -274,6 +284,54 @@ const Profile = () => {
   const formatDate = (dateString?: string) => {
     if (!dateString) return t("profile.not_set");
     return new Date(dateString).toLocaleDateString();
+  };
+
+  const getAvatarInitials = (displayName: string) => {
+    return displayName
+      .split(" ")
+      .filter((n) => n.length > 0)
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2); // Only take first 2 characters
+  };
+
+  const getAchievementTitle = (achievement: any) => {
+    // Normalize title thành key format
+    const key = achievement.title?.toLowerCase().replace(/\s+/g, "_");
+
+    const titleMap: Record<string, string> = {
+      first_steps: t("profile.achievement_first_transaction"),
+      first_transaction: t("profile.achievement_first_transaction"),
+      transaction_master: t("profile.achievement_transaction_master"),
+      budget_creator: t("profile.achievement_budget_creator"),
+      goal_achiever: t("profile.achievement_goal_achiever"),
+      savings_champion: t("profile.achievement_savings_champion"),
+      consistent_tracker: t("profile.achievement_consistent_tracker"),
+      category_explorer: t("profile.achievement_category_explorer"),
+      financial_planner: t("profile.achievement_financial_planner"),
+    };
+
+    return titleMap[key] || achievement.title; // Fallback to original
+  };
+
+  const getAchievementDescription = (achievement: any) => {
+    // Normalize title thành key format
+    const key = achievement.title?.toLowerCase().replace(/\s+/g, "_");
+
+    const descMap: Record<string, string> = {
+      first_steps: t("profile.achievement_first_transaction_desc"),
+      first_transaction: t("profile.achievement_first_transaction_desc"),
+      transaction_master: t("profile.achievement_transaction_master_desc"),
+      budget_creator: t("profile.achievement_budget_creator_desc"),
+      goal_achiever: t("profile.achievement_goal_achiever_desc"),
+      savings_champion: t("profile.achievement_savings_champion_desc"),
+      consistent_tracker: t("profile.achievement_consistent_tracker_desc"),
+      category_explorer: t("profile.achievement_category_explorer_desc"),
+      financial_planner: t("profile.achievement_financial_planner_desc"),
+    };
+
+    return descMap[key] || achievement.description; // Fallback to original
   };
 
   if (loading) {
@@ -350,11 +408,7 @@ const Profile = () => {
                       alt={displayName}
                     />
                     <AvatarFallback className="text-lg">
-                      {displayName
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")
-                        .toUpperCase()}
+                      {getAvatarInitials(displayName)}
                     </AvatarFallback>
                   </Avatar>
                   {isEditing && (
@@ -365,6 +419,7 @@ const Profile = () => {
                         className="h-8 w-8 rounded-full p-0"
                         onClick={() => fileInputRef.current?.click()}
                         disabled={uploadingAvatar}
+                        title={t("profile.upload_avatar")}
                       >
                         {uploadingAvatar ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
@@ -379,6 +434,7 @@ const Profile = () => {
                           className="h-8 w-8 rounded-full p-0 text-destructive hover:text-destructive"
                           onClick={handleDeleteAvatar}
                           disabled={uploadingAvatar}
+                          title={t("profile.remove_avatar")}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -389,7 +445,9 @@ const Profile = () => {
                 <div>
                   <h3 className="text-lg font-semibold">{displayName}</h3>
                   <p className="text-muted-foreground">
-                    {t("profile.member_since", { date: profileData.joinDate })}
+                    {t("profile.member_since", {
+                      date: formatDate(profileData.joinDate),
+                    })}
                   </p>
                   <div className="flex gap-2 mt-1">
                     <Badge variant="secondary">
@@ -429,6 +487,7 @@ const Profile = () => {
                       onChange={(e) =>
                         setEditForm({ ...editForm, firstName: e.target.value })
                       }
+                      placeholder={t("profile.first_name_placeholder")}
                     />
                   ) : (
                     <div className="flex items-center gap-2 mt-1">
@@ -449,6 +508,7 @@ const Profile = () => {
                       onChange={(e) =>
                         setEditForm({ ...editForm, lastName: e.target.value })
                       }
+                      placeholder={t("profile.last_name_placeholder")}
                     />
                   ) : (
                     <div className="flex items-center gap-2 mt-1">
@@ -469,6 +529,7 @@ const Profile = () => {
                       onChange={(e) =>
                         setEditForm({ ...editForm, username: e.target.value })
                       }
+                      placeholder={t("profile.username_placeholder")}
                     />
                   ) : (
                     <div className="flex items-center gap-2 mt-1">
@@ -488,6 +549,7 @@ const Profile = () => {
                       onChange={(e) =>
                         setEditForm({ ...editForm, email: e.target.value })
                       }
+                      placeholder={t("profile.email_placeholder")}
                     />
                   ) : (
                     <div className="flex items-center gap-2 mt-1">
@@ -506,6 +568,7 @@ const Profile = () => {
                       onChange={(e) =>
                         setEditForm({ ...editForm, phone: e.target.value })
                       }
+                      placeholder={t("profile.phone_placeholder")}
                     />
                   ) : (
                     <div className="flex items-center gap-2 mt-1">
@@ -549,6 +612,7 @@ const Profile = () => {
                         setEditForm({ ...editForm, address: e.target.value })
                       }
                       rows={3}
+                      placeholder={t("profile.address_placeholder")}
                     />
                   ) : (
                     <div className="flex items-center gap-2 mt-1">
@@ -616,18 +680,19 @@ const Profile = () => {
                         <IconComponent className="h-5 w-5" />
                       </div>
                       <div className="flex-1">
-                        <h4 className="font-medium">{achievement.title}</h4>
+                        {/* ✅ FIX: Pass whole achievement object */}
+                        <h4 className="font-medium">
+                          {getAchievementTitle(achievement)}
+                        </h4>
                         <p className="text-sm text-muted-foreground">
-                          {achievement.description}
+                          {getAchievementDescription(achievement)}
                         </p>
                         {achievement.earned && achievement.date && (
                           <div className="flex items-center gap-1 mt-1">
                             <Calendar className="h-3 w-3" />
                             <span className="text-xs text-muted-foreground">
                               {t("profile.earned_on", {
-                                date: new Date(
-                                  achievement.date
-                                ).toLocaleDateString(),
+                                date: formatDate(achievement.date),
                               })}
                             </span>
                           </div>
@@ -728,7 +793,7 @@ const Profile = () => {
                       profileData.accountLevel.currentLevel
                     )}`}
                   >
-                    {profileData.accountLevel.currentLevel}
+                    {getLevelText(profileData.accountLevel.currentLevel)}
                   </div>
                   <div className="text-sm text-muted-foreground">
                     {t("profile.current_level")}
@@ -741,7 +806,7 @@ const Profile = () => {
                 <div className="text-center text-sm text-muted-foreground">
                   {t("profile.to_next_level", {
                     progress: profileData.accountLevel.progress,
-                    nextLevel: profileData.accountLevel.nextLevel,
+                    nextLevel: getLevelText(profileData.accountLevel.nextLevel),
                   })}
                 </div>
                 <div className="text-xs text-muted-foreground text-center">
@@ -753,7 +818,7 @@ const Profile = () => {
             </CardContent>
           </Card>
 
-          {/* Subscription Card - Demo */}
+          {/* Subscription Card */}
           <Card className="transition-all hover:shadow-md">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -785,7 +850,9 @@ const Profile = () => {
                         {t("profile.premium_active")}
                       </Badge>
                       <p className="text-sm text-muted-foreground mt-2">
-                        {t("profile.next_billing", { date: "June 15, 2024" })}
+                        {t("profile.next_billing", {
+                          date: t("profile.sample_billing_date"),
+                        })}
                       </p>
                     </div>
                     <Button variant="outline" className="w-full">
