@@ -43,11 +43,13 @@ import {
   type NotificationSettings,
   type PrivacySettings,
 } from "@/services/settingsService";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 const Settings = () => {
   const { theme, setTheme } = useTheme();
   const { t, i18n: i18nInstance } = useTranslation();
   const { toast } = useToast();
+  const { setCurrency } = useCurrency();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
@@ -106,7 +108,7 @@ const Settings = () => {
         variant: "destructive",
       });
     }
-  }, [settingsError, toast, t]); // ✅ Riêng biệt để tránh loop
+  }, [settingsError, toast, t]);
 
   const handleSaveProfile = async () => {
     try {
@@ -128,6 +130,8 @@ const Settings = () => {
       const fullName = `${profile.firstName} ${profile.lastName}`.trim();
       localStorage.setItem("userName", fullName);
       localStorage.setItem("userEmail", profile.email);
+
+      setCurrency(profile.currency);
 
       // Trigger storage event để sidebar cập nhật
       window.dispatchEvent(
@@ -253,12 +257,18 @@ const Settings = () => {
   };
 
   const handleLanguageChange = (value: string) => {
-    console.log("Changing language to:", value); // Debug
+    console.log("Changing language to:", value);
     setProfile({ ...profile, language: value });
     i18n.changeLanguage(value).then(() => {
-      console.log("Language changed to:", value); // Debug
+      console.log("Language changed to:", value);
     });
     localStorage.setItem("language", value);
+  };
+
+  const handleCurrencyChange = (value: string) => {
+    setProfile({ ...profile, currency: value });
+    // Instant update currency trong context
+    setCurrency(value);
   };
 
   const themeOptions = [
@@ -284,6 +294,7 @@ const Settings = () => {
         language: settings.language,
       });
 
+      setCurrency(settings.currency);
       setNotifications(settings.notifications);
       setPrivacy(settings.privacy);
 
@@ -437,12 +448,10 @@ const Settings = () => {
                 <Label htmlFor="currency">{t("settings.currency")}</Label>
                 <Select
                   value={profile.currency}
-                  onValueChange={(value) =>
-                    setProfile({ ...profile, currency: value })
-                  }
+                  onValueChange={handleCurrencyChange}
                 >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Select currency" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="USD">

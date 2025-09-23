@@ -40,6 +40,7 @@ import {
   BarChart3,
   Loader2,
 } from "lucide-react";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -56,6 +57,7 @@ const Analytics = () => {
   );
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { formatCurrency } = useCurrency();
 
   useEffect(() => {
     fetchAnalyticsData();
@@ -225,7 +227,7 @@ const Analytics = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ${analyticsData.totalIncome.toLocaleString()}
+              {formatCurrency(analyticsData.totalIncome)}
             </div>
             <p className="text-xs text-muted-foreground">
               <span className="text-success flex items-center">
@@ -245,7 +247,7 @@ const Analytics = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ${analyticsData.totalExpenses.toLocaleString()}
+              {formatCurrency(analyticsData.totalExpenses)}
             </div>
             <p className="text-xs text-muted-foreground">
               <span className="text-success flex items-center">
@@ -285,7 +287,7 @@ const Analytics = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ${analyticsData.avgMonthlyExpenses.toFixed(0)}
+              {formatCurrency(analyticsData.avgMonthlyExpenses)}
             </div>
             <p className="text-xs text-muted-foreground">
               <span className="text-success flex items-center">
@@ -316,7 +318,12 @@ const Analytics = () => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} interval={0} />
                 <YAxis />
-                <Tooltip />
+                <Tooltip
+                  formatter={(value) => [
+                    formatCurrency(Number(value)),
+                    t("analytics.amount"),
+                  ]}
+                />
                 <Bar
                   dataKey="income"
                   fill="hsl(var(--primary))"
@@ -349,7 +356,12 @@ const Analytics = () => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} interval={0} />
                 <YAxis />
-                <Tooltip />
+                <Tooltip
+                  formatter={(value) => [
+                    formatCurrency(Number(value)),
+                    t("analytics.net_worth"),
+                  ]}
+                />
                 <Area
                   type="monotone"
                   dataKey="netWorth"
@@ -377,7 +389,12 @@ const Analytics = () => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} interval={0} />
                 <YAxis />
-                <Tooltip />
+                <Tooltip
+                  formatter={(value) => [
+                    formatCurrency(Number(value)),
+                    t("analytics.savings"),
+                  ]}
+                />
                 <Line
                   type="monotone"
                   dataKey="savings"
@@ -418,9 +435,9 @@ const Analytics = () => {
                       ))}
                     </Pie>
                     <Tooltip
-                      formatter={(value) => [
-                        `$${value}`,
-                        t("analytics.amount"),
+                      formatter={(value, name) => [
+                        formatCurrency(Number(value)),
+                        name,
                       ]}
                     />
                   </RechartsPieChart>

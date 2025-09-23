@@ -18,6 +18,7 @@ import {
   DollarSign,
   Loader2,
 } from "lucide-react";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import {
   Dialog,
   DialogContent,
@@ -61,6 +62,7 @@ const Goals = () => {
   });
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
+  const { formatCurrency } = useCurrency();
 
   useEffect(() => {
     loadGoals();
@@ -185,7 +187,7 @@ const Goals = () => {
       toast({
         title: t("common.success"),
         description: t("goals.money_added", {
-          amount: amount.toLocaleString(),
+          amount: formatCurrency(amount),
         }),
       });
       await loadGoals();
@@ -231,13 +233,6 @@ const Goals = () => {
     const diffTime = deadlineDate.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays;
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(amount);
   };
 
   if (loading) {
@@ -491,6 +486,42 @@ const Goals = () => {
                   </div>
 
                   <div className="flex gap-2 flex-wrap">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleAddMoney(goal.goalId, 50)}
+                      disabled={isCompleted}
+                    >
+                      <DollarSign className="h-4 w-4 mr-1" />+
+                      {formatCurrency(50)}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleAddMoney(goal.goalId, 100)}
+                      disabled={isCompleted}
+                    >
+                      <DollarSign className="h-4 w-4 mr-1" />+
+                      {formatCurrency(100)}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleAddMoney(goal.goalId, 250)}
+                      disabled={isCompleted}
+                    >
+                      <DollarSign className="h-4 w-4 mr-1" />+
+                      {formatCurrency(250)}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleAddMoney(goal.goalId, 500)}
+                      disabled={isCompleted}
+                    >
+                      <DollarSign className="h-4 w-4 mr-1" />+
+                      {formatCurrency(500)}
+                    </Button>
                     <Button
                       variant="outline"
                       size="sm"

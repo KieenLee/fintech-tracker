@@ -1,19 +1,48 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Cell, Pie, LineChart, Line, Area, AreaChart } from "recharts";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart as RechartsPieChart,
+  Cell,
+  Pie,
+  LineChart,
+  Line,
+  Area,
+  AreaChart,
+} from "recharts";
 import { useState } from "react";
-import { 
-  DollarSign, 
-  TrendingUp, 
-  Users, 
+import { useCurrency } from "@/contexts/CurrencyContext";
+import {
+  DollarSign,
+  TrendingUp,
+  Users,
   CreditCard,
   Calendar,
-  Download
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const Reports = () => {
   const [timeRange, setTimeRange] = useState("monthly");
+  const { formatCurrency } = useCurrency();
 
   // Sample data for different time periods
   const revenueData = [
@@ -44,8 +73,12 @@ const Reports = () => {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Reports & Analytics</h1>
-          <p className="text-muted-foreground">Comprehensive business insights and metrics</p>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Reports & Analytics
+          </h1>
+          <p className="text-muted-foreground">
+            Comprehensive business insights and metrics
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <Select value={timeRange} onValueChange={setTimeRange}>
@@ -74,7 +107,7 @@ const Reports = () => {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$27,800</div>
+            <div className="text-2xl font-bold">{formatCurrency(27800)}</div>
             <p className="text-xs text-muted-foreground">
               <span className="text-success">+12.5%</span> from last period
             </p>
@@ -132,12 +165,19 @@ const Reports = () => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis />
-                <Tooltip />
-                <Area 
-                  type="monotone" 
-                  dataKey="revenue" 
-                  stroke="hsl(var(--primary))" 
-                  fill="hsl(var(--primary))" 
+                <Tooltip
+                  formatter={(value, name) => [
+                    name === "Revenue ($)"
+                      ? formatCurrency(Number(value))
+                      : value,
+                    name === "Revenue ($)" ? "Revenue" : name,
+                  ]}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="hsl(var(--primary))"
+                  fill="hsl(var(--primary))"
                   fillOpacity={0.6}
                   name="Revenue ($)"
                 />
@@ -158,9 +198,24 @@ const Reports = () => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="day" />
                 <YAxis />
-                <Tooltip />
-                <Bar dataKey="newUsers" fill="hsl(var(--chart-1))" name="New Users" />
-                <Bar dataKey="activeUsers" fill="hsl(var(--chart-2))" name="Active Users" />
+                <Tooltip
+                  formatter={(value, name) => [
+                    name === "Revenue ($)"
+                      ? formatCurrency(Number(value))
+                      : value,
+                    name === "Revenue ($)" ? "Revenue" : name,
+                  ]}
+                />
+                <Bar
+                  dataKey="newUsers"
+                  fill="hsl(var(--chart-1))"
+                  name="New Users"
+                />
+                <Bar
+                  dataKey="activeUsers"
+                  fill="hsl(var(--chart-2))"
+                  name="Active Users"
+                />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -199,7 +254,9 @@ const Reports = () => {
         <Card>
           <CardHeader>
             <CardTitle>Revenue vs Users</CardTitle>
-            <CardDescription>Correlation between revenue and user count</CardDescription>
+            <CardDescription>
+              Correlation between revenue and user count
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -209,19 +266,19 @@ const Reports = () => {
                 <YAxis yAxisId="left" />
                 <YAxis yAxisId="right" orientation="right" />
                 <Tooltip />
-                <Line 
+                <Line
                   yAxisId="left"
-                  type="monotone" 
-                  dataKey="revenue" 
-                  stroke="hsl(var(--primary))" 
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="hsl(var(--primary))"
                   strokeWidth={3}
                   name="Revenue ($)"
                 />
-                <Line 
+                <Line
                   yAxisId="right"
-                  type="monotone" 
-                  dataKey="users" 
-                  stroke="hsl(var(--chart-2))" 
+                  type="monotone"
+                  dataKey="users"
+                  stroke="hsl(var(--chart-2))"
                   strokeWidth={3}
                   name="Users"
                 />
@@ -254,7 +311,9 @@ const Reports = () => {
                 {revenueData.map((data, index) => (
                   <tr key={index} className="border-b">
                     <td className="py-3">{data.month}</td>
-                    <td className="text-right py-3">${data.revenue}</td>
+                    <td className="text-right py-3">
+                      {formatCurrency(data.revenue)}
+                    </td>
                     <td className="text-right py-3">{data.users}</td>
                     <td className="text-right py-3">{data.premium}</td>
                     <td className="text-right py-3">3.2%</td>

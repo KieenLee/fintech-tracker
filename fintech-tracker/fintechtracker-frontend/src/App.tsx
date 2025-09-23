@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { CurrencyProvider } from "./contexts/CurrencyContext";
 import Index from "./pages/Index";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
@@ -31,114 +32,116 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/verify-otp" element={<VerifyOTP />} />
-          <Route
-            path="/dashboard"
-            element={
-              <DashboardLayout>
-                <Dashboard />
-              </DashboardLayout>
-            }
-          />
-          <Route
-            path="/transactions"
-            element={
-              <DashboardLayout>
-                <Transactions />
-              </DashboardLayout>
-            }
-          />
-          <Route
-            path="/budgets"
-            element={
-              <DashboardLayout>
-                <Budgets />
-              </DashboardLayout>
-            }
-          />
-          <Route
-            path="/goals"
-            element={
-              <DashboardLayout>
-                <Goals />
-              </DashboardLayout>
-            }
-          />
-          <Route
-            path="/analytics"
-            element={
-              <DashboardLayout>
-                <Analytics />
-              </DashboardLayout>
-            }
-          />
-          <Route
-            path="/settings"
-            element={
-              <DashboardLayout>
-                <Settings />
-              </DashboardLayout>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <DashboardLayout>
-                <Profile />
-              </DashboardLayout>
-            }
-          />
-          <Route
-            path="/quick-add"
-            element={
-              <DashboardLayout>
-                <QuickAdd />
-              </DashboardLayout>
-            }
-          />
-          {/* Admin Routes */}
-          <Route
-            path="/users"
-            element={
-              <DashboardLayout>
-                <Suspense fallback={<div>Loading...</div>}>
-                  <Users />
-                </Suspense>
-              </DashboardLayout>
-            }
-          />
-          <Route
-            path="/reports"
-            element={
-              <DashboardLayout>
-                <Suspense fallback={<div>Loading...</div>}>
-                  <Reports />
-                </Suspense>
-              </DashboardLayout>
-            }
-          />
-          {/* Customer Routes */}
-          <Route
-            path="/upgrade"
-            element={
-              <DashboardLayout>
-                <Suspense fallback={<div>Loading...</div>}>
-                  <Upgrade />
-                </Suspense>
-              </DashboardLayout>
-            }
-          />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <CurrencyProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/verify-otp" element={<VerifyOTP />} />
+            <Route
+              path="/dashboard"
+              element={
+                <DashboardLayout>
+                  <Dashboard />
+                </DashboardLayout>
+              }
+            />
+            <Route
+              path="/transactions"
+              element={
+                <DashboardLayout>
+                  <Transactions />
+                </DashboardLayout>
+              }
+            />
+            <Route
+              path="/budgets"
+              element={
+                <DashboardLayout>
+                  <Budgets />
+                </DashboardLayout>
+              }
+            />
+            <Route
+              path="/goals"
+              element={
+                <DashboardLayout>
+                  <Goals />
+                </DashboardLayout>
+              }
+            />
+            <Route
+              path="/analytics"
+              element={
+                <DashboardLayout>
+                  <Analytics />
+                </DashboardLayout>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <DashboardLayout>
+                  <Settings />
+                </DashboardLayout>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <DashboardLayout>
+                  <Profile />
+                </DashboardLayout>
+              }
+            />
+            <Route
+              path="/quick-add"
+              element={
+                <DashboardLayout>
+                  <QuickAdd />
+                </DashboardLayout>
+              }
+            />
+            {/* Admin Routes */}
+            <Route
+              path="/users"
+              element={
+                <DashboardLayout>
+                  <Suspense fallback={<div>Loading...</div>}>
+                    <Users />
+                  </Suspense>
+                </DashboardLayout>
+              }
+            />
+            <Route
+              path="/reports"
+              element={
+                <DashboardLayout>
+                  <Suspense fallback={<div>Loading...</div>}>
+                    <Reports />
+                  </Suspense>
+                </DashboardLayout>
+              }
+            />
+            {/* Customer Routes */}
+            <Route
+              path="/upgrade"
+              element={
+                <DashboardLayout>
+                  <Suspense fallback={<div>Loading...</div>}>
+                    <Upgrade />
+                  </Suspense>
+                </DashboardLayout>
+              }
+            />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </CurrencyProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

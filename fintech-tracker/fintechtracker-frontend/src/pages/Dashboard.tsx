@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import {
   ArrowDownIcon,
   ArrowUpIcon,
@@ -49,6 +50,7 @@ const Dashboard = () => {
   const [monthlyTrendData, setMonthlyTrendData] = useState<MonthlyTrend[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { formatCurrency } = useCurrency();
   const [budgets, setBudgets] = useState([]);
 
   useEffect(() => {
@@ -125,12 +127,12 @@ const Dashboard = () => {
       };
     }) || [];
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(amount);
-  };
+  // const formatCurrency = (amount: number) => {
+  //   return new Intl.NumberFormat("vi-VN", {
+  //     style: "currency",
+  //     currency: "VND",
+  //   }).format(amount);
+  // };
 
   // Loading state
   if (loading) {
@@ -269,7 +271,9 @@ const Dashboard = () => {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
                     <YAxis />
-                    <Tooltip />
+                    <Tooltip
+                      formatter={(value) => formatCurrency(Number(value))}
+                    />
                     <Bar dataKey="amount" fill="hsl(var(--primary))" />
                   </BarChart>
                 </ResponsiveContainer>
@@ -305,7 +309,9 @@ const Dashboard = () => {
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip
+                      formatter={(value) => formatCurrency(Number(value))}
+                    />
                   </RechartsPieChart>
                 </ResponsiveContainer>
               ) : (
@@ -421,7 +427,9 @@ const Dashboard = () => {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis />
-                  <Tooltip />
+                  <Tooltip
+                    formatter={(value) => formatCurrency(Number(value))}
+                  />
                   <Bar dataKey="amount" fill="hsl(var(--primary))" />
                 </BarChart>
               </ResponsiveContainer>
@@ -457,7 +465,9 @@ const Dashboard = () => {
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip
+                    formatter={(value) => formatCurrency(Number(value))}
+                  />
                 </RechartsPieChart>
               </ResponsiveContainer>
             ) : (

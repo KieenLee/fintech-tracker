@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Plus, Edit, Trash2, Target, AlertTriangle } from "lucide-react";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { useToast } from "@/components/ui/use-toast";
 import AddBudgetDialog from "@/components/AddBudgetDialog";
 import {
@@ -21,6 +22,7 @@ import {
 const Budgets = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const { formatCurrency } = useCurrency();
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [budgetSummary, setBudgetSummary] = useState<BudgetResponse | null>(
     null
@@ -86,13 +88,6 @@ const Budgets = () => {
     if (percentage >= 100) return "bg-destructive";
     if (percentage >= 80) return "bg-warning";
     return "bg-primary";
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(amount);
   };
 
   // Loading state

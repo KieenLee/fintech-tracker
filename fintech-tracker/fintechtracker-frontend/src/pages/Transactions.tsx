@@ -28,6 +28,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { Plus, Search, Download, Edit, Trash2 } from "lucide-react";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import {
@@ -43,6 +44,7 @@ import { useTranslation } from "react-i18next";
 const Transactions = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const { formatCurrency } = useCurrency();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -218,7 +220,7 @@ const Transactions = () => {
 
   const formatAmount = (amount: number, type: string) => {
     const prefix = type === "income" ? "+" : "-";
-    return `${prefix}${Math.abs(amount).toLocaleString("vi-VN")} đ`;
+    return `${prefix}${formatCurrency(Math.abs(amount))}`;
   };
 
   // Get unique categories and accounts for filters
