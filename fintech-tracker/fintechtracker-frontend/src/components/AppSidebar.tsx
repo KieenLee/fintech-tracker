@@ -57,17 +57,14 @@ export function AppSidebar() {
   const { t } = useTranslation();
   const currentPath = location.pathname;
 
-  // State cho thông tin user từ API
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
 
   useEffect(() => {
-    // Gọi API lấy profile khi sidebar mount
     const fetchProfile = async () => {
       try {
         const data = await profileService.getProfile();
         setProfile(data);
       } catch (error) {
-        // Có thể fallback về localStorage nếu muốn
         setProfile(null);
       }
     };
@@ -107,7 +104,7 @@ export function AppSidebar() {
     },
     {
       title: t("navigation.budget"),
-      url: "/budget",
+      url: "/budgets",
       icon: PiggyBank,
     },
     {

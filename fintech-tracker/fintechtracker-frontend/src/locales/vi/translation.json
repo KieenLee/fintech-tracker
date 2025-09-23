@@ -328,7 +328,8 @@
     "validation_error_desc": "Vui lòng điền đầy đủ các trường bắt buộc",
     "updated_successfully": "Cập nhật giao dịch thành công",
     "created_successfully": "Tạo giao dịch thành công",
-    "failed_to_save": "Không thể lưu giao dịch"
+    "failed_to_save": "Không thể lưu giao dịch",
+    "location": "Địa điểm"
   },
   "profile": {
     "title": "Hồ sơ",

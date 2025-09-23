@@ -335,7 +335,8 @@
     "validation_error_desc": "Please fill in all required fields",
     "updated_successfully": "Transaction updated successfully",
     "created_successfully": "Transaction created successfully",
-    "failed_to_save": "Failed to save transaction"
+    "failed_to_save": "Failed to save transaction",
+    "location": "Location"
   },
   "profile": {
     "title": "Profile",
