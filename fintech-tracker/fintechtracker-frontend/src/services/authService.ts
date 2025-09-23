@@ -20,3 +20,24 @@ export async function login({
   }
   return res.json();
 }
+
+export interface RegisterResponse {
+  message: string;
+  email: string;
+}
+
+export interface VerifyOtpResponse {
+  message: string;
+}
+
+export interface ResendOtpResponse {
+  message: string;
+  email: string;
+}
+
+export interface PendingRegistration {
+  email: string;
+  firstName: string;
+  lastName: string;
+  username: string;
+}

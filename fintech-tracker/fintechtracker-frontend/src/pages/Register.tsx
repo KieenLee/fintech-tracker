@@ -38,11 +38,60 @@ const Register = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({
+    email: "",
+    username: "",
+  });
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const checkEmailAvailability = async (email: string) => {
+    if (!email || !email.includes("@")) return;
+
+    try {
+      await axios.post("http://localhost:5013/api/auth/check-email", { email });
+      setValidationErrors((prev) => ({ ...prev, email: "" }));
+    } catch (error: any) {
+      if (error.response?.status === 409) {
+        setValidationErrors((prev) => ({
+          ...prev,
+          email: "This email is already registered",
+        }));
+      }
+    }
+  };
+
+  const checkUsernameAvailability = async (username: string) => {
+    if (!username || username.length < 3) return;
+
+    try {
+      await axios.post("http://localhost:5013/api/auth/check-username", {
+        username,
+      });
+      setValidationErrors((prev) => ({ ...prev, username: "" }));
+    } catch (error: any) {
+      if (error.response?.status === 409) {
+        setValidationErrors((prev) => ({
+          ...prev,
+          username: "This username is already taken",
+        }));
+      }
+    }
+  };
+
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+
+    if (field === "email" || field === "username") {
+      setValidationErrors((prev) => ({ ...prev, [field]: "" }));
+    }
+
+    if (field === "email") {
+      setTimeout(() => checkEmailAvailability(value), 1000);
+    }
+    if (field === "username") {
+      setTimeout(() => checkUsernameAvailability(value), 1000);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -69,26 +118,74 @@ const Register = () => {
     setIsLoading(true);
 
     try {
-      await axios.post("http://localhost:5013/api/auth/register", {
-        username: formData.username,
-        email: formData.email,
-        password: formData.password,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-      });
+      const response = await axios.post(
+        "http://localhost:5013/api/auth/register",
+        {
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+        }
+      );
+
+      localStorage.setItem(
+        "pendingRegistration",
+        JSON.stringify({
+          email: formData.email,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          username: formData.username,
+        })
+      );
 
       toast({
-        title: "Registration successful!",
-        description: "You can now log in.",
+        title: "Verification code sent!",
+        description: `Please check your email (${formData.email}) for the verification code.`,
       });
 
-      navigate("/login");
+      navigate(`/verify-otp?email=${encodeURIComponent(formData.email)}`);
     } catch (error: any) {
+      let errorMessage = "Registration failed";
+
+      if (error.response?.status === 409) {
+        errorMessage =
+          error.response?.data?.message || "Email or username already exists";
+      } else if (error.response?.status === 400) {
+        errorMessage =
+          error.response?.data?.message || "Please check your input data";
+      } else if (error.response?.status === 500) {
+        errorMessage = "Server error. Please try again later.";
+      } else {
+        errorMessage =
+          error.response?.data?.message ||
+          "Network error. Please check your connection.";
+      }
+
       toast({
         title: "Registration failed",
-        description: error.response?.data?.message || "Unknown error",
+        description: errorMessage,
         variant: "destructive",
       });
+
+      if (error.response?.data?.message?.includes("Email already exists")) {
+        setTimeout(() => {
+          toast({
+            title: "Email exists",
+            description:
+              "This email is already registered. Try logging in instead.",
+            action: (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/login")}
+              >
+                Go to Login
+              </Button>
+            ),
+          });
+        }, 2000);
+      }
     }
 
     setIsLoading(false);
@@ -124,24 +221,26 @@ const Register = () => {
                   <Label htmlFor="firstName">First Name</Label>
                   <Input
                     id="firstName"
-                    placeholder="John"
+                    type="text"
                     value={formData.firstName}
                     onChange={(e) =>
                       handleInputChange("firstName", e.target.value)
                     }
                     required
+                    placeholder="John"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="lastName">Last Name</Label>
                   <Input
                     id="lastName"
-                    placeholder="Doe"
+                    type="text"
                     value={formData.lastName}
                     onChange={(e) =>
                       handleInputChange("lastName", e.target.value)
                     }
                     required
+                    placeholder="Doe"
                   />
                 </div>
               </div>
@@ -150,13 +249,22 @@ const Register = () => {
                 <Label htmlFor="username">Username</Label>
                 <Input
                   id="username"
-                  placeholder="johndoe123"
+                  type="text"
                   value={formData.username}
                   onChange={(e) =>
                     handleInputChange("username", e.target.value)
                   }
                   required
+                  placeholder="johndoe"
+                  className={
+                    validationErrors.username ? "border-destructive" : ""
+                  }
                 />
+                {validationErrors.username && (
+                  <p className="text-sm text-destructive">
+                    {validationErrors.username}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -164,29 +272,17 @@ const Register = () => {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="john@example.com"
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
                   required
+                  placeholder="john@example.com"
+                  className={validationErrors.email ? "border-destructive" : ""}
                 />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="accountType">Account Type</Label>
-                <Select
-                  value={formData.accountType}
-                  onValueChange={(value) =>
-                    handleInputChange("accountType", value)
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select account type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="personal">Personal</SelectItem>
-                    <SelectItem value="family">Family</SelectItem>
-                  </SelectContent>
-                </Select>
+                {validationErrors.email && (
+                  <p className="text-sm text-destructive">
+                    {validationErrors.email}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -195,24 +291,24 @@ const Register = () => {
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Create a password"
                     value={formData.password}
                     onChange={(e) =>
                       handleInputChange("password", e.target.value)
                     }
                     required
+                    placeholder="Create a strong password"
                   />
                   <Button
                     type="button"
                     variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    size="icon"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      <EyeOff className="h-4 w-4" />
                     ) : (
-                      <Eye className="h-4 w-4 text-muted-foreground" />
+                      <Eye className="h-4 w-4" />
                     )}
                   </Button>
                 </div>
@@ -224,27 +320,44 @@ const Register = () => {
                   <Input
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
-                    placeholder="Confirm your password"
                     value={formData.confirmPassword}
                     onChange={(e) =>
                       handleInputChange("confirmPassword", e.target.value)
                     }
                     required
+                    placeholder="Confirm your password"
                   />
                   <Button
                     type="button"
                     variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    size="icon"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
                     {showConfirmPassword ? (
-                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      <EyeOff className="h-4 w-4" />
                     ) : (
-                      <Eye className="h-4 w-4 text-muted-foreground" />
+                      <Eye className="h-4 w-4" />
                     )}
                   </Button>
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="accountType">Account Type</Label>
+                <Select
+                  onValueChange={(value) =>
+                    handleInputChange("accountType", value)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select account type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="personal">Personal</SelectItem>
+                    <SelectItem value="business">Business</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="flex items-center space-x-2">
@@ -255,35 +368,43 @@ const Register = () => {
                     setAcceptTerms(checked as boolean)
                   }
                 />
-                <Label
-                  htmlFor="terms"
-                  className="text-sm text-muted-foreground"
-                >
+                <Label htmlFor="terms" className="text-sm">
                   I agree to the{" "}
-                  <a href="#" className="text-primary hover:underline">
+                  <Link to="/terms" className="text-primary hover:underline">
                     Terms of Service
-                  </a>{" "}
+                  </Link>{" "}
                   and{" "}
-                  <a href="#" className="text-primary hover:underline">
+                  <Link to="/privacy" className="text-primary hover:underline">
                     Privacy Policy
-                  </a>
+                  </Link>
                 </Label>
               </div>
             </CardContent>
 
             <CardFooter className="flex flex-col space-y-4">
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Creating account..." : "Create account"}
+                {isLoading ? "Sending verification code..." : "Create Account"}
               </Button>
 
-              <Separator />
-
-              <div className="text-center text-sm text-muted-foreground">
+              <div className="text-center text-sm">
                 Already have an account?{" "}
                 <Link to="/login" className="text-primary hover:underline">
                   Sign in
                 </Link>
               </div>
+
+              <Separator />
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  /* Google auth logic */
+                }}
+              >
+                Continue with Google
+              </Button>
             </CardFooter>
           </form>
         </Card>

@@ -310,6 +310,30 @@ namespace fintechtracker_backend.Controllers
             }
         }
 
+        [HttpPost("check-email")]
+        public async Task<IActionResult> CheckEmail([FromBody] CheckEmailDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Email))
+                return BadRequest(new { message = "Email is required" });
+
+            if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
+                return Conflict(new { message = "Email already exists" });
+
+            return Ok(new { message = "Email is available" });
+        }
+
+        [HttpPost("check-username")]
+        public async Task<IActionResult> CheckUsername([FromBody] CheckUsernameDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Username))
+                return BadRequest(new { message = "Username is required" });
+
+            if (await _context.Users.AnyAsync(u => u.Username == dto.Username))
+                return Conflict(new { message = "Username already exists" });
+
+            return Ok(new { message = "Username is available" });
+        }
+
         private string GenerateJwtToken(User user)
         {
             var claims = new[]
@@ -336,5 +360,15 @@ namespace fintechtracker_backend.Controllers
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+    }
+
+    public class CheckEmailDto
+    {
+        public string Email { get; set; } = string.Empty;
+    }
+
+    public class CheckUsernameDto
+    {
+        public string Username { get; set; } = string.Empty;
     }
 }
