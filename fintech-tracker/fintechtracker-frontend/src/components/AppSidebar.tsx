@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/hooks/useTheme";
 import {
   BarChart3,
   CreditCard,
