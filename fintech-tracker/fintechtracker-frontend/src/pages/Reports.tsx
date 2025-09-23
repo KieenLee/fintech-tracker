@@ -39,34 +39,36 @@ import {
   Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 
 const Reports = () => {
   const [timeRange, setTimeRange] = useState("monthly");
   const { formatCurrency } = useCurrency();
+  const { t } = useTranslation();
 
   // Sample data for different time periods
   const revenueData = [
-    { month: "Jan", revenue: 4500, users: 120, premium: 45 },
-    { month: "Feb", revenue: 4200, users: 115, premium: 42 },
-    { month: "Mar", revenue: 4800, users: 140, premium: 52 },
-    { month: "Apr", revenue: 4600, users: 135, premium: 49 },
-    { month: "May", revenue: 5000, users: 150, premium: 58 },
-    { month: "Jun", revenue: 4700, users: 145, premium: 55 },
+    { month: t("reports.months.jan"), revenue: 4500, users: 120, premium: 45 },
+    { month: t("reports.months.feb"), revenue: 4200, users: 115, premium: 42 },
+    { month: t("reports.months.mar"), revenue: 4800, users: 140, premium: 52 },
+    { month: t("reports.months.apr"), revenue: 4600, users: 135, premium: 49 },
+    { month: t("reports.months.may"), revenue: 5000, users: 150, premium: 58 },
+    { month: t("reports.months.jun"), revenue: 4700, users: 145, premium: 55 },
   ];
 
   const userData = [
-    { day: "Mon", newUsers: 12, activeUsers: 85 },
-    { day: "Tue", newUsers: 18, activeUsers: 92 },
-    { day: "Wed", newUsers: 15, activeUsers: 88 },
-    { day: "Thu", newUsers: 22, activeUsers: 105 },
-    { day: "Fri", newUsers: 25, activeUsers: 110 },
-    { day: "Sat", newUsers: 30, activeUsers: 125 },
-    { day: "Sun", newUsers: 20, activeUsers: 95 },
+    { day: t("reports.days.mon"), newUsers: 12, activeUsers: 85 },
+    { day: t("reports.days.tue"), newUsers: 18, activeUsers: 92 },
+    { day: t("reports.days.wed"), newUsers: 15, activeUsers: 88 },
+    { day: t("reports.days.thu"), newUsers: 22, activeUsers: 105 },
+    { day: t("reports.days.fri"), newUsers: 25, activeUsers: 110 },
+    { day: t("reports.days.sat"), newUsers: 30, activeUsers: 125 },
+    { day: t("reports.days.sun"), newUsers: 20, activeUsers: 95 },
   ];
 
   const subscriptionData = [
-    { name: "Basic", value: 65, color: "hsl(var(--chart-1))" },
-    { name: "Premium", value: 35, color: "hsl(var(--chart-2))" },
+    { name: t("common.basic"), value: 65, color: "hsl(var(--chart-1))" },
+    { name: t("common.premium"), value: 35, color: "hsl(var(--chart-2))" },
   ];
 
   return (
@@ -74,11 +76,9 @@ const Reports = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            Reports & Analytics
+            {t("reports.title")}
           </h1>
-          <p className="text-muted-foreground">
-            Comprehensive business insights and metrics
-          </p>
+          <p className="text-muted-foreground">{t("reports.subtitle")}</p>
         </div>
         <div className="flex items-center gap-2">
           <Select value={timeRange} onValueChange={setTimeRange}>
@@ -86,15 +86,17 @@ const Reports = () => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="daily">Daily</SelectItem>
-              <SelectItem value="weekly">Weekly</SelectItem>
-              <SelectItem value="monthly">Monthly</SelectItem>
-              <SelectItem value="yearly">Yearly</SelectItem>
+              <SelectItem value="daily">{t("analytics.daily")}</SelectItem>
+              <SelectItem value="weekly">{t("analytics.weekly")}</SelectItem>
+              <SelectItem value="monthly">{t("analytics.monthly")}</SelectItem>
+              <SelectItem value="yearly">
+                {t("reports.time_periods.yearly")}
+              </SelectItem>
             </SelectContent>
           </Select>
           <Button variant="outline">
             <Download className="h-4 w-4 mr-2" />
-            Export
+            {t("common.export")}
           </Button>
         </div>
       </div>
@@ -103,49 +105,61 @@ const Reports = () => {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t("reports.metrics.total_revenue")}
+            </CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(27800)}</div>
             <p className="text-xs text-muted-foreground">
-              <span className="text-success">+12.5%</span> from last period
+              <span className="text-success">+12.5%</span>{" "}
+              {t("reports.metrics.from_last_period")}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t("dashboard.total_users")}
+            </CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">1,245</div>
             <p className="text-xs text-muted-foreground">
-              <span className="text-success">+8.2%</span> from last period
+              <span className="text-success">+8.2%</span>{" "}
+              {t("reports.metrics.from_last_period")}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Premium Users</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t("reports.metrics.premium_users")}
+            </CardTitle>
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">423</div>
             <p className="text-xs text-muted-foreground">
-              <span className="text-success">+15.3%</span> from last period
+              <span className="text-success">+15.3%</span>{" "}
+              {t("reports.metrics.from_last_period")}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg. Session</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t("reports.metrics.avg_session")}
+            </CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">12m 35s</div>
             <p className="text-xs text-muted-foreground">
-              <span className="text-success">+2.1%</span> from last period
+              <span className="text-success">+2.1%</span>{" "}
+              {t("reports.metrics.from_last_period")}
             </p>
           </CardContent>
         </Card>
@@ -156,8 +170,10 @@ const Reports = () => {
         {/* Revenue Chart */}
         <Card>
           <CardHeader>
-            <CardTitle>Revenue Trend</CardTitle>
-            <CardDescription>Monthly revenue and user growth</CardDescription>
+            <CardTitle>{t("reports.charts.revenue_trend")}</CardTitle>
+            <CardDescription>
+              {t("reports.charts.revenue_trend_desc")}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -167,10 +183,12 @@ const Reports = () => {
                 <YAxis />
                 <Tooltip
                   formatter={(value, name) => [
-                    name === "Revenue ($)"
+                    name === t("reports.charts.revenue_label")
                       ? formatCurrency(Number(value))
                       : value,
-                    name === "Revenue ($)" ? "Revenue" : name,
+                    name === t("reports.charts.revenue_label")
+                      ? t("reports.charts.revenue")
+                      : name,
                   ]}
                 />
                 <Area
@@ -179,7 +197,7 @@ const Reports = () => {
                   stroke="hsl(var(--primary))"
                   fill="hsl(var(--primary))"
                   fillOpacity={0.6}
-                  name="Revenue ($)"
+                  name={t("reports.charts.revenue_label")}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -189,8 +207,10 @@ const Reports = () => {
         {/* User Growth Chart */}
         <Card>
           <CardHeader>
-            <CardTitle>User Growth</CardTitle>
-            <CardDescription>New vs active users</CardDescription>
+            <CardTitle>{t("reports.charts.user_growth")}</CardTitle>
+            <CardDescription>
+              {t("reports.charts.user_growth_desc")}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -200,21 +220,23 @@ const Reports = () => {
                 <YAxis />
                 <Tooltip
                   formatter={(value, name) => [
-                    name === "Revenue ($)"
+                    name === t("reports.charts.revenue_label")
                       ? formatCurrency(Number(value))
                       : value,
-                    name === "Revenue ($)" ? "Revenue" : name,
+                    name === t("reports.charts.revenue_label")
+                      ? t("reports.charts.revenue")
+                      : name,
                   ]}
                 />
                 <Bar
                   dataKey="newUsers"
                   fill="hsl(var(--chart-1))"
-                  name="New Users"
+                  name={t("reports.charts.new_users")}
                 />
                 <Bar
                   dataKey="activeUsers"
                   fill="hsl(var(--chart-2))"
-                  name="Active Users"
+                  name={t("reports.charts.active_users")}
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -224,8 +246,12 @@ const Reports = () => {
         {/* Subscription Distribution */}
         <Card>
           <CardHeader>
-            <CardTitle>Subscription Distribution</CardTitle>
-            <CardDescription>Breakdown of user subscriptions</CardDescription>
+            <CardTitle>
+              {t("reports.charts.subscription_distribution")}
+            </CardTitle>
+            <CardDescription>
+              {t("reports.charts.subscription_distribution_desc")}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -244,7 +270,12 @@ const Reports = () => {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => [`${value}%`, "Percentage"]} />
+                <Tooltip
+                  formatter={(value) => [
+                    `${value}%`,
+                    t("reports.charts.percentage"),
+                  ]}
+                />
               </RechartsPieChart>
             </ResponsiveContainer>
           </CardContent>
@@ -253,9 +284,9 @@ const Reports = () => {
         {/* Revenue vs Users */}
         <Card>
           <CardHeader>
-            <CardTitle>Revenue vs Users</CardTitle>
+            <CardTitle>{t("reports.charts.revenue_vs_users")}</CardTitle>
             <CardDescription>
-              Correlation between revenue and user count
+              {t("reports.charts.revenue_vs_users_desc")}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -272,7 +303,7 @@ const Reports = () => {
                   dataKey="revenue"
                   stroke="hsl(var(--primary))"
                   strokeWidth={3}
-                  name="Revenue ($)"
+                  name={t("reports.charts.revenue_label")}
                 />
                 <Line
                   yAxisId="right"
@@ -280,7 +311,7 @@ const Reports = () => {
                   dataKey="users"
                   stroke="hsl(var(--chart-2))"
                   strokeWidth={3}
-                  name="Users"
+                  name={t("reports.charts.users")}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -291,20 +322,34 @@ const Reports = () => {
       {/* Detailed Metrics */}
       <Card>
         <CardHeader>
-          <CardTitle>Detailed Metrics</CardTitle>
-          <CardDescription>Comprehensive data breakdown</CardDescription>
+          <CardTitle>{t("reports.detailed_metrics.title")}</CardTitle>
+          <CardDescription>
+            {t("reports.detailed_metrics.description")}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left pb-3">Month</th>
-                  <th className="text-right pb-3">Revenue</th>
-                  <th className="text-right pb-3">New Users</th>
-                  <th className="text-right pb-3">Premium Users</th>
-                  <th className="text-right pb-3">Conversion Rate</th>
-                  <th className="text-right pb-3">Churn Rate</th>
+                  <th className="text-left pb-3">
+                    {t("reports.detailed_metrics.month")}
+                  </th>
+                  <th className="text-right pb-3">
+                    {t("reports.detailed_metrics.revenue")}
+                  </th>
+                  <th className="text-right pb-3">
+                    {t("reports.detailed_metrics.new_users")}
+                  </th>
+                  <th className="text-right pb-3">
+                    {t("reports.detailed_metrics.premium_users")}
+                  </th>
+                  <th className="text-right pb-3">
+                    {t("reports.detailed_metrics.conversion_rate")}
+                  </th>
+                  <th className="text-right pb-3">
+                    {t("reports.detailed_metrics.churn_rate")}
+                  </th>
                 </tr>
               </thead>
               <tbody>

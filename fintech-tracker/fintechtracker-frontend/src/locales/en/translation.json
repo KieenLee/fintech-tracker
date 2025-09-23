@@ -534,5 +534,91 @@
     "logout": "Logout",
     "logged_out": "Logged out",
     "logged_out_desc": "You have been successfully logged out"
+  },
+  "reports": {
+    "title": "Reports & Analytics",
+    "subtitle": "Comprehensive business insights and metrics",
+    "time_periods": {
+      "yearly": "Yearly"
+    },
+    "metrics": {
+      "total_revenue": "Total Revenue",
+      "premium_users": "Premium Users",
+      "avg_session": "Avg. Session",
+      "from_last_period": "from last period"
+    },
+    "charts": {
+      "revenue_trend": "Revenue Trend",
+      "revenue_trend_desc": "Monthly revenue and user growth",
+      "user_growth": "User Growth",
+      "user_growth_desc": "New vs active users",
+      "subscription_distribution": "Subscription Distribution",
+      "subscription_distribution_desc": "Breakdown of user subscriptions",
+      "revenue_vs_users": "Revenue vs Users",
+      "revenue_vs_users_desc": "Correlation between revenue and user count",
+      "revenue": "Revenue",
+      "revenue_label": "Revenue ($)",
+      "new_users": "New Users",
+      "active_users": "Active Users",
+      "users": "Users",
+      "percentage": "Percentage"
+    },
+    "detailed_metrics": {
+      "title": "Detailed Metrics",
+      "description": "Comprehensive data breakdown",
+      "month": "Month",
+      "revenue": "Revenue",
+      "new_users": "New Users",
+      "premium_users": "Premium Users",
+      "conversion_rate": "Conversion Rate",
+      "churn_rate": "Churn Rate"
+    },
+    "months": {
+      "jan": "Jan",
+      "feb": "Feb",
+      "mar": "Mar",
+      "apr": "Apr",
+      "may": "May",
+      "jun": "Jun"
+    },
+    "days": {
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat",
+      "sun": "Sun"
+    }
+  },
+  "users": {
+    "title": "User Management",
+    "subtitle": "Manage all users and their subscriptions",
+    "add_user": "Add User",
+    "edit_user": "Edit User",
+    "add_new_user": "Add New User",
+    "edit_user_desc": "Edit user details",
+    "create_user_desc": "Create a new user account",
+    "name": "Name",
+    "name_placeholder": "User name",
+    "email_placeholder": "user@example.com",
+    "role": "Role",
+    "select_role": "Select role",
+    "subscription": "Subscription",
+    "select_subscription": "Select subscription",
+    "update_user": "Update User",
+    "create_user": "Create User",
+    "growth_from_last_month": "+12% from last month",
+    "premium_growth_from_last_month": "+8% from last month",
+    "revenue": "Revenue",
+    "revenue_growth_from_last_month": "+15% from last month",
+    "avg_retention": "Avg. Retention",
+    "retention_growth_from_last_month": "+3% from last month",
+    "manage_user_base": "Manage your user base",
+    "search_users": "Search users...",
+    "user": "User",
+    "join_date": "Join Date",
+    "last_active": "Last Active",
+    "total_spent": "Total Spent"
   }
 }

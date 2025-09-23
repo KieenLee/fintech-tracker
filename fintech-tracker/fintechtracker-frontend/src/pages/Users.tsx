@@ -1,18 +1,47 @@
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Search, Plus, Edit, Trash2, Eye, CreditCard } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useTranslation } from "react-i18next";
 
 const Users = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+  const { t } = useTranslation();
 
   // Sample user data
   const users = [
@@ -48,9 +77,10 @@ const Users = () => {
     },
   ];
 
-  const filteredUsers = users.filter(user => 
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredUsers = users.filter(
+    (user) =>
+      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleEdit = (user) => {
@@ -73,63 +103,79 @@ const Users = () => {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
-          <p className="text-muted-foreground">Manage all users and their subscriptions</p>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {t("users.title")}
+          </h1>
+          <p className="text-muted-foreground">{t("users.subtitle")}</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => setEditingUser(null)}>
               <Plus className="h-4 w-4 mr-2" />
-              Add User
+              {t("users.add_user")}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{editingUser ? "Edit User" : "Add New User"}</DialogTitle>
+              <DialogTitle>
+                {editingUser ? t("users.edit_user") : t("users.add_new_user")}
+              </DialogTitle>
               <DialogDescription>
-                {editingUser ? "Edit user details" : "Create a new user account"}
+                {editingUser
+                  ? t("users.edit_user_desc")
+                  : t("users.create_user_desc")}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div>
-                <Label htmlFor="name">Name</Label>
-                <Input id="name" placeholder="User name" />
+                <Label htmlFor="name">{t("users.name")}</Label>
+                <Input id="name" placeholder={t("users.name_placeholder")} />
               </div>
               <div>
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="user@example.com" />
+                <Label htmlFor="email">{t("auth.email")}</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder={t("users.email_placeholder")}
+                />
               </div>
               <div>
-                <Label htmlFor="role">Role</Label>
+                <Label htmlFor="role">{t("users.role")}</Label>
                 <Select>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select role" />
+                    <SelectValue placeholder={t("users.select_role")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="customer">Customer</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="customer">
+                      {t("sidebar.customer")}
+                    </SelectItem>
+                    <SelectItem value="admin">
+                      {t("sidebar.administrator")}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label htmlFor="subscription">Subscription</Label>
+                <Label htmlFor="subscription">{t("users.subscription")}</Label>
                 <Select>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select subscription" />
+                    <SelectValue placeholder={t("users.select_subscription")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="basic">Basic</SelectItem>
-                    <SelectItem value="premium">Premium</SelectItem>
+                    <SelectItem value="basic">{t("common.basic")}</SelectItem>
+                    <SelectItem value="premium">
+                      {t("common.premium")}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button onClick={handleSave}>
-                {editingUser ? "Update" : "Create"} User
+                {editingUser ? t("users.update_user") : t("users.create_user")}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -140,45 +186,53 @@ const Users = () => {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t("dashboard.total_users")}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">1,234</div>
             <p className="text-xs text-muted-foreground">
-              +12% from last month
+              {t("users.growth_from_last_month")}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Premium Users</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t("reports.metrics.premium_users")}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">321</div>
             <p className="text-xs text-muted-foreground">
-              +8% from last month
+              {t("users.premium_growth_from_last_month")}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Revenue</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t("users.revenue")}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">$9,854</div>
             <p className="text-xs text-muted-foreground">
-              +15% from last month
+              {t("users.revenue_growth_from_last_month")}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg. Retention</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t("users.avg_retention")}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">78%</div>
             <p className="text-xs text-muted-foreground">
-              +3% from last month
+              {t("users.retention_growth_from_last_month")}
             </p>
           </CardContent>
         </Card>
@@ -187,15 +241,15 @@ const Users = () => {
       {/* Search and Filter */}
       <Card>
         <CardHeader>
-          <CardTitle>Users</CardTitle>
-          <CardDescription>Manage your user base</CardDescription>
+          <CardTitle>{t("sidebar.users")}</CardTitle>
+          <CardDescription>{t("users.manage_user_base")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-4 mb-4">
             <div className="relative flex-1">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search users..."
+                placeholder={t("users.search_users")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-8"
@@ -205,13 +259,15 @@ const Users = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>User</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Subscription</TableHead>
-                <TableHead>Join Date</TableHead>
-                <TableHead>Last Active</TableHead>
-                <TableHead>Total Spent</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t("users.user")}</TableHead>
+                <TableHead>{t("users.role")}</TableHead>
+                <TableHead>{t("users.subscription")}</TableHead>
+                <TableHead>{t("users.join_date")}</TableHead>
+                <TableHead>{t("users.last_active")}</TableHead>
+                <TableHead>{t("users.total_spent")}</TableHead>
+                <TableHead className="text-right">
+                  {t("common.actions")}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -219,16 +275,32 @@ const Users = () => {
                 <TableRow key={user.id}>
                   <TableCell>
                     <div className="font-medium">{user.name}</div>
-                    <div className="text-sm text-muted-foreground">{user.email}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {user.email}
+                    </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={user.role === "admin" ? "destructive" : "default"}>
-                      {user.role}
+                    <Badge
+                      variant={
+                        user.role === "admin" ? "destructive" : "default"
+                      }
+                    >
+                      {user.role === "admin"
+                        ? t("sidebar.administrator")
+                        : t("sidebar.customer")}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={user.subscription === "premium" ? "default" : "secondary"}>
-                      {user.subscription}
+                    <Badge
+                      variant={
+                        user.subscription === "premium"
+                          ? "default"
+                          : "secondary"
+                      }
+                    >
+                      {user.subscription === "premium"
+                        ? t("common.premium")
+                        : t("common.basic")}
                     </Badge>
                   </TableCell>
                   <TableCell>{user.joinDate}</TableCell>
@@ -236,13 +308,21 @@ const Users = () => {
                   <TableCell>${user.totalSpent}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="sm" onClick={() => handleEdit(user)}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(user)}
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button variant="ghost" size="sm">
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDelete(user.id)}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(user.id)}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
