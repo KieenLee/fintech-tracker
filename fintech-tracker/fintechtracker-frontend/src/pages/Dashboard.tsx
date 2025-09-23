@@ -35,8 +35,10 @@ import {
 import { dashboardService } from "@/services/dashboardService";
 import { budgetService } from "@/services/budgetService";
 import { DashboardSummary, MonthlyTrend } from "@/types/dashboard";
+import { useTranslation } from "react-i18next";
 
 const Dashboard = () => {
+  const { t } = useTranslation();
   const userRole = localStorage.getItem("userRole") || "customer";
   const userName = localStorage.getItem("userName") || "User";
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -61,14 +63,14 @@ const Dashboard = () => {
       } catch (error) {
         console.error("Budget fetch error:", error);
         toast({
-          title: "Error",
-          description: "Failed to load budgets",
+          title: t("common.error"),
+          description: t("dashboard.budget_load_failed"),
           variant: "destructive",
         });
       }
     };
     fetchBudgets();
-  }, []);
+  }, [toast, t]);
 
   const fetchDashboardData = async () => {
     try {
@@ -83,9 +85,9 @@ const Dashboard = () => {
     } catch (error: any) {
       console.error("Dashboard error:", error);
       toast({
-        title: "Error",
+        title: t("common.error"),
         description:
-          error.response?.data?.message || "Failed to load dashboard data",
+          error.response?.data?.message || t("dashboard.load_failed"),
         variant: "destructive",
       });
     } finally {
@@ -155,14 +157,13 @@ const Dashboard = () => {
     return (
       <div className="p-6">
         <div className="text-center py-12">
-          <h2 className="text-2xl font-bold mb-4">Welcome to FinanceTracker</h2>
+          <h2 className="text-2xl font-bold mb-4">{t("dashboard.no_data")}</h2>
           <p className="text-muted-foreground mb-6">
-            Start managing your finances by adding your first account and
-            transaction
+            {t("dashboard.start_adding")}
           </p>
           <div className="space-x-4">
             <Button onClick={() => setIsAddDialogOpen(true)}>
-              Add Transaction
+              {t("dashboard.add_transaction")}
             </Button>
           </div>
         </div>
@@ -176,9 +177,11 @@ const Dashboard = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">
-              Admin Dashboard
+              {t("dashboard.admin_dashboard")}
             </h1>
-            <p className="text-muted-foreground">Welcome back, {userName}</p>
+            <p className="text-muted-foreground">
+              {t("dashboard.welcome_back", { name: userName })}
+            </p>
           </div>
         </div>
 
@@ -186,13 +189,16 @@ const Dashboard = () => {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {t("dashboard.total_users")}
+              </CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">1,234</div>
               <p className="text-xs text-muted-foreground">
-                <span className="text-success">+12%</span> from last month
+                <span className="text-success">+12%</span>{" "}
+                {t("dashboard.from_last_month")}
               </p>
             </CardContent>
           </Card>
@@ -200,14 +206,15 @@ const Dashboard = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Active Sessions
+                {t("dashboard.active_sessions")}
               </CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">892</div>
               <p className="text-xs text-muted-foreground">
-                <span className="text-success">+8%</span> from last week
+                <span className="text-success">+8%</span>{" "}
+                {t("dashboard.from_last_week")}
               </p>
             </CardContent>
           </Card>
@@ -215,7 +222,7 @@ const Dashboard = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Total Transactions
+                {t("dashboard.total_transactions")}
               </CardTitle>
               <CreditCard className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -224,7 +231,8 @@ const Dashboard = () => {
                 {dashboardData.transactionCount}
               </div>
               <p className="text-xs text-muted-foreground">
-                <span className="text-success">+19%</span> from last month
+                <span className="text-success">+19%</span>{" "}
+                {t("dashboard.from_last_month")}
               </p>
             </CardContent>
           </Card>
@@ -232,13 +240,15 @@ const Dashboard = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                System Health
+                {t("dashboard.system_health")}
               </CardTitle>
               <Target className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-success">99.9%</div>
-              <p className="text-xs text-muted-foreground">Uptime this month</p>
+              <p className="text-xs text-muted-foreground">
+                {t("dashboard.uptime_this_month")}
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -247,8 +257,10 @@ const Dashboard = () => {
         <div className="grid gap-4 md:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>Monthly Expenses</CardTitle>
-              <CardDescription>Monthly expense trends</CardDescription>
+              <CardTitle>{t("dashboard.monthly_expenses")}</CardTitle>
+              <CardDescription>
+                {t("dashboard.monthly_expense_trends")}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {monthlyExpenses.length > 0 ? (
@@ -263,7 +275,7 @@ const Dashboard = () => {
                 </ResponsiveContainer>
               ) : (
                 <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                  No expense data available
+                  {t("dashboard.no_expense_data")}
                 </div>
               )}
             </CardContent>
@@ -271,9 +283,9 @@ const Dashboard = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle>Expense Categories</CardTitle>
+              <CardTitle>{t("dashboard.expense_categories")}</CardTitle>
               <CardDescription>
-                Distribution of expenses by category
+                {t("dashboard.expense_distribution")}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -298,7 +310,7 @@ const Dashboard = () => {
                 </ResponsiveContainer>
               ) : (
                 <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                  No category data available
+                  {t("dashboard.no_category_data")}
                 </div>
               )}
             </CardContent>
@@ -309,14 +321,16 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back, {userName}</p>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {t("dashboard.title")}
+          </h1>
+          <p className="text-muted-foreground">{t("dashboard.subtitle")}</p>
         </div>
         <Button onClick={() => setIsAddDialogOpen(true)}>
-          Add Transaction
+          {t("dashboard.add_transaction")}
         </Button>
       </div>
 
@@ -324,7 +338,9 @@ const Dashboard = () => {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Balance</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t("dashboard.total_balance")}
+            </CardTitle>
             <Wallet className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -332,7 +348,7 @@ const Dashboard = () => {
               {formatCurrency(dashboardData.netBalance)}
             </div>
             <p className="text-xs text-muted-foreground">
-              Net balance from transactions
+              {t("dashboard.net_balance_desc")}
             </p>
           </CardContent>
         </Card>
@@ -340,7 +356,7 @@ const Dashboard = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Monthly Income
+              {t("dashboard.monthly_income")}
             </CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -348,14 +364,16 @@ const Dashboard = () => {
             <div className="text-2xl font-bold">
               {formatCurrency(dashboardData.totalIncome)}
             </div>
-            <p className="text-xs text-muted-foreground">Last 30 days income</p>
+            <p className="text-xs text-muted-foreground">
+              {t("dashboard.last_30_days_income")}
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Monthly Expenses
+              {t("dashboard.monthly_expenses")}
             </CardTitle>
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -364,7 +382,7 @@ const Dashboard = () => {
               {formatCurrency(dashboardData.totalExpense)}
             </div>
             <p className="text-xs text-muted-foreground">
-              Last 30 days expenses
+              {t("dashboard.last_30_days_expenses")}
             </p>
           </CardContent>
         </Card>
@@ -372,7 +390,7 @@ const Dashboard = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Total Transactions
+              {t("dashboard.total_transactions")}
             </CardTitle>
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -380,7 +398,9 @@ const Dashboard = () => {
             <div className="text-2xl font-bold">
               {dashboardData.transactionCount}
             </div>
-            <p className="text-xs text-muted-foreground">Last 30 days</p>
+            <p className="text-xs text-muted-foreground">
+              {t("dashboard.last_30_days")}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -389,9 +409,9 @@ const Dashboard = () => {
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Monthly Expenses</CardTitle>
+            <CardTitle>{t("dashboard.monthly_expenses")}</CardTitle>
             <CardDescription>
-              Your spending over the last 6 months
+              {t("dashboard.spending_last_6_months")}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -407,7 +427,7 @@ const Dashboard = () => {
               </ResponsiveContainer>
             ) : (
               <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                No expense data available for the last 6 months
+                {t("dashboard.no_expense_data_6_months")}
               </div>
             )}
           </CardContent>
@@ -415,9 +435,9 @@ const Dashboard = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Expense Categories</CardTitle>
+            <CardTitle>{t("dashboard.expense_categories")}</CardTitle>
             <CardDescription>
-              Breakdown of your current spending
+              {t("dashboard.current_spending_breakdown")}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -442,7 +462,7 @@ const Dashboard = () => {
               </ResponsiveContainer>
             ) : (
               <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                No expense categories available
+                {t("dashboard.no_expense_categories")}
               </div>
             )}
           </CardContent>
@@ -453,9 +473,9 @@ const Dashboard = () => {
       {budgetData.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Budget Overview</CardTitle>
+            <CardTitle>{t("dashboard.budget_overview")}</CardTitle>
             <CardDescription>
-              Track your spending against your budgets
+              {t("dashboard.track_spending_budgets")}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -482,12 +502,13 @@ const Dashboard = () => {
                   <div className="text-xs text-muted-foreground">
                     {item.percentage > 100 ? (
                       <span className="text-destructive">
-                        Over budget by{" "}
+                        {t("dashboard.over_budget_by")}{" "}
                         {formatCurrency(item.spent - item.budget)}
                       </span>
                     ) : (
                       <span>
-                        {formatCurrency(item.budget - item.spent)} remaining
+                        {formatCurrency(item.budget - item.spent)}{" "}
+                        {t("dashboard.remaining")}
                       </span>
                     )}
                   </div>

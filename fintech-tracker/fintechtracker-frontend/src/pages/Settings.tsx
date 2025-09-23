@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
+import { useTranslation } from "react-i18next";
+import i18n from "@/i18n";
 import {
   Card,
   CardContent,
@@ -44,6 +46,7 @@ import {
 
 const Settings = () => {
   const { theme, setTheme } = useTheme();
+  const { t, i18n: i18nInstance } = useTranslation();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -82,55 +85,28 @@ const Settings = () => {
 
   // Load settings khi component mount
   useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        setLoading(true);
-        const settings = await settingsService.getUserSettings();
-
-        setProfile({
-          firstName: settings.firstName,
-          lastName: settings.lastName,
-          username: settings.username,
-          email: settings.email,
-          phoneNumber: settings.phoneNumber,
-          currency: settings.currency,
-          language: settings.language,
-        });
-
-        setNotifications(settings.notifications);
-        setPrivacy(settings.privacy);
-
-        // Cập nhật localStorage để sync với sidebar
-        const fullName = `${settings.firstName} ${settings.lastName}`.trim();
-        localStorage.setItem("userName", fullName);
-        localStorage.setItem("userEmail", settings.email);
-      } catch (error: any) {
-        console.error("Failed to fetch settings:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load settings. Using default values.",
-          variant: "destructive",
-        });
-
-        // Fallback to localStorage values
-        const savedName = localStorage.getItem("userName") || "User";
-        const nameParts = savedName.split(" ");
-        setProfile({
-          firstName: nameParts[0] || "",
-          lastName: nameParts.slice(1).join(" ") || "",
-          username: "",
-          email: localStorage.getItem("userEmail") || "user@example.com",
-          phoneNumber: "",
-          currency: "USD",
-          language: "en",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchSettings();
-  }, [toast]);
+  }, []); // ✅ QUAN TRỌNG: Bỏ toast và t khỏi dependencies
+
+  // ✅ SỬA LỖI: Bỏ debug useEffect hoặc thêm dependency đúng
+  useEffect(() => {
+    console.log("Current language:", i18nInstance.language);
+    console.log("Available languages:", Object.keys(i18nInstance.store.data));
+    console.log("Translation test:", t("settings.title"));
+  }, [i18nInstance.language]); // ✅ CHỈ dependency i18nInstance.language
+
+  // ✅ THÊM: Error handling riêng cho việc load settings thất bại
+  const [settingsError, setSettingsError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (settingsError) {
+      toast({
+        title: t("common.error"),
+        description: settingsError,
+        variant: "destructive",
+      });
+    }
+  }, [settingsError, toast, t]); // ✅ Riêng biệt để tránh loop
 
   const handleSaveProfile = async () => {
     try {
@@ -162,15 +138,15 @@ const Settings = () => {
       );
 
       toast({
-        title: "Profile updated",
-        description: "Your profile information has been saved successfully.",
+        title: t("settings.profile_updated"),
+        description: t("settings.profile_updated_desc"),
       });
     } catch (error: any) {
       console.error("Failed to update profile:", error);
       toast({
-        title: "Error",
+        title: t("common.error"),
         description:
-          error.response?.data?.message || "Failed to update profile.",
+          error.response?.data?.message || t("settings.failed_to_update"),
         variant: "destructive",
       });
     } finally {
@@ -181,8 +157,8 @@ const Settings = () => {
   const handleChangePassword = async () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast({
-        title: "Error",
-        description: "New password and confirm password do not match.",
+        title: t("common.error"),
+        description: t("settings.password_mismatch"),
         variant: "destructive",
       });
       return;
@@ -190,8 +166,8 @@ const Settings = () => {
 
     if (passwordData.newPassword.length < 6) {
       toast({
-        title: "Error",
-        description: "New password must be at least 6 characters long.",
+        title: t("common.error"),
+        description: t("settings.password_too_short"),
         variant: "destructive",
       });
       return;
@@ -216,15 +192,16 @@ const Settings = () => {
       });
 
       toast({
-        title: "Password changed",
-        description: "Your password has been updated successfully.",
+        title: t("settings.password_changed"),
+        description: t("settings.password_changed_desc"),
       });
     } catch (error: any) {
       console.error("Failed to change password:", error);
       toast({
-        title: "Error",
+        title: t("common.error"),
         description:
-          error.response?.data?.message || "Failed to change password.",
+          error.response?.data?.message ||
+          t("settings.failed_to_change_password"),
         variant: "destructive",
       });
     } finally {
@@ -237,16 +214,16 @@ const Settings = () => {
       setSubmitting(true);
       await settingsService.updateNotifications(notifications);
       toast({
-        title: "Notification preferences updated",
-        description: "Your notification settings have been saved.",
+        title: t("settings.notifications_updated"),
+        description: t("settings.notifications_updated_desc"),
       });
     } catch (error: any) {
       console.error("Failed to update notifications:", error);
       toast({
-        title: "Error",
+        title: t("common.error"),
         description:
           error.response?.data?.message ||
-          "Failed to save notification settings.",
+          t("settings.failed_to_save_notifications"),
         variant: "destructive",
       });
     } finally {
@@ -259,20 +236,29 @@ const Settings = () => {
       setSubmitting(true);
       await settingsService.updatePrivacy(privacy);
       toast({
-        title: "Privacy settings updated",
-        description: "Your privacy preferences have been saved.",
+        title: t("settings.privacy_updated"),
+        description: t("settings.privacy_updated_desc"),
       });
     } catch (error: any) {
       console.error("Failed to update privacy:", error);
       toast({
-        title: "Error",
+        title: t("common.error"),
         description:
-          error.response?.data?.message || "Failed to save privacy settings.",
+          error.response?.data?.message || t("settings.failed_to_save_privacy"),
         variant: "destructive",
       });
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleLanguageChange = (value: string) => {
+    console.log("Changing language to:", value); // Debug
+    setProfile({ ...profile, language: value });
+    i18n.changeLanguage(value).then(() => {
+      console.log("Language changed to:", value); // Debug
+    });
+    localStorage.setItem("language", value);
   };
 
   const themeOptions = [
@@ -281,11 +267,60 @@ const Settings = () => {
     { value: "system", label: "System", icon: Monitor },
   ];
 
+  const fetchSettings = async () => {
+    try {
+      setLoading(true);
+      setSettingsError(null);
+
+      const settings = await settingsService.getUserSettings();
+
+      setProfile({
+        firstName: settings.firstName,
+        lastName: settings.lastName,
+        username: settings.username,
+        email: settings.email,
+        phoneNumber: settings.phoneNumber,
+        currency: settings.currency,
+        language: settings.language,
+      });
+
+      setNotifications(settings.notifications);
+      setPrivacy(settings.privacy);
+
+      // Đổi ngôn ngữ giao diện theo profile
+      i18n.changeLanguage(settings.language);
+      localStorage.setItem("language", settings.language);
+
+      // Cập nhật localStorage để sync với sidebar
+      const fullName = `${settings.firstName} ${settings.lastName}`.trim();
+      localStorage.setItem("userName", fullName);
+      localStorage.setItem("userEmail", settings.email);
+    } catch (error: any) {
+      console.error("Failed to fetch settings:", error);
+      setSettingsError(t("settings.failed_to_load_settings"));
+
+      // Fallback to localStorage values
+      const savedName = localStorage.getItem("userName") || "User";
+      const nameParts = savedName.split(" ");
+      setProfile({
+        firstName: nameParts[0] || "",
+        lastName: nameParts.slice(1).join(" ") || "",
+        username: "",
+        email: localStorage.getItem("userEmail") || "user@example.com",
+        phoneNumber: "",
+        currency: "USD",
+        language: "en",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="p-6 flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
-        <span className="ml-2">Loading settings...</span>
+        <span className="ml-2">{t("settings.loading_settings")}</span>
       </div>
     );
   }
@@ -293,10 +328,10 @@ const Settings = () => {
   return (
     <div className="p-6 space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground">
-          Manage your account preferences and application settings
-        </p>
+        <h1 className="text-3xl font-bold tracking-tight">
+          {t("settings.title")}
+        </h1>
+        <p className="text-muted-foreground">{t("settings.subtitle")}</p>
       </div>
 
       <div className="grid gap-6">
@@ -305,15 +340,13 @@ const Settings = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <SettingsIcon className="h-5 w-5" />
-              Appearance
+              {t("settings.appearance")}
             </CardTitle>
-            <CardDescription>
-              Customize how the application looks and feels
-            </CardDescription>
+            <CardDescription>{t("settings.appearance_desc")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label>Theme</Label>
+              <Label>{t("settings.theme")}</Label>
               <div className="grid grid-cols-3 gap-3 mt-2">
                 {themeOptions.map((option) => {
                   const Icon = option.icon;
@@ -325,7 +358,7 @@ const Settings = () => {
                       onClick={() => setTheme(option.value)}
                     >
                       <Icon className="h-4 w-4" />
-                      {option.label}
+                      {t(`settings.${option.label.toLowerCase()}`)}
                     </Button>
                   );
                 })}
@@ -339,14 +372,14 @@ const Settings = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User className="h-5 w-5" />
-              Profile Information
+              {t("settings.profile_information")}
             </CardTitle>
-            <CardDescription>Update your personal information</CardDescription>
+            <CardDescription>{t("settings.profile_desc")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="firstName">First Name</Label>
+                <Label htmlFor="firstName">{t("settings.first_name")}</Label>
                 <Input
                   id="firstName"
                   value={profile.firstName}
@@ -356,7 +389,7 @@ const Settings = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="lastName">Last Name</Label>
+                <Label htmlFor="lastName">{t("settings.last_name")}</Label>
                 <Input
                   id="lastName"
                   value={profile.lastName}
@@ -367,7 +400,7 @@ const Settings = () => {
               </div>
             </div>
             <div>
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username">{t("auth.username")}</Label>
               <Input
                 id="username"
                 value={profile.username}
@@ -375,23 +408,21 @@ const Settings = () => {
                   setProfile({ ...profile, username: e.target.value })
                 }
                 pattern="^[a-zA-Z0-9_]+$"
-                title="No special characters allowed"
+                title={t("settings.username_pattern")}
               />
             </div>
             <div>
-              <Label htmlFor="phoneNumber">Phone Number</Label>
+              <Label htmlFor="phoneNumber">{t("settings.phone_number")}</Label>
               <Input
                 id="phoneNumber"
                 value={profile.phoneNumber}
                 onChange={(e) =>
                   setProfile({ ...profile, phoneNumber: e.target.value })
                 }
-                pattern="^\d{9,15}$"
-                title="Enter a valid phone number"
               />
             </div>
             <div>
-              <Label htmlFor="email">Email Address</Label>
+              <Label htmlFor="email">{t("settings.email_address")}</Label>
               <Input
                 id="email"
                 type="email"
@@ -403,7 +434,7 @@ const Settings = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="currency">Default Currency</Label>
+                <Label htmlFor="currency">{t("settings.currency")}</Label>
                 <Select
                   value={profile.currency}
                   onValueChange={(value) =>
@@ -414,30 +445,38 @@ const Settings = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="USD">USD - US Dollar</SelectItem>
-                    <SelectItem value="EUR">EUR - Euro</SelectItem>
-                    <SelectItem value="GBP">GBP - British Pound</SelectItem>
-                    <SelectItem value="CNY">CNY - Chinese Yuan</SelectItem>
-                    <SelectItem value="VND">VND - Vietnamese Dong</SelectItem>
+                    <SelectItem value="USD">
+                      {t("settings.currency_usd")}
+                    </SelectItem>
+                    <SelectItem value="EUR">
+                      {t("settings.currency_eur")}
+                    </SelectItem>
+                    <SelectItem value="GBP">
+                      {t("settings.currency_gbp")}
+                    </SelectItem>
+                    <SelectItem value="CNY">
+                      {t("settings.currency_cny")}
+                    </SelectItem>
+                    <SelectItem value="VND">
+                      {t("settings.currency_vnd")}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label htmlFor="language">Language</Label>
+                <Label htmlFor="language">{t("settings.language")}</Label>
                 <Select
                   value={profile.language}
-                  onValueChange={(value) =>
-                    setProfile({ ...profile, language: value })
-                  }
+                  onValueChange={handleLanguageChange}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="vi">Vietnamese</SelectItem>
-                    <SelectItem value="es">Spanish</SelectItem>
-                    <SelectItem value="fr">French</SelectItem>
+                    <SelectItem value="en">{t("settings.english")}</SelectItem>
+                    <SelectItem value="vi">
+                      {t("settings.vietnamese")}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -452,7 +491,7 @@ const Settings = () => {
               ) : (
                 <Save className="h-4 w-4 mr-2" />
               )}
-              Save Profile
+              {t("settings.save_profile")}
             </Button>
           </CardContent>
         </Card>
@@ -462,13 +501,17 @@ const Settings = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Lock className="h-5 w-5" />
-              Change Password
+              {t("settings.change_password")}
             </CardTitle>
-            <CardDescription>Update your account password</CardDescription>
+            <CardDescription>
+              {t("settings.change_password_desc")}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="currentPassword">Current Password</Label>
+              <Label htmlFor="currentPassword">
+                {t("settings.current_password")}
+              </Label>
               <div className="relative">
                 <Input
                   id="currentPassword"
@@ -498,7 +541,9 @@ const Settings = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="newPassword">New Password</Label>
+                <Label htmlFor="newPassword">
+                  {t("settings.new_password")}
+                </Label>
                 <div className="relative">
                   <Input
                     id="newPassword"
@@ -527,7 +572,9 @@ const Settings = () => {
                 </div>
               </div>
               <div>
-                <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                <Label htmlFor="confirmPassword">
+                  {t("settings.confirm_password")}
+                </Label>
                 <div className="relative">
                   <Input
                     id="confirmPassword"
@@ -571,7 +618,7 @@ const Settings = () => {
               ) : (
                 <Lock className="h-4 w-4 mr-2" />
               )}
-              Change Password
+              {t("settings.change_password_btn")}
             </Button>
           </CardContent>
         </Card>
@@ -581,10 +628,10 @@ const Settings = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Bell className="h-5 w-5" />
-              Notifications
+              {t("settings.notifications")}
             </CardTitle>
             <CardDescription>
-              Configure how you receive updates and alerts
+              {t("settings.notifications_desc")}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -592,10 +639,10 @@ const Settings = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <Label htmlFor="email-notifications">
-                    Email Notifications
+                    {t("settings.email_notifications")}
                   </Label>
                   <p className="text-sm text-muted-foreground">
-                    Receive updates via email
+                    {t("settings.email_notifications_desc")}
                   </p>
                 </div>
                 <Switch
@@ -612,9 +659,11 @@ const Settings = () => {
               <Separator />
               <div className="flex items-center justify-between">
                 <div>
-                  <Label htmlFor="budget-alerts">Budget Alerts</Label>
+                  <Label htmlFor="budget-alerts">
+                    {t("settings.budget_alerts")}
+                  </Label>
                   <p className="text-sm text-muted-foreground">
-                    Get notified when approaching budget limits
+                    {t("settings.budget_alerts_desc")}
                   </p>
                 </div>
                 <Switch
@@ -631,9 +680,11 @@ const Settings = () => {
               <Separator />
               <div className="flex items-center justify-between">
                 <div>
-                  <Label htmlFor="goal-reminders">Goal Reminders</Label>
+                  <Label htmlFor="goal-reminders">
+                    {t("settings.goal_reminders")}
+                  </Label>
                   <p className="text-sm text-muted-foreground">
-                    Receive reminders about your financial goals
+                    {t("settings.goal_reminders_desc")}
                   </p>
                 </div>
                 <Switch
@@ -650,9 +701,11 @@ const Settings = () => {
               <Separator />
               <div className="flex items-center justify-between">
                 <div>
-                  <Label htmlFor="weekly-reports">Weekly Reports</Label>
+                  <Label htmlFor="weekly-reports">
+                    {t("settings.weekly_reports")}
+                  </Label>
                   <p className="text-sm text-muted-foreground">
-                    Get weekly spending summaries
+                    {t("settings.weekly_reports_desc")}
                   </p>
                 </div>
                 <Switch
@@ -677,7 +730,7 @@ const Settings = () => {
               ) : (
                 <Save className="h-4 w-4 mr-2" />
               )}
-              Save Notifications
+              {t("settings.save_notifications")}
             </Button>
           </CardContent>
         </Card>
@@ -687,19 +740,19 @@ const Settings = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5" />
-              Privacy & Security
+              {t("settings.privacy_security")}
             </CardTitle>
-            <CardDescription>
-              Control your data and privacy preferences
-            </CardDescription>
+            <CardDescription>{t("settings.privacy_desc")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <Label htmlFor="data-sharing">Data Sharing</Label>
+                  <Label htmlFor="data-sharing">
+                    {t("settings.data_sharing")}
+                  </Label>
                   <p className="text-sm text-muted-foreground">
-                    Allow anonymous data sharing for service improvement
+                    {t("settings.data_sharing_desc")}
                   </p>
                 </div>
                 <Switch
@@ -713,9 +766,11 @@ const Settings = () => {
               <Separator />
               <div className="flex items-center justify-between">
                 <div>
-                  <Label htmlFor="analytics-tracking">Analytics Tracking</Label>
+                  <Label htmlFor="analytics-tracking">
+                    {t("settings.analytics_tracking")}
+                  </Label>
                   <p className="text-sm text-muted-foreground">
-                    Help improve the app with usage analytics
+                    {t("settings.analytics_tracking_desc")}
                   </p>
                 </div>
                 <Switch
@@ -729,9 +784,11 @@ const Settings = () => {
               <Separator />
               <div className="flex items-center justify-between">
                 <div>
-                  <Label htmlFor="marketing-emails">Marketing Emails</Label>
+                  <Label htmlFor="marketing-emails">
+                    {t("settings.marketing_emails")}
+                  </Label>
                   <p className="text-sm text-muted-foreground">
-                    Receive promotional emails and tips
+                    {t("settings.marketing_emails_desc")}
                   </p>
                 </div>
                 <Switch
@@ -753,7 +810,7 @@ const Settings = () => {
               ) : (
                 <Save className="h-4 w-4 mr-2" />
               )}
-              Save Privacy Settings
+              {t("settings.save_privacy")}
             </Button>
           </CardContent>
         </Card>
@@ -761,30 +818,30 @@ const Settings = () => {
         {/* Danger Zone */}
         <Card className="border-destructive/50">
           <CardHeader>
-            <CardTitle className="text-destructive">Danger Zone</CardTitle>
-            <CardDescription>
-              Irreversible and destructive actions
-            </CardDescription>
+            <CardTitle className="text-destructive">
+              {t("settings.danger_zone")}
+            </CardTitle>
+            <CardDescription>{t("settings.danger_desc")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between p-4 border border-destructive/20 rounded-lg">
               <div>
-                <h4 className="font-medium">Delete Account</h4>
+                <h4 className="font-medium">{t("settings.delete_account")}</h4>
                 <p className="text-sm text-muted-foreground">
-                  Permanently delete your account and all data
+                  {t("settings.delete_account_desc")}
                 </p>
               </div>
               <Button
                 variant="destructive"
                 onClick={() => {
                   toast({
-                    title: "Account deletion",
-                    description: "This feature is not yet implemented.",
+                    title: t("settings.account_deletion"),
+                    description: t("settings.account_deletion_not_implemented"),
                     variant: "destructive",
                   });
                 }}
               >
-                Delete Account
+                {t("settings.delete_account")}
               </Button>
             </div>
           </CardContent>

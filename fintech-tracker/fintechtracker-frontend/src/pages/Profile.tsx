@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Card,
   CardContent,
@@ -47,6 +48,7 @@ const iconMap = {
 };
 
 const Profile = () => {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -99,9 +101,9 @@ const Profile = () => {
     } catch (error: any) {
       console.error("Failed to load profile:", error);
       toast({
-        title: "Error",
+        title: t("common.error"),
         description:
-          error.response?.data?.message || "Failed to load profile data",
+          error.response?.data?.message || t("profile.failed_to_load"),
         variant: "destructive",
       });
     } finally {
@@ -119,8 +121,8 @@ const Profile = () => {
 
       setIsEditing(false);
       toast({
-        title: "Profile updated",
-        description: "Your profile information has been saved successfully.",
+        title: t("profile.profile_updated"),
+        description: t("profile.profile_updated_desc"),
       });
 
       // Trigger storage event để sidebar cập nhật
@@ -135,9 +137,9 @@ const Profile = () => {
     } catch (error: any) {
       console.error("Failed to update profile:", error);
       toast({
-        title: "Error",
+        title: t("common.error"),
         description:
-          error.response?.data?.message || "Failed to update profile",
+          error.response?.data?.message || t("profile.failed_to_update"),
         variant: "destructive",
       });
     } finally {
@@ -170,8 +172,8 @@ const Profile = () => {
     const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
     if (!allowedTypes.includes(file.type)) {
       toast({
-        title: "Invalid file type",
-        description: "Please select a valid image file (JPG, PNG, GIF)",
+        title: t("profile.invalid_file_type"),
+        description: t("profile.invalid_file_desc"),
         variant: "destructive",
       });
       return;
@@ -180,8 +182,8 @@ const Profile = () => {
     // Validate file size (5MB)
     if (file.size > 2 * 1024 * 1024) {
       toast({
-        title: "File too large",
-        description: "Please select an image smaller than 5MB",
+        title: t("profile.file_too_large"),
+        description: t("profile.file_too_large_desc"),
         variant: "destructive",
       });
       return;
@@ -195,23 +197,22 @@ const Profile = () => {
       await fetchProfile();
 
       toast({
-        title: "Avatar updated",
-        description: "Your profile picture has been updated successfully.",
+        title: t("profile.avatar_updated"),
+        description: t("profile.avatar_updated_desc"),
       });
     } catch (error: any) {
       console.error("Failed to upload avatar:", error);
 
       // **FIX: Better error handling**
-      let errorMessage = "Failed to upload avatar";
+      let errorMessage = t("profile.upload_failed");
       if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error.response?.status === 500) {
-        errorMessage =
-          "Server error. Please check if the uploads folder exists.";
+        errorMessage = t("profile.server_error");
       }
 
       toast({
-        title: "Upload failed",
+        title: t("profile.upload_failed"),
         description: errorMessage,
         variant: "destructive",
       });
@@ -233,14 +234,15 @@ const Profile = () => {
       await fetchProfile();
 
       toast({
-        title: "Avatar removed",
-        description: "Your profile picture has been removed.",
+        title: t("profile.avatar_removed"),
+        description: t("profile.avatar_removed_desc"),
       });
     } catch (error: any) {
       console.error("Failed to delete avatar:", error);
       toast({
-        title: "Delete failed",
-        description: error.response?.data?.message || "Failed to delete avatar",
+        title: t("profile.delete_failed"),
+        description:
+          error.response?.data?.message || t("profile.delete_failed"),
         variant: "destructive",
       });
     } finally {
@@ -270,7 +272,7 @@ const Profile = () => {
   };
 
   const formatDate = (dateString?: string) => {
-    if (!dateString) return "Not set";
+    if (!dateString) return t("profile.not_set");
     return new Date(dateString).toLocaleDateString();
   };
 
@@ -278,7 +280,7 @@ const Profile = () => {
     return (
       <div className="p-6 flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
-        <span className="ml-2">Loading profile...</span>
+        <span className="ml-2">{t("profile.loading_profile")}</span>
       </div>
     );
   }
@@ -287,9 +289,11 @@ const Profile = () => {
     return (
       <div className="p-6">
         <div className="text-center">
-          <h2 className="text-xl font-semibold">Failed to load profile</h2>
+          <h2 className="text-xl font-semibold">
+            {t("profile.failed_load_profile")}
+          </h2>
           <Button onClick={fetchProfile} className="mt-4">
-            Try Again
+            {t("common.try_again")}
           </Button>
         </div>
       </div>
@@ -303,10 +307,10 @@ const Profile = () => {
   return (
     <div className="p-6 space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Profile</h1>
-        <p className="text-muted-foreground">
-          Manage your personal information and track your achievements
-        </p>
+        <h1 className="text-3xl font-bold tracking-tight">
+          {t("profile.title")}
+        </h1>
+        <p className="text-muted-foreground">{t("profile.subtitle")}</p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
@@ -317,7 +321,7 @@ const Profile = () => {
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
                   <User className="h-5 w-5" />
-                  Personal Information
+                  {t("profile.personal_information")}
                 </CardTitle>
                 <Button
                   variant="outline"
@@ -328,7 +332,7 @@ const Profile = () => {
                   disabled={submitting}
                 >
                   <Edit2 className="h-4 w-4 mr-2" />
-                  {isEditing ? "Cancel" : "Edit"}
+                  {isEditing ? t("common.cancel") : t("common.edit")}
                 </Button>
               </div>
             </CardHeader>
@@ -385,19 +389,21 @@ const Profile = () => {
                 <div>
                   <h3 className="text-lg font-semibold">{displayName}</h3>
                   <p className="text-muted-foreground">
-                    Member since {profileData.joinDate}
+                    {t("profile.member_since", { date: profileData.joinDate })}
                   </p>
                   <div className="flex gap-2 mt-1">
                     <Badge variant="secondary">
-                      {userRole === "admin" ? "Administrator" : "Customer"}
+                      {userRole === "admin"
+                        ? t("profile.administrator")
+                        : t("profile.customer")}
                     </Badge>
                     {userSubscription === "premium" ? (
                       <Badge className="bg-primary text-primary-foreground">
                         <Crown className="h-3 w-3 mr-1" />
-                        Premium
+                        {t("common.premium")}
                       </Badge>
                     ) : (
-                      <Badge variant="outline">Basic Plan</Badge>
+                      <Badge variant="outline">{t("profile.basic_plan")}</Badge>
                     )}
                   </div>
                 </div>
@@ -415,7 +421,7 @@ const Profile = () => {
               {/* Profile Fields */}
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <Label htmlFor="firstName">First Name</Label>
+                  <Label htmlFor="firstName">{t("profile.first_name")}</Label>
                   {isEditing ? (
                     <Input
                       id="firstName"
@@ -427,13 +433,15 @@ const Profile = () => {
                   ) : (
                     <div className="flex items-center gap-2 mt-1">
                       <User className="h-4 w-4 text-muted-foreground" />
-                      <span>{profileData.firstName || "Not set"}</span>
+                      <span>
+                        {profileData.firstName || t("profile.not_set")}
+                      </span>
                     </div>
                   )}
                 </div>
 
                 <div>
-                  <Label htmlFor="lastName">Last Name</Label>
+                  <Label htmlFor="lastName">{t("profile.last_name")}</Label>
                   {isEditing ? (
                     <Input
                       id="lastName"
@@ -445,13 +453,15 @@ const Profile = () => {
                   ) : (
                     <div className="flex items-center gap-2 mt-1">
                       <User className="h-4 w-4 text-muted-foreground" />
-                      <span>{profileData.lastName || "Not set"}</span>
+                      <span>
+                        {profileData.lastName || t("profile.not_set")}
+                      </span>
                     </div>
                   )}
                 </div>
 
                 <div>
-                  <Label htmlFor="username">Username</Label>
+                  <Label htmlFor="username">{t("auth.username")}</Label>
                   {isEditing ? (
                     <Input
                       id="username"
@@ -469,7 +479,7 @@ const Profile = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="email">Email Address</Label>
+                  <Label htmlFor="email">{t("profile.email_address")}</Label>
                   {isEditing ? (
                     <Input
                       id="email"
@@ -488,7 +498,7 @@ const Profile = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="phone">Phone Number</Label>
+                  <Label htmlFor="phone">{t("profile.phone_number")}</Label>
                   {isEditing ? (
                     <Input
                       id="phone"
@@ -500,13 +510,15 @@ const Profile = () => {
                   ) : (
                     <div className="flex items-center gap-2 mt-1">
                       <Phone className="h-4 w-4 text-muted-foreground" />
-                      <span>{profileData.phone || "Not set"}</span>
+                      <span>{profileData.phone || t("profile.not_set")}</span>
                     </div>
                   )}
                 </div>
 
                 <div>
-                  <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                  <Label htmlFor="dateOfBirth">
+                    {t("profile.date_of_birth")}
+                  </Label>
                   {isEditing ? (
                     <Input
                       id="dateOfBirth"
@@ -528,7 +540,7 @@ const Profile = () => {
                 </div>
 
                 <div className="md:col-span-2">
-                  <Label htmlFor="address">Address</Label>
+                  <Label htmlFor="address">{t("profile.address")}</Label>
                   {isEditing ? (
                     <Textarea
                       id="address"
@@ -541,7 +553,7 @@ const Profile = () => {
                   ) : (
                     <div className="flex items-center gap-2 mt-1">
                       <MapPin className="h-4 w-4 text-muted-foreground" />
-                      <span>{profileData.address || "Not set"}</span>
+                      <span>{profileData.address || t("profile.not_set")}</span>
                     </div>
                   )}
                 </div>
@@ -553,10 +565,10 @@ const Profile = () => {
                     {submitting ? (
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Saving...
+                        {t("profile.saving")}
                       </>
                     ) : (
-                      "Save Changes"
+                      t("profile.save_changes")
                     )}
                   </Button>
                   <Button
@@ -564,7 +576,7 @@ const Profile = () => {
                     onClick={handleCancel}
                     disabled={submitting}
                   >
-                    Cancel
+                    {t("common.cancel")}
                   </Button>
                 </div>
               )}
@@ -576,11 +588,9 @@ const Profile = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Trophy className="h-5 w-5" />
-                Achievements
+                {t("profile.achievements")}
               </CardTitle>
-              <CardDescription>
-                Your financial milestones and accomplishments
-              </CardDescription>
+              <CardDescription>{t("profile.milestones")}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid gap-4">
@@ -614,8 +624,11 @@ const Profile = () => {
                           <div className="flex items-center gap-1 mt-1">
                             <Calendar className="h-3 w-3" />
                             <span className="text-xs text-muted-foreground">
-                              Earned on{" "}
-                              {new Date(achievement.date).toLocaleDateString()}
+                              {t("profile.earned_on", {
+                                date: new Date(
+                                  achievement.date
+                                ).toLocaleDateString(),
+                              })}
                             </span>
                           </div>
                         )}
@@ -626,7 +639,9 @@ const Profile = () => {
                               className="h-2"
                             />
                             <span className="text-xs text-muted-foreground">
-                              {Math.round(achievement.progress)}% complete
+                              {t("profile.complete_progress", {
+                                progress: Math.round(achievement.progress),
+                              })}
                             </span>
                           </div>
                         )}
@@ -636,7 +651,7 @@ const Profile = () => {
                           variant="secondary"
                           className="bg-success/20 text-success"
                         >
-                          Earned
+                          {t("profile.earned")}
                         </Badge>
                       )}
                     </div>
@@ -651,12 +666,14 @@ const Profile = () => {
         <div className="space-y-6">
           <Card className="transition-all hover:shadow-md">
             <CardHeader>
-              <CardTitle>Quick Stats</CardTitle>
-              <CardDescription>Your activity at a glance</CardDescription>
+              <CardTitle>{t("profile.quick_stats")}</CardTitle>
+              <CardDescription>{t("profile.activity_glance")}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Total Transactions</span>
+                <span className="text-sm font-medium">
+                  {t("profile.total_transactions")}
+                </span>
                 <div className="text-right">
                   <div className="font-bold">
                     {profileData.stats.totalTransactions.toLocaleString()}
@@ -664,7 +681,9 @@ const Profile = () => {
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Budgets Created</span>
+                <span className="text-sm font-medium">
+                  {t("profile.budgets_created")}
+                </span>
                 <div className="text-right">
                   <div className="font-bold">
                     {profileData.stats.budgetsCreated}
@@ -672,7 +691,9 @@ const Profile = () => {
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Goals Achieved</span>
+                <span className="text-sm font-medium">
+                  {t("profile.goals_achieved")}
+                </span>
                 <div className="text-right">
                   <div className="font-bold">
                     {profileData.stats.goalsAchieved}
@@ -680,7 +701,9 @@ const Profile = () => {
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Days Active</span>
+                <span className="text-sm font-medium">
+                  {t("profile.days_active")}
+                </span>
                 <div className="text-right">
                   <div className="font-bold">
                     {profileData.stats.daysActive}
@@ -692,8 +715,10 @@ const Profile = () => {
 
           <Card className="transition-all hover:shadow-md">
             <CardHeader>
-              <CardTitle>Account Level</CardTitle>
-              <CardDescription>Progress to next tier</CardDescription>
+              <CardTitle>{t("profile.account_level")}</CardTitle>
+              <CardDescription>
+                {t("profile.progress_next_tier")}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -706,7 +731,7 @@ const Profile = () => {
                     {profileData.accountLevel.currentLevel}
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    Current Level
+                    {t("profile.current_level")}
                   </div>
                 </div>
                 <Progress
@@ -714,11 +739,15 @@ const Profile = () => {
                   className="h-3"
                 />
                 <div className="text-center text-sm text-muted-foreground">
-                  {profileData.accountLevel.progress}% to{" "}
-                  {profileData.accountLevel.nextLevel} Level
+                  {t("profile.to_next_level", {
+                    progress: profileData.accountLevel.progress,
+                    nextLevel: profileData.accountLevel.nextLevel,
+                  })}
                 </div>
                 <div className="text-xs text-muted-foreground text-center">
-                  {profileData.accountLevel.points} points earned
+                  {t("profile.points_earned", {
+                    points: profileData.accountLevel.points,
+                  })}
                 </div>
               </div>
             </CardContent>
@@ -731,19 +760,19 @@ const Profile = () => {
                 {userSubscription === "premium" ? (
                   <>
                     <Crown className="h-5 w-5 text-primary" />
-                    Premium Subscription
+                    {t("profile.premium_subscription")}
                   </>
                 ) : (
                   <>
                     <CreditCard className="h-5 w-5" />
-                    Subscription Plan
+                    {t("profile.subscription_plan")}
                   </>
                 )}
               </CardTitle>
               <CardDescription>
                 {userSubscription === "premium"
-                  ? "You have access to all premium features"
-                  : "Upgrade to unlock more features"}
+                  ? t("profile.premium_access")
+                  : t("profile.upgrade_unlock")}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -753,33 +782,32 @@ const Profile = () => {
                     <div className="text-center">
                       <Badge className="bg-primary text-primary-foreground text-lg px-4 py-2">
                         <Crown className="h-4 w-4 mr-1" />
-                        Premium Active
+                        {t("profile.premium_active")}
                       </Badge>
                       <p className="text-sm text-muted-foreground mt-2">
-                        Next billing date: June 15, 2024
+                        {t("profile.next_billing", { date: "June 15, 2024" })}
                       </p>
                     </div>
                     <Button variant="outline" className="w-full">
-                      Manage Subscription
+                      {t("profile.manage_subscription")}
                     </Button>
                   </>
                 ) : (
                   <>
                     <div className="text-center">
                       <Badge variant="outline" className="text-lg px-4 py-2">
-                        Basic Plan
+                        {t("profile.basic_plan")}
                       </Badge>
                       <p className="text-sm text-muted-foreground mt-2">
-                        Limited features available
+                        {t("profile.limited_features")}
                       </p>
                     </div>
                     <Button className="w-full" onClick={handleUpgrade}>
                       <Crown className="h-4 w-4 mr-2" />
-                      Upgrade to Premium
+                      {t("profile.upgrade_to_premium")}
                     </Button>
                     <p className="text-xs text-muted-foreground text-center">
-                      Unlock unlimited transactions, advanced analytics, and
-                      investment tracking
+                      {t("profile.unlock_features")}
                     </p>
                   </>
                 )}

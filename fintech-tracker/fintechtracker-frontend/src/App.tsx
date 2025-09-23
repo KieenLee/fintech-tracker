@@ -19,6 +19,7 @@ import Profile from "./pages/Profile";
 import QuickAdd from "./pages/QuickAdd";
 import DashboardLayout from "./layouts/DashboardLayout";
 import NotFound from "./pages/NotFound";
+import "./i18n";
 
 // Lazy load pages that are not frequently accessed
 const Users = lazy(() => import("./pages/Users"));
@@ -35,9 +36,9 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Landing />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/verify-otp" element={<VerifyOTP />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/verify-otp" element={<VerifyOTP />} />
           <Route
             path="/dashboard"
             element={

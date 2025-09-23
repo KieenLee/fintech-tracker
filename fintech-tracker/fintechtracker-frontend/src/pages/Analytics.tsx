@@ -46,8 +46,10 @@ import {
   analyticsService,
   AnalyticsOverview,
 } from "@/services/analyticsService";
+import { useTranslation } from "react-i18next";
 
 const Analytics = () => {
+  const { t } = useTranslation();
   const [timeRange, setTimeRange] = useState("6months");
   const [analyticsData, setAnalyticsData] = useState<AnalyticsOverview | null>(
     null
@@ -67,9 +69,9 @@ const Analytics = () => {
     } catch (error: any) {
       console.error("Analytics error:", error);
       toast({
-        title: "Error",
+        title: t("common.error"),
         description:
-          error.response?.data?.message || "Failed to load analytics data",
+          error.response?.data?.message || t("analytics.load_failed"),
         variant: "destructive",
       });
     } finally {
@@ -96,82 +98,61 @@ const Analytics = () => {
       color: chartColors[index % chartColors.length],
     })) || [];
 
-  // Thêm function để get chart title dựa trên time range
-  const getChartTitle = (baseTitle: string) => {
-    const timeRangeMap: { [key: string]: string } = {
-      "1week": "Daily",
-      "1month": "Weekly",
-      "3months": "Monthly",
-      "6months": "Monthly",
-      "1year": "Monthly",
-      "2years": "Monthly",
-    };
-
-    const period = timeRangeMap[timeRange] || "Monthly";
-    return `${period} ${baseTitle}`;
-  };
-
-  // Cập nhật function để get chart config dựa trên time range
+  // Cập nhật function để get chart config dựa trên time range với localization
   const getChartConfig = () => {
     const configs = {
       "1week": {
-        dataLabel: "Daily",
+        dataLabel: t("analytics.daily"),
         period: "day",
         description: {
-          incomeExpenses:
-            "Daily comparison of income and expenses over the last 7 days",
-          netWorth: "Daily financial changes over the last week",
-          savings: "Daily savings progress over the last week",
+          incomeExpenses: t("analytics.daily_income_expenses_desc"),
+          netWorth: t("analytics.daily_net_worth_desc"),
+          savings: t("analytics.daily_savings_desc"),
         },
       },
       "1month": {
-        dataLabel: "Weekly",
+        dataLabel: t("analytics.weekly"),
         period: "week",
         description: {
-          incomeExpenses:
-            "Weekly comparison of income and expenses over the last 4 weeks",
-          netWorth: "Weekly financial changes over the last month",
-          savings: "Weekly savings progress over the last month",
+          incomeExpenses: t("analytics.weekly_income_expenses_desc"),
+          netWorth: t("analytics.weekly_net_worth_desc"),
+          savings: t("analytics.weekly_savings_desc"),
         },
       },
       "3months": {
-        dataLabel: "Monthly",
+        dataLabel: t("analytics.monthly"),
         period: "month",
         description: {
-          incomeExpenses:
-            "Monthly comparison of income and expenses over the last 3 months",
-          netWorth: "Monthly financial growth over the last 3 months",
-          savings: "Monthly savings progress over the last 3 months",
+          incomeExpenses: t("analytics.monthly_income_expenses_3m_desc"),
+          netWorth: t("analytics.monthly_net_worth_3m_desc"),
+          savings: t("analytics.monthly_savings_3m_desc"),
         },
       },
       "6months": {
-        dataLabel: "Monthly",
+        dataLabel: t("analytics.monthly"),
         period: "month",
         description: {
-          incomeExpenses:
-            "Monthly comparison of income and expenses over the last 6 months",
-          netWorth: "Monthly financial growth over the last 6 months",
-          savings: "Monthly savings progress over the last 6 months",
+          incomeExpenses: t("analytics.monthly_income_expenses_6m_desc"),
+          netWorth: t("analytics.monthly_net_worth_6m_desc"),
+          savings: t("analytics.monthly_savings_6m_desc"),
         },
       },
       "1year": {
-        dataLabel: "Monthly",
+        dataLabel: t("analytics.monthly"),
         period: "month",
         description: {
-          incomeExpenses:
-            "Monthly comparison of income and expenses over the last year",
-          netWorth: "Monthly financial growth over the last year",
-          savings: "Monthly savings progress over the last year",
+          incomeExpenses: t("analytics.monthly_income_expenses_1y_desc"),
+          netWorth: t("analytics.monthly_net_worth_1y_desc"),
+          savings: t("analytics.monthly_savings_1y_desc"),
         },
       },
       "2years": {
-        dataLabel: "Monthly",
+        dataLabel: t("analytics.monthly"),
         period: "month",
         description: {
-          incomeExpenses:
-            "Monthly comparison of income and expenses over the last 2 years",
-          netWorth: "Monthly financial growth over the last 2 years",
-          savings: "Monthly savings progress over the last 2 years",
+          incomeExpenses: t("analytics.monthly_income_expenses_2y_desc"),
+          netWorth: t("analytics.monthly_net_worth_2y_desc"),
+          savings: t("analytics.monthly_savings_2y_desc"),
         },
       },
     };
@@ -186,7 +167,7 @@ const Analytics = () => {
     return (
       <div className="p-6 flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
-        <span className="ml-2">Loading analytics...</span>
+        <span className="ml-2">{t("analytics.loading_analytics")}</span>
       </div>
     );
   }
@@ -196,10 +177,8 @@ const Analytics = () => {
     return (
       <div className="p-6">
         <div className="text-center py-12">
-          <h2 className="text-2xl font-bold mb-4">No Analytics Data</h2>
-          <p className="text-muted-foreground">
-            Start adding transactions to see your financial analytics
-          </p>
+          <h2 className="text-2xl font-bold mb-4">{t("analytics.no_data")}</h2>
+          <p className="text-muted-foreground">{t("analytics.no_data_desc")}</p>
         </div>
       </div>
     );
@@ -209,22 +188,28 @@ const Analytics = () => {
     <div className="p-6 space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
-          <p className="text-muted-foreground">
-            Detailed insights into your financial patterns
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {t("analytics.title")}
+          </h1>
+          <p className="text-muted-foreground">{t("analytics.subtitle")}</p>
         </div>
         <Select value={timeRange} onValueChange={setTimeRange}>
           <SelectTrigger className="w-48">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="1week">Last Week</SelectItem>
-            <SelectItem value="1month">Last Month</SelectItem>
-            <SelectItem value="3months">Last 3 Months</SelectItem>
-            <SelectItem value="6months">Last 6 Months</SelectItem>
-            <SelectItem value="1year">Last Year</SelectItem>
-            <SelectItem value="2years">Last 2 Years</SelectItem>
+            <SelectItem value="1week">{t("analytics.last_week")}</SelectItem>
+            <SelectItem value="1month">{t("analytics.last_month")}</SelectItem>
+            <SelectItem value="3months">
+              {t("analytics.last_3_months")}
+            </SelectItem>
+            <SelectItem value="6months">
+              {t("analytics.last_6_months")}
+            </SelectItem>
+            <SelectItem value="1year">{t("analytics.last_year")}</SelectItem>
+            <SelectItem value="2years">
+              {t("analytics.last_2_years")}
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -233,7 +218,9 @@ const Analytics = () => {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="transition-all hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Income</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t("analytics.total_income")}
+            </CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -243,7 +230,7 @@ const Analytics = () => {
             <p className="text-xs text-muted-foreground">
               <span className="text-success flex items-center">
                 <ArrowUpIcon className="h-3 w-3 mr-1" />
-                +12.5% from previous period
+                {t("analytics.income_change")}
               </span>
             </p>
           </CardContent>
@@ -252,7 +239,7 @@ const Analytics = () => {
         <Card className="transition-all hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Total Expenses
+              {t("analytics.total_expenses")}
             </CardTitle>
             <TrendingDown className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -263,7 +250,7 @@ const Analytics = () => {
             <p className="text-xs text-muted-foreground">
               <span className="text-success flex items-center">
                 <ArrowDownIcon className="h-3 w-3 mr-1" />
-                -3.2% from previous period
+                {t("analytics.expense_change")}
               </span>
             </p>
           </CardContent>
@@ -271,7 +258,9 @@ const Analytics = () => {
 
         <Card className="transition-all hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Savings Rate</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {t("analytics.savings_rate")}
+            </CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -281,7 +270,7 @@ const Analytics = () => {
             <p className="text-xs text-muted-foreground">
               <span className="text-success flex items-center">
                 <ArrowUpIcon className="h-3 w-3 mr-1" />
-                +2.1% from previous period
+                {t("analytics.savings_change")}
               </span>
             </p>
           </CardContent>
@@ -290,7 +279,7 @@ const Analytics = () => {
         <Card className="transition-all hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Avg. Monthly Expenses
+              {t("analytics.avg_monthly_expenses")}
             </CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -301,7 +290,7 @@ const Analytics = () => {
             <p className="text-xs text-muted-foreground">
               <span className="text-success flex items-center">
                 <ArrowDownIcon className="h-3 w-3 mr-1" />
-                -1.8% from previous period
+                {t("analytics.avg_expense_change")}
               </span>
             </p>
           </CardContent>
@@ -315,7 +304,7 @@ const Analytics = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5" />
-              {chartConfig.dataLabel} Income vs Expenses
+              {chartConfig.dataLabel} {t("analytics.income_vs_expenses")}
             </CardTitle>
             <CardDescription>
               {chartConfig.description.incomeExpenses}
@@ -331,12 +320,12 @@ const Analytics = () => {
                 <Bar
                   dataKey="income"
                   fill="hsl(var(--primary))"
-                  name="Income"
+                  name={t("analytics.income")}
                 />
                 <Bar
                   dataKey="expenses"
                   fill="hsl(var(--destructive))"
-                  name="Expenses"
+                  name={t("analytics.expenses")}
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -348,7 +337,7 @@ const Analytics = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5" />
-              Net Worth Growth
+              {t("analytics.net_worth_growth")}
             </CardTitle>
             <CardDescription>
               {chartConfig.description.netWorth}
@@ -367,7 +356,7 @@ const Analytics = () => {
                   stroke="hsl(var(--primary))"
                   fill="hsl(var(--primary))"
                   fillOpacity={0.6}
-                  name="Net Worth"
+                  name={t("analytics.net_worth")}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -377,7 +366,9 @@ const Analytics = () => {
         {/* Savings Trend */}
         <Card className="transition-all hover:shadow-md">
           <CardHeader>
-            <CardTitle>{chartConfig.dataLabel} Savings</CardTitle>
+            <CardTitle>
+              {chartConfig.dataLabel} {t("analytics.savings")}
+            </CardTitle>
             <CardDescription>{chartConfig.description.savings}</CardDescription>
           </CardHeader>
           <CardContent>
@@ -392,7 +383,7 @@ const Analytics = () => {
                   dataKey="savings"
                   stroke="hsl(var(--primary))"
                   strokeWidth={3}
-                  name="Savings"
+                  name={t("analytics.savings")}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -404,9 +395,9 @@ const Analytics = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <PieChart className="h-5 w-5" />
-              Expense Breakdown
+              {t("analytics.expense_breakdown")}
             </CardTitle>
-            <CardDescription>Where your money goes each month</CardDescription>
+            <CardDescription>{t("analytics.where_money_goes")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col lg:flex-row items-center gap-4">
@@ -426,7 +417,12 @@ const Analytics = () => {
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value) => [`$${value}`, "Amount"]} />
+                    <Tooltip
+                      formatter={(value) => [
+                        `$${value}`,
+                        t("analytics.amount"),
+                      ]}
+                    />
                   </RechartsPieChart>
                 </ResponsiveContainer>
               </div>
@@ -447,39 +443,38 @@ const Analytics = () => {
         </Card>
       </div>
 
-      {/* Insights - Giữ nguyên như hiện tại */}
+      {/* Insights */}
       <Card className="transition-all hover:shadow-md">
         <CardHeader>
-          <CardTitle>Financial Insights</CardTitle>
-          <CardDescription>
-            AI-powered recommendations based on your spending patterns
-          </CardDescription>
+          <CardTitle>{t("analytics.financial_insights")}</CardTitle>
+          <CardDescription>{t("analytics.ai_recommendations")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
             <div className="p-4 bg-success/10 rounded-lg border border-success/20">
-              <h4 className="font-medium text-success mb-2">Great Progress!</h4>
+              <h4 className="font-medium text-success mb-2">
+                {t("analytics.great_progress")}
+              </h4>
               <p className="text-sm text-muted-foreground">
-                Your savings rate of {analyticsData.savingsRate.toFixed(1)}% is
-                above the recommended 20%. Keep up the excellent work!
+                {t("analytics.savings_rate_message", {
+                  rate: analyticsData.savingsRate.toFixed(1),
+                })}
               </p>
             </div>
             <div className="p-4 bg-warning/10 rounded-lg border border-warning/20">
               <h4 className="font-medium text-warning mb-2">
-                Food Spending Alert
+                {t("analytics.food_spending_alert")}
               </h4>
               <p className="text-sm text-muted-foreground">
-                Your food expenses are 35% of total spending. Consider meal
-                planning to optimize this category.
+                {t("analytics.food_spending_message")}
               </p>
             </div>
             <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
               <h4 className="font-medium text-blue-700 dark:text-blue-300 mb-2">
-                Investment Opportunity
+                {t("analytics.investment_opportunity")}
               </h4>
               <p className="text-sm text-muted-foreground">
-                With consistent savings, consider diversifying into investment
-                accounts for long-term growth.
+                {t("analytics.investment_message")}
               </p>
             </div>
           </div>

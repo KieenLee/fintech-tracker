@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -15,10 +16,11 @@ interface Message {
 }
 
 const QuickAdd = () => {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
-      text: "Hi! I'm your financial assistant. You can tell me about your transactions in natural language. For example: 'I spent $25 on lunch at McDonald's today' or 'I received $500 salary payment'",
+      text: t("quick_add.intro_message"),
       sender: "bot",
       timestamp: new Date(),
     },
@@ -30,15 +32,15 @@ const QuickAdd = () => {
   const navigate = useNavigate();
 
   const quickQuestions = [
-    "Today's spending",
-    "This week's spending", 
-    "This month's spending",
-    "This month's income",
-    "Current balance",
-    "Which category spends the most?",
-    "Total food spending this month",
-    "Remaining budget",
-    "Evaluate this month's income and expenses"
+    t("quick_add.todays_spending"),
+    t("quick_add.weeks_spending"),
+    t("quick_add.months_spending"),
+    t("quick_add.months_income"),
+    t("quick_add.current_balance"),
+    t("quick_add.category_most"),
+    t("quick_add.food_spending"),
+    t("quick_add.remaining_budget"),
+    t("quick_add.evaluate_month"),
   ];
 
   const handleQuickQuestion = (question: string) => {
@@ -52,16 +54,12 @@ const QuickAdd = () => {
     setMessages((prev) => [...prev, userMessage]);
     setIsProcessing(true);
     setShowQuickQuestions(false);
-    
+
     // Simulate bot response for analysis questions
     setTimeout(() => {
-      let botResponse = "";
-      
-      if (question.includes("spending") || question.includes("income") || question.includes("balance") || question.includes("category") || question.includes("budget") || question.includes("Evaluate")) {
-        botResponse = `I'm analyzing your ${question.toLowerCase()}. Based on your transaction history, here's what I found: [This would show actual financial analysis in a real implementation with backend data]`;
-      } else {
-        botResponse = "I understand you're asking about your finances. Let me help you with that analysis.";
-      }
+      const botResponse = t("quick_add.analyzing", {
+        question: question.toLowerCase(),
+      });
 
       const botMessage: Message = {
         id: Date.now() + 1,
@@ -188,7 +186,12 @@ const QuickAdd = () => {
       let botResponse = "";
 
       if (transaction) {
-        botResponse = `Great! I understood that as a ${transaction.type} of $${transaction.amount} for "${transaction.description}" in the ${transaction.category} category. Should I add this transaction for you?`;
+        botResponse = t("quick_add.understood_transaction", {
+          type: transaction.type,
+          amount: transaction.amount,
+          description: transaction.description,
+          category: transaction.category,
+        });
 
         // Save to localStorage
         const existingTransactions = JSON.parse(
@@ -205,14 +208,16 @@ const QuickAdd = () => {
         );
 
         toast({
-          title: "Transaction Added",
-          description: `Added ${transaction.type} of $${transaction.amount}`,
+          title: t("transactions.add_transaction"),
+          description: t("quick_add.transaction_added_toast", {
+            type: transaction.type,
+            amount: transaction.amount,
+          }),
         });
 
-        botResponse += " ✅ Transaction has been added successfully!";
+        botResponse += " " + t("quick_add.transaction_added");
       } else {
-        botResponse =
-          "I couldn't parse that as a transaction. Please try something like: 'I spent $25 on lunch at McDonald's' or 'I received $500 from my job'. Make sure to include the amount and what it was for.";
+        botResponse = t("quick_add.parse_failed");
       }
 
       const botMessage: Message = {
@@ -240,10 +245,10 @@ const QuickAdd = () => {
     <div className="h-full flex flex-col animate-fade-in">
       <div className="items-center gap-4 mb-6">
         <h1 className="text-3xl font-bold pl-[24px] pt-[24px]">
-          Quick Add Assistant
+          {t("quick_add.title")}
         </h1>
         <p className="text-muted-foreground pl-[24px]">
-          Allows you to quickly add new transaction.
+          {t("quick_add.subtitle")}
         </p>
       </div>
 
@@ -252,11 +257,10 @@ const QuickAdd = () => {
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Bot className="h-5 w-5 text-primary" />
-              AI Financial Assistant
+              {t("quick_add.ai_assistant")}
             </CardTitle>
             <p className="text-sm text-muted-foreground">
-              Describe your transactions in natural language and I'll add them for
-              you
+              {t("quick_add.describe_transactions")}
             </p>
           </CardHeader>
 
@@ -267,7 +271,7 @@ const QuickAdd = () => {
                   <div className="space-y-3 mb-4">
                     <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                       <Zap className="h-4 w-4 text-primary" />
-                      Quick Questions - Click to ask instantly
+                      {t("quick_add.quick_questions")}
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       {quickQuestions.map((question, index) => (
@@ -289,7 +293,9 @@ const QuickAdd = () => {
                   <div
                     key={message.id}
                     className={`flex items-start gap-3 ${
-                      message.sender === "user" ? "justify-end" : "justify-start"
+                      message.sender === "user"
+                        ? "justify-end"
+                        : "justify-start"
                     }`}
                   >
                     {message.sender === "bot" && (
@@ -344,7 +350,7 @@ const QuickAdd = () => {
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Type your transaction here... e.g., 'I spent $25 on coffee at Starbucks'"
+                placeholder={t("quick_add.type_transaction")}
                 className="flex-1"
                 disabled={isProcessing}
               />

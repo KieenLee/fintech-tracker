@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -25,7 +26,7 @@ import {
 } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { CalendarIcon, DollarSign } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import {
   Transaction,
@@ -48,6 +49,7 @@ const AddTransactionDialog = ({
   onSave,
   editingTransaction,
 }: AddTransactionDialogProps) => {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [dataLoading, setDataLoading] = useState(false);
@@ -87,27 +89,25 @@ const AddTransactionDialog = ({
 
         if (accountsData.length === 0) {
           toast({
-            title: "No Accounts Found",
-            description:
-              "Please create an account first before adding transactions.",
+            title: t("transactions.no_accounts_found"),
+            description: t("transactions.create_account_first"),
             variant: "destructive",
           });
         }
 
         if (categoriesData.length === 0) {
           toast({
-            title: "No Categories Found",
-            description: "No categories available. Please check your data.",
+            title: t("transactions.no_categories_found"),
+            description: t("transactions.no_categories_available"),
             variant: "destructive",
           });
         }
       } catch (error: any) {
         console.error("Error loading data:", error);
         toast({
-          title: "Error",
+          title: t("common.error"),
           description:
-            error.response?.data?.message ||
-            "Failed to load accounts and categories",
+            error.response?.data?.message || t("transactions.failed_load_data"),
           variant: "destructive",
         });
       } finally {
@@ -116,7 +116,7 @@ const AddTransactionDialog = ({
     };
 
     loadData();
-  }, [isOpen, toast]);
+  }, [isOpen, toast, t]);
 
   // Filter categories based on transaction type
   useEffect(() => {
@@ -165,8 +165,8 @@ const AddTransactionDialog = ({
 
     if (!formData.amount || !formData.accountId) {
       toast({
-        title: "Validation Error",
-        description: "Please fill in all required fields",
+        title: t("transactions.validation_error"),
+        description: t("transactions.validation_error_desc"),
         variant: "destructive",
       });
       return;
@@ -193,14 +193,14 @@ const AddTransactionDialog = ({
           transactionData
         );
         toast({
-          title: "Success",
-          description: "Transaction updated successfully",
+          title: t("common.success"),
+          description: t("transactions.updated_successfully"),
         });
       } else {
         await transactionService.createTransaction(transactionData);
         toast({
-          title: "Success",
-          description: "Transaction created successfully",
+          title: t("common.success"),
+          description: t("transactions.created_successfully"),
         });
       }
 
@@ -209,9 +209,9 @@ const AddTransactionDialog = ({
     } catch (error: any) {
       console.error("Error saving transaction:", error);
       toast({
-        title: "Error",
+        title: t("common.error"),
         description:
-          error.response?.data?.message || "Failed to save transaction",
+          error.response?.data?.message || t("transactions.failed_to_save"),
         variant: "destructive",
       });
     } finally {
@@ -235,10 +235,10 @@ const AddTransactionDialog = ({
   // Get account type display name
   const getAccountTypeDisplay = (type: string) => {
     const typeMap: Record<string, string> = {
-      cash: "Cash",
-      bank_account: "Bank Account",
-      e_wallet: "E-Wallet",
-      credit_card: "Credit Card",
+      cash: t("transactions.account_type_cash"),
+      bank_account: t("transactions.account_type_bank"),
+      e_wallet: t("transactions.account_type_ewallet"),
+      credit_card: t("transactions.account_type_credit"),
     };
     return typeMap[type] || type;
   };
@@ -249,25 +249,27 @@ const AddTransactionDialog = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <DollarSign className="h-5 w-5" />
-            {editingTransaction ? "Edit Transaction" : "Add New Transaction"}
+            {editingTransaction
+              ? t("transactions.edit_transaction")
+              : t("transactions.add_new_transaction")}
           </DialogTitle>
           <DialogDescription>
             {editingTransaction
-              ? "Update your transaction details"
-              : "Record a new income or expense"}
+              ? t("transactions.update_details")
+              : t("transactions.record_new")}
           </DialogDescription>
         </DialogHeader>
 
         {dataLoading ? (
           <div className="flex justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-            <span className="ml-2">Loading data...</span>
+            <span className="ml-2">{t("transactions.loading_data")}</span>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4 py-4">
             {/* Transaction Type */}
             <div>
-              <Label>Transaction Type</Label>
+              <Label>{t("transactions.transaction_type")}</Label>
               <div className="grid grid-cols-2 gap-2 mt-2">
                 <Button
                   type="button"
@@ -281,7 +283,7 @@ const AddTransactionDialog = ({
                   }
                   className="justify-start"
                 >
-                  Expense
+                  {t("transactions.expense")}
                 </Button>
                 <Button
                   type="button"
@@ -291,21 +293,21 @@ const AddTransactionDialog = ({
                   }
                   className="justify-start"
                 >
-                  Income
+                  {t("transactions.income")}
                 </Button>
               </div>
             </div>
 
             {/* Amount */}
             <div>
-              <Label htmlFor="amount">Amount *</Label>
+              <Label htmlFor="amount">{t("transactions.amount")} *</Label>
               <div className="relative">
                 <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="amount"
                   type="number"
                   step="0.01"
-                  placeholder="0.00"
+                  placeholder={t("transactions.amount_placeholder")}
                   value={formData.amount}
                   onChange={(e) =>
                     setFormData({ ...formData, amount: e.target.value })
@@ -319,7 +321,8 @@ const AddTransactionDialog = ({
             {/* Account */}
             <div>
               <Label htmlFor="account">
-                Account * ({accounts.length} available)
+                {t("transactions.account")} * ({accounts.length}{" "}
+                {t("transactions.available")})
               </Label>
               <Select
                 value={formData.accountId}
@@ -331,8 +334,8 @@ const AddTransactionDialog = ({
                   <SelectValue
                     placeholder={
                       accounts.length > 0
-                        ? "Select an account"
-                        : "No accounts available"
+                        ? t("transactions.select_account")
+                        : t("transactions.no_accounts_available")
                     }
                   />
                 </SelectTrigger>
@@ -351,7 +354,7 @@ const AddTransactionDialog = ({
                     ))
                   ) : (
                     <SelectItem value="no-accounts" disabled>
-                      No accounts available
+                      {t("transactions.no_accounts_available")}
                     </SelectItem>
                   )}
                 </SelectContent>
@@ -361,8 +364,12 @@ const AddTransactionDialog = ({
             {/* Category */}
             <div>
               <Label htmlFor="category">
-                Category ({filteredCategories.length} available for{" "}
-                {formData.type})
+                {t("transactions.category")} ({filteredCategories.length}{" "}
+                {t("transactions.available_for")}{" "}
+                {formData.type === "income"
+                  ? t("transactions.income")
+                  : t("transactions.expense")}
+                )
               </Label>
               <Select
                 value={formData.categoryId}
@@ -374,8 +381,13 @@ const AddTransactionDialog = ({
                   <SelectValue
                     placeholder={
                       filteredCategories.length > 0
-                        ? "Select a category"
-                        : `No ${formData.type} categories available`
+                        ? t("transactions.select_category")
+                        : t("transactions.no_categories_for_type", {
+                            type:
+                              formData.type === "income"
+                                ? t("transactions.income")
+                                : t("transactions.expense"),
+                          })
                     }
                   />
                 </SelectTrigger>
@@ -391,7 +403,12 @@ const AddTransactionDialog = ({
                     ))
                   ) : (
                     <SelectItem value="no-categories" disabled>
-                      No {formData.type} categories available
+                      {t("transactions.no_categories_for_type", {
+                        type:
+                          formData.type === "income"
+                            ? t("transactions.income")
+                            : t("transactions.expense"),
+                      })}
                     </SelectItem>
                   )}
                 </SelectContent>
@@ -400,10 +417,12 @@ const AddTransactionDialog = ({
 
             {/* Description */}
             <div>
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">
+                {t("transactions.description")}
+              </Label>
               <Textarea
                 id="description"
-                placeholder="Enter transaction description..."
+                placeholder={t("transactions.description_placeholder")}
                 value={formData.description}
                 onChange={(e) =>
                   setFormData({ ...formData, description: e.target.value })
@@ -414,10 +433,10 @@ const AddTransactionDialog = ({
 
             {/* Location */}
             <div>
-              <Label htmlFor="location">Location</Label>
+              <Label htmlFor="location">{t("transactions.location")}</Label>
               <Input
                 id="location"
-                placeholder="Enter location (optional)"
+                placeholder={t("transactions.location_placeholder")}
                 value={formData.location}
                 onChange={(e) =>
                   setFormData({ ...formData, location: e.target.value })
@@ -427,7 +446,7 @@ const AddTransactionDialog = ({
 
             {/* Date */}
             <div>
-              <Label>Date *</Label>
+              <Label>{t("transactions.date")} *</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -441,7 +460,7 @@ const AddTransactionDialog = ({
                     {formData.date ? (
                       format(formData.date, "PPP")
                     ) : (
-                      <span>Pick a date</span>
+                      <span>{t("transactions.pick_date")}</span>
                     )}
                   </Button>
                 </PopoverTrigger>
@@ -461,10 +480,14 @@ const AddTransactionDialog = ({
             {/* Action Buttons */}
             <div className="flex justify-end space-x-2 pt-4">
               <Button type="button" variant="outline" onClick={handleCancel}>
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button type="submit" disabled={loading || accounts.length === 0}>
-                {loading ? "Saving..." : editingTransaction ? "Update" : "Save"}
+                {loading
+                  ? t("transactions.saving")
+                  : editingTransaction
+                  ? t("common.update")
+                  : t("common.save")}
               </Button>
             </div>
           </form>

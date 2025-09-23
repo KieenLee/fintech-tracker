@@ -1,96 +1,166 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTranslation } from "react-i18next";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, Star, Zap, Shield, TrendingUp } from "lucide-react";
+import { Check, Crown, Star, Zap } from "lucide-react";
 
 const Upgrade = () => {
+  const { t } = useTranslation();
   const userRole = localStorage.getItem("userRole") || "customer";
   const currentSubscription = "basic"; // This would come from user data
 
   const plans = [
     {
-      name: "Basic",
-      price: "Free",
-      description: "Perfect for getting started",
+      name: t("common.basic"),
+      price: t("upgrade.free", "Free"),
+      description: t("upgrade.perfect_getting_started"),
       features: [
-        "Track up to 100 transactions/month",
-        "Basic budgeting tools",
-        "Monthly financial reports",
-        "Email support",
-        "Standard security"
+        t("upgrade.track_transactions"),
+        t("upgrade.basic_budgeting"),
+        t("upgrade.monthly_reports"),
+        t("upgrade.email_support"),
+        t("upgrade.standard_security"),
       ],
-      cta: "Current Plan",
+      cta: t("common.current_plan"),
       ctaVariant: "outline" as const,
-      popular: false
+      popular: false,
     },
     {
-      name: "Premium",
+      name: t("common.premium"),
       price: "$9.99",
-      period: "/month",
-      description: "Advanced features for serious financial management",
+      period: t("upgrade.monthly", "/month"),
+      description: t("upgrade.advanced_features"),
       features: [
-        "Unlimited transactions",
-        "Advanced budgeting & forecasting",
-        "Real-time financial insights",
-        "Priority email & chat support",
-        "Bank-level encryption",
-        "Investment tracking",
-        "Goal planning with projections",
-        "Custom financial reports",
-        "Early access to new features"
+        t("upgrade.unlimited_transactions"),
+        t("upgrade.advanced_budgeting"),
+        t("upgrade.realtime_insights"),
+        t("upgrade.priority_support"),
+        t("upgrade.bank_encryption"),
+        t("upgrade.investment_tracking"),
+        t("upgrade.goal_planning"),
+        t("upgrade.custom_reports"),
+        t("upgrade.early_access"),
       ],
-      cta: "Upgrade to Premium",
+      cta: t("upgrade.upgrade_to_premium"),
       ctaVariant: "default" as const,
-      popular: true
-    }
+      popular: true,
+    },
+  ];
+
+  const features = [
+    {
+      name: t("upgrade.transaction_limit"),
+      basic: "100/month",
+      premium: t("common.unlimited"),
+    },
+    {
+      name: t("upgrade.budgeting_tools"),
+      basic: t("common.basic"),
+      premium: t("common.advanced"),
+    },
+    {
+      name: t("upgrade.financial_insights"),
+      basic: t("upgrade.monthly"),
+      premium: t("upgrade.realtime"),
+    },
+    {
+      name: t("upgrade.support"),
+      basic: t("upgrade.email_support"),
+      premium: t("upgrade.priority_chat"),
+    },
+    {
+      name: t("upgrade.security"),
+      basic: t("upgrade.standard_security"),
+      premium: t("upgrade.bank_level"),
+    },
+    {
+      name: t("upgrade.new_features"),
+      basic: t("common.standard_release"),
+      premium: t("common.early_access"),
+    },
+  ];
+
+  const testimonials = [
+    {
+      text: t("upgrade.testimonial_1"),
+      author: "Sarah M.",
+      role: "Financial Analyst",
+    },
+    {
+      text: t("upgrade.testimonial_2"),
+      author: "David K.",
+      role: "Entrepreneur",
+    },
+    {
+      text: t("upgrade.testimonial_3"),
+      author: "Maria L.",
+      role: "Teacher",
+    },
   ];
 
   return (
     <div className="p-6 space-y-6">
       <div className="text-center">
-        <h1 className="text-3xl font-bold tracking-tight">Upgrade Your Experience</h1>
-        <p className="text-muted-foreground mt-2">
-          Unlock powerful features to take control of your financial future
+        <h1 className="text-4xl font-bold tracking-tight mb-4">
+          {t("upgrade.title")}
+        </h1>
+        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          {t("upgrade.subtitle")}
         </p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 max-w-4xl mx-auto">
-        {plans.map((plan) => (
-          <Card 
-            key={plan.name} 
-            className={`relative ${plan.popular ? "border-primary shadow-lg" : ""}`}
+        {plans.map((plan, index) => (
+          <Card
+            key={index}
+            className={`relative transition-all hover:shadow-lg ${
+              plan.popular ? "border-primary shadow-md" : ""
+            }`}
           >
             {plan.popular && (
-              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                <Badge className="bg-primary text-primary-foreground px-4 py-1.5">
-                  <Star className="h-3 w-3 mr-1 fill-current" />
-                  MOST POPULAR
+              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                <Badge className="bg-primary text-primary-foreground px-4 py-1">
+                  <Crown className="h-3 w-3 mr-1" />
+                  {t("common.most_popular")}
                 </Badge>
               </div>
             )}
-            <CardHeader>
+            <CardHeader className="text-center pb-8">
               <CardTitle className="text-2xl">{plan.name}</CardTitle>
-              <CardDescription>{plan.description}</CardDescription>
-              <div className="mt-4">
-                <span className="text-4xl font-bold">{plan.price}</span>
-                {plan.period && <span className="text-muted-foreground">{plan.period}</span>}
+              <div className="text-4xl font-bold">
+                {plan.price}
+                {plan.period && (
+                  <span className="text-lg font-normal text-muted-foreground">
+                    {plan.period}
+                  </span>
+                )}
               </div>
+              <CardDescription className="text-base">
+                {plan.description}
+              </CardDescription>
             </CardHeader>
-            <CardContent>
-              <ul className="space-y-3 mb-6">
-                {plan.features.map((feature, index) => (
-                  <li key={index} className="flex items-start">
-                    <Check className="h-5 w-5 text-primary mt-0.5 mr-2 flex-shrink-0" />
-                    <span className="text-muted-foreground">{feature}</span>
+            <CardContent className="space-y-6">
+              <ul className="space-y-3">
+                {plan.features.map((feature, featureIndex) => (
+                  <li key={featureIndex} className="flex items-start gap-3">
+                    <Check className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                    <span className="text-sm">{feature}</span>
                   </li>
                 ))}
               </ul>
-              <Button 
-                className="w-full" 
+              <Button
+                className="w-full"
                 variant={plan.ctaVariant}
-                disabled={currentSubscription === plan.name.toLowerCase()}
+                size="lg"
+                disabled={plan.name === t("common.basic")}
               >
-                {currentSubscription === plan.name.toLowerCase() ? "Current Plan" : plan.cta}
+                {plan.cta}
               </Button>
             </CardContent>
           </Card>
@@ -100,60 +170,47 @@ const Upgrade = () => {
       {/* Features Comparison */}
       <Card className="max-w-4xl mx-auto">
         <CardHeader>
-          <CardTitle>Feature Comparison</CardTitle>
-          <CardDescription>Detailed breakdown of what each plan offers</CardDescription>
+          <CardTitle className="text-2xl text-center">
+            {t("upgrade.feature_comparison")}
+          </CardTitle>
+          <CardDescription className="text-center">
+            {t("upgrade.detailed_breakdown")}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left pb-3">Features</th>
-                  <th className="text-center pb-3">Basic</th>
-                  <th className="text-center pb-3">Premium</th>
+                  <th className="text-left py-3 px-4 font-semibold">
+                    {t("common.features")}
+                  </th>
+                  <th className="text-center py-3 px-4 font-semibold">
+                    {t("common.basic")}
+                  </th>
+                  <th className="text-center py-3 px-4 font-semibold">
+                    <div className="flex items-center justify-center gap-2">
+                      <Crown className="h-4 w-4 text-primary" />
+                      {t("common.premium")}
+                    </div>
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                <tr className="border-b">
-                  <td className="py-3">Transaction Limit</td>
-                  <td className="text-center py-3">100/month</td>
-                  <td className="text-center py-3">Unlimited</td>
-                </tr>
-                <tr className="border-b">
-                  <td className="py-3">Budgeting Tools</td>
-                  <td className="text-center py-3">Basic</td>
-                  <td className="text-center py-3">Advanced</td>
-                </tr>
-                <tr className="border-b">
-                  <td className="py-3">Financial Insights</td>
-                  <td className="text-center py-3">Monthly</td>
-                  <td className="text-center py-3">Real-time</td>
-                </tr>
-                <tr className="border-b">
-                  <td className="py-3">Investment Tracking</td>
-                  <td className="text-center py-3">-</td>
-                  <td className="text-center py-3">✓</td>
-                </tr>
-                <tr className="border-b">
-                  <td className="py-3">Goal Planning</td>
-                  <td className="text-center py-3">Basic</td>
-                  <td className="text-center py-3">Advanced with projections</td>
-                </tr>
-                <tr className="border-b">
-                  <td className="py-3">Support</td>
-                  <td className="text-center py-3">Email</td>
-                  <td className="text-center py-3">Priority email & chat</td>
-                </tr>
-                <tr className="border-b">
-                  <td className="py-3">Security</td>
-                  <td className="text-center py-3">Standard</td>
-                  <td className="text-center py-3">Bank-level encryption</td>
-                </tr>
-                <tr>
-                  <td className="py-3">New Features</td>
-                  <td className="text-center py-3">Standard release</td>
-                  <td className="text-center py-3">Early access</td>
-                </tr>
+                {features.map((feature, index) => (
+                  <tr key={index} className="border-b hover:bg-muted/50">
+                    <td className="py-4 px-4 font-medium">{feature.name}</td>
+                    <td className="py-4 px-4 text-center text-muted-foreground">
+                      {feature.basic}
+                    </td>
+                    <td className="py-4 px-4 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <Check className="h-4 w-4 text-primary" />
+                        <span className="font-medium">{feature.premium}</span>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -162,47 +219,31 @@ const Upgrade = () => {
 
       {/* Testimonials */}
       <div className="max-w-4xl mx-auto text-center">
-        <h2 className="text-2xl font-bold mb-6">Why Our Users Upgrade</h2>
+        <h3 className="text-2xl font-bold mb-8">{t("upgrade.why_upgrade")}</h3>
         <div className="grid gap-6 md:grid-cols-3">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex justify-center mb-4">
-                <div className="bg-primary/10 p-3 rounded-full">
-                  <TrendingUp className="h-6 w-6 text-primary" />
+          {testimonials.map((testimonial, index) => (
+            <Card key={index} className="transition-all hover:shadow-md">
+              <CardContent className="pt-6">
+                <div className="flex justify-center mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className="h-4 w-4 fill-primary text-primary"
+                    />
+                  ))}
                 </div>
-              </div>
-              <p className="text-muted-foreground">
-                "The premium forecasting tools helped me save an extra $200/month by identifying spending patterns I never noticed before."
-              </p>
-              <p className="font-medium mt-4">- Sarah K.</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex justify-center mb-4">
-                <div className="bg-primary/10 p-3 rounded-full">
-                  <Zap className="h-6 w-6 text-primary" />
+                <blockquote className="text-sm text-muted-foreground mb-4">
+                  "{testimonial.text}"
+                </blockquote>
+                <div className="border-t pt-4">
+                  <div className="font-semibold">{testimonial.author}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {testimonial.role}
+                  </div>
                 </div>
-              </div>
-              <p className="text-muted-foreground">
-                "Investment tracking in one place has simplified my financial management. Worth every penny of the subscription."
-              </p>
-              <p className="font-medium mt-4">- Michael T.</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex justify-center mb-4">
-                <div className="bg-primary/10 p-3 rounded-full">
-                  <Shield className="h-6 w-6 text-primary" />
-                </div>
-              </div>
-              <p className="text-muted-foreground">
-                "The priority support team resolved my account sync issue in under 2 hours. That's customer service!"
-              </p>
-              <p className="font-medium mt-4">- Jennifer L.</p>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     </div>

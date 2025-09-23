@@ -18,6 +18,8 @@ import {
   Monitor,
   Crown,
   MessageCircle,
+  LayoutDashboard,
+  PiggyBank,
 } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -28,6 +30,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { profileService, ProfileResponse } from "@/services/profileService";
+import { useTranslation } from "react-i18next";
 
 import {
   Sidebar,
@@ -70,6 +73,7 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
+  const { t } = useTranslation();
   const currentPath = location.pathname;
 
   // State cho thông tin user từ API
@@ -101,6 +105,39 @@ export function AppSidebar() {
   const userSubscription = localStorage.getItem("userSubscription") || "basic";
 
   const items = userRole === "admin" ? adminItems : customerItems;
+
+  const navigationItems = [
+    {
+      title: t("navigation.dashboard"),
+      url: "/dashboard",
+      icon: LayoutDashboard,
+      badge: null,
+    },
+    {
+      title: t("navigation.transactions"),
+      url: "/transactions",
+      icon: CreditCard,
+      badge: null,
+    },
+    {
+      title: t("navigation.budget"),
+      url: "/budget",
+      icon: PiggyBank,
+      badge: null,
+    },
+    {
+      title: t("navigation.goals"),
+      url: "/goals",
+      icon: Target,
+      badge: null,
+    },
+    {
+      title: t("navigation.analytics"),
+      url: "/analytics",
+      icon: TrendingUp,
+      badge: null,
+    },
+  ];
 
   const isActive = (path: string) => currentPath === path;
   const getNavCls = ({ isActive }: { isActive: boolean }) =>

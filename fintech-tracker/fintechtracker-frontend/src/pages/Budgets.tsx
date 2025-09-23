@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Card,
   CardContent,
@@ -18,6 +19,7 @@ import {
 } from "@/services/budgetService";
 
 const Budgets = () => {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [budgetSummary, setBudgetSummary] = useState<BudgetResponse | null>(
@@ -37,8 +39,8 @@ const Budgets = () => {
     } catch (error: any) {
       console.error("Error loading budgets:", error);
       toast({
-        title: "Error",
-        description: "Failed to load budgets",
+        title: t("common.error"),
+        description: t("budgets.load_failed"),
         variant: "destructive",
       });
     } finally {
@@ -60,21 +62,21 @@ const Budgets = () => {
   };
 
   const handleDelete = async (budgetId: number) => {
-    if (!confirm("Are you sure you want to delete this budget?")) {
+    if (!confirm(t("budgets.delete_confirm"))) {
       return;
     }
 
     try {
       await budgetService.deleteBudget(budgetId);
       toast({
-        title: "Success",
-        description: "Budget deleted successfully",
+        title: t("common.success"),
+        description: t("budgets.delete_success"),
       });
       loadBudgets();
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: "Failed to delete budget",
+        title: t("common.error"),
+        description: t("budgets.delete_failed"),
         variant: "destructive",
       });
     }
@@ -114,11 +116,9 @@ const Budgets = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            Budget Management
+            {t("budgets.title")}
           </h1>
-          <p className="text-muted-foreground">
-            Track and manage your spending limits
-          </p>
+          <p className="text-muted-foreground">{t("budgets.subtitle")}</p>
         </div>
         <Button
           onClick={() => {
@@ -127,7 +127,7 @@ const Budgets = () => {
           }}
         >
           <Plus className="h-4 w-4 mr-2" />
-          Add Budget
+          {t("budgets.add_budget")}
         </Button>
       </div>
 
@@ -137,16 +137,14 @@ const Budgets = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="h-5 w-5" />
-              Overall Budget Progress
+              {t("budgets.title")} {t("dashboard.budget_overview")}
             </CardTitle>
-            <CardDescription>
-              Total spending across all categories
-            </CardDescription>
+            <CardDescription>{t("budgets.subtitle")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>Total Spent</span>
+                <span>{t("budgets.total_spent")}</span>
                 <span className="font-medium">
                   {formatCurrency(budgetSummary.totalSpentAmount)} /{" "}
                   {formatCurrency(budgetSummary.totalBudgetAmount)}
@@ -160,7 +158,7 @@ const Budgets = () => {
                 {budgetSummary.overallProgressPercentage > 100 ? (
                   <span className="text-destructive flex items-center gap-1">
                     <AlertTriangle className="h-3 w-3" />
-                    Over budget by{" "}
+                    {t("budgets.over_budget")}{" "}
                     {formatCurrency(
                       budgetSummary.totalSpentAmount -
                         budgetSummary.totalBudgetAmount
@@ -172,7 +170,7 @@ const Budgets = () => {
                       budgetSummary.totalBudgetAmount -
                         budgetSummary.totalSpentAmount
                     )}{" "}
-                    remaining this period
+                    {t("budgets.remaining")}
                   </span>
                 )}
               </div>
@@ -186,13 +184,15 @@ const Budgets = () => {
         <Card>
           <CardContent className="text-center py-12">
             <Target className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h2 className="text-xl font-semibold mb-2">No Budgets Found</h2>
+            <h2 className="text-xl font-semibold mb-2">
+              {t("budgets.no_budgets")}
+            </h2>
             <p className="text-muted-foreground mb-4">
-              Start managing your finances by creating your first budget
+              {t("budgets.no_budgets_desc")}
             </p>
             <Button onClick={() => setIsDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
-              Create Budget
+              {t("budgets.create_first")}
             </Button>
           </CardContent>
         </Card>
@@ -237,7 +237,7 @@ const Budgets = () => {
                       {formatCurrency(budget.spentAmount)}
                     </span>
                     <span className="text-sm text-muted-foreground">
-                      of {formatCurrency(budget.amount)}
+                      {t("budgets.of")} {formatCurrency(budget.amount)}
                     </span>
                   </div>
                   <Progress
@@ -250,12 +250,13 @@ const Budgets = () => {
                     {budget.progressPercentage > 100 ? (
                       <span className="text-destructive flex items-center gap-1">
                         <AlertTriangle className="h-3 w-3" />
-                        Over by{" "}
+                        {t("budgets.over")}{" "}
                         {formatCurrency(budget.spentAmount - budget.amount)}
                       </span>
                     ) : (
                       <span className="text-muted-foreground">
-                        {formatCurrency(budget.remainingAmount)} left (
+                        {formatCurrency(budget.remainingAmount)}{" "}
+                        {t("budgets.left")} (
                         {(100 - budget.progressPercentage).toFixed(0)}%)
                       </span>
                     )}

@@ -38,8 +38,10 @@ import {
 } from "@/services/transactionService";
 import { accountService, Account } from "@/services/accountService";
 import { categoryService, Category } from "@/services/categoryService";
+import { useTranslation } from "react-i18next";
 
 const Transactions = () => {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -172,15 +174,15 @@ const Transactions = () => {
   };
 
   const handleDelete = async (transactionId: number) => {
-    if (!confirm("Are you sure you want to delete this transaction?")) {
+    if (!confirm(t("transactions.delete_confirm"))) {
       return;
     }
 
     try {
       await transactionService.deleteTransaction(transactionId);
       toast({
-        title: "Success",
-        description: "Transaction deleted successfully",
+        title: t("common.success"),
+        description: t("transactions.delete_success"),
       });
       loadTransactions(currentPage);
       // Reload accounts to get updated balances
@@ -190,8 +192,8 @@ const Transactions = () => {
         .catch(() => {});
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: "Failed to delete transaction",
+        title: t("common.error"),
+        description: t("transactions.delete_failed"),
         variant: "destructive",
       });
     }
@@ -232,31 +234,31 @@ const Transactions = () => {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Transactions</h1>
-          <p className="text-muted-foreground">
-            Track and manage your financial transactions
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {t("transactions.title")}
+          </h1>
+          <p className="text-muted-foreground">{t("transactions.subtitle")}</p>
         </div>
         <Button onClick={() => setIsAddDialogOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
-          Add Transaction
+          {t("transactions.add_transaction")}
         </Button>
       </div>
 
       {/* Filters and Search */}
       <Card>
         <CardHeader>
-          <CardTitle>Filters</CardTitle>
+          <CardTitle>{t("transactions.filters")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <div>
-              <Label htmlFor="search">Search</Label>
+              <Label htmlFor="search">{t("common.search")}</Label>
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="search"
-                  placeholder="Search transactions..."
+                  placeholder={t("transactions.search_placeholder")}
                   className="pl-8"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -265,27 +267,37 @@ const Transactions = () => {
             </div>
 
             <div>
-              <Label htmlFor="type-filter">Type</Label>
+              <Label htmlFor="type-filter">{t("transactions.type")}</Label>
               <Select value={typeFilter} onValueChange={setTypeFilter}>
                 <SelectTrigger>
-                  <SelectValue placeholder="All types" />
+                  <SelectValue placeholder={t("transactions.all_types")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All types</SelectItem>
-                  <SelectItem value="income">Income</SelectItem>
-                  <SelectItem value="expense">Expense</SelectItem>
+                  <SelectItem value="all">
+                    {t("transactions.all_types")}
+                  </SelectItem>
+                  <SelectItem value="income">
+                    {t("transactions.income")}
+                  </SelectItem>
+                  <SelectItem value="expense">
+                    {t("transactions.expense")}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div>
-              <Label htmlFor="category-filter">Category</Label>
+              <Label htmlFor="category-filter">
+                {t("transactions.category")}
+              </Label>
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                 <SelectTrigger>
-                  <SelectValue placeholder="All categories" />
+                  <SelectValue placeholder={t("transactions.all_categories")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All categories</SelectItem>
+                  <SelectItem value="all">
+                    {t("transactions.all_categories")}
+                  </SelectItem>
                   {allCategories.map((category) => (
                     <SelectItem
                       key={category.categoryId}
@@ -299,13 +311,17 @@ const Transactions = () => {
             </div>
 
             <div>
-              <Label htmlFor="account-filter">Account</Label>
+              <Label htmlFor="account-filter">
+                {t("transactions.account")}
+              </Label>
               <Select value={accountFilter} onValueChange={setAccountFilter}>
                 <SelectTrigger>
-                  <SelectValue placeholder="All accounts" />
+                  <SelectValue placeholder={t("transactions.all_accounts")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All accounts</SelectItem>
+                  <SelectItem value="all">
+                    {t("transactions.all_accounts")}
+                  </SelectItem>
                   {accounts.map((account) => (
                     <SelectItem
                       key={account.accountId}
@@ -321,7 +337,7 @@ const Transactions = () => {
             <div className="flex items-end">
               <Button variant="outline" className="w-full">
                 <Download className="mr-2 h-4 w-4" />
-                Export
+                {t("common.export")}
               </Button>
             </div>
           </div>
@@ -331,9 +347,9 @@ const Transactions = () => {
       {/* Transactions Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Transactions</CardTitle>
+          <CardTitle>{t("transactions.recent_transactions")}</CardTitle>
           <CardDescription>
-            Your latest financial activity ({totalCount} total transactions)
+            {t("transactions.latest_activity", { total: totalCount })}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -346,12 +362,16 @@ const Transactions = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Account</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>{t("transactions.date")}</TableHead>
+                    <TableHead>{t("transactions.description")}</TableHead>
+                    <TableHead>{t("transactions.category")}</TableHead>
+                    <TableHead>{t("transactions.account")}</TableHead>
+                    <TableHead className="text-right">
+                      {t("transactions.amount")}
+                    </TableHead>
+                    <TableHead className="text-right">
+                      {t("common.actions")}
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -364,7 +384,7 @@ const Transactions = () => {
                         )}
                       </TableCell>
                       <TableCell>
-                        {transaction.description || "No description"}
+                        {transaction.description || t("common.no_description")}
                       </TableCell>
                       <TableCell>
                         {transaction.categoryName && (
@@ -428,10 +448,13 @@ const Transactions = () => {
                     onClick={() => loadTransactions(currentPage - 1)}
                     disabled={currentPage <= 1}
                   >
-                    Previous
+                    {t("common.previous")}
                   </Button>
                   <span className="flex items-center px-2">
-                    Page {currentPage} of {totalPages}
+                    {t("common.page_of", {
+                      current: currentPage,
+                      total: totalPages,
+                    })}
                   </span>
                   <Button
                     variant="outline"
@@ -439,7 +462,7 @@ const Transactions = () => {
                     onClick={() => loadTransactions(currentPage + 1)}
                     disabled={currentPage >= totalPages}
                   >
-                    Next
+                    {t("common.next")}
                   </Button>
                 </div>
               )}

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Card,
   CardContent,
@@ -29,6 +30,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import {
   goalService,
@@ -38,6 +46,7 @@ import {
 } from "@/services/goalService";
 
 const Goals = () => {
+  const { t } = useTranslation();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -64,8 +73,8 @@ const Goals = () => {
       setGoals(data);
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to load goals",
+        title: t("common.error"),
+        description: error.response?.data?.message || t("goals.load_failed"),
         variant: "destructive",
       });
     } finally {
@@ -76,8 +85,8 @@ const Goals = () => {
   const handleSave = async () => {
     if (!formData.title || !formData.targetAmount || !formData.deadline) {
       toast({
-        title: "Validation Error",
-        description: "Please fill in all required fields",
+        title: t("goals.validation_error"),
+        description: t("goals.validation_error_desc"),
         variant: "destructive",
       });
       return;
@@ -98,8 +107,8 @@ const Goals = () => {
 
         await goalService.updateGoal(editingGoal.goalId, updateData);
         toast({
-          title: "Success",
-          description: "Goal updated successfully",
+          title: t("common.success"),
+          description: t("goals.goal_updated"),
         });
       } else {
         const createData: CreateGoalRequest = {
@@ -113,8 +122,8 @@ const Goals = () => {
 
         await goalService.createGoal(createData);
         toast({
-          title: "Success",
-          description: "Goal created successfully",
+          title: t("common.success"),
+          description: t("goals.goal_created"),
         });
       }
 
@@ -131,8 +140,8 @@ const Goals = () => {
       await loadGoals();
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to save goal",
+        title: t("common.error"),
+        description: error.response?.data?.message || t("goals.create_failed"),
         variant: "destructive",
       });
     } finally {
@@ -157,14 +166,14 @@ const Goals = () => {
     try {
       await goalService.deleteGoal(id);
       toast({
-        title: "Success",
-        description: "Goal deleted successfully",
+        title: t("common.success"),
+        description: t("goals.goal_deleted"),
       });
       await loadGoals();
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to delete goal",
+        title: t("common.error"),
+        description: error.response?.data?.message || t("goals.delete_failed"),
         variant: "destructive",
       });
     }
@@ -174,14 +183,17 @@ const Goals = () => {
     try {
       await goalService.addMoneyToGoal(goalId, amount);
       toast({
-        title: "Success",
-        description: `Added $${amount} to goal`,
+        title: t("common.success"),
+        description: t("goals.money_added", {
+          amount: amount.toLocaleString(),
+        }),
       });
       await loadGoals();
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to add money",
+        title: t("common.error"),
+        description:
+          error.response?.data?.message || t("goals.add_money_failed"),
         variant: "destructive",
       });
     }
@@ -200,6 +212,19 @@ const Goals = () => {
     }
   };
 
+  const getPriorityText = (priority: string) => {
+    switch (priority) {
+      case "High":
+        return t("goals.high");
+      case "Medium":
+        return t("goals.medium");
+      case "Low":
+        return t("goals.low");
+      default:
+        return priority;
+    }
+  };
+
   const getDaysRemaining = (deadline: string) => {
     const today = new Date();
     const deadlineDate = new Date(deadline);
@@ -208,11 +233,18 @@ const Goals = () => {
     return diffDays;
   };
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(amount);
+  };
+
   if (loading) {
     return (
       <div className="p-6 flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
-        <span className="ml-2">Loading goals...</span>
+        <span className="ml-2">{t("common.loading")}</span>
       </div>
     );
   }
@@ -221,10 +253,10 @@ const Goals = () => {
     <div className="p-6 space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Financial Goals</h1>
-          <p className="text-muted-foreground">
-            Track your progress towards financial milestones
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight">
+            {t("goals.title")}
+          </h1>
+          <p className="text-muted-foreground">{t("goals.subtitle")}</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -242,44 +274,44 @@ const Goals = () => {
               }}
             >
               <Plus className="h-4 w-4 mr-2" />
-              Add Goal
+              {t("goals.add_goal")}
             </Button>
           </DialogTrigger>
           <DialogContent className="animate-scale-in">
             <DialogHeader>
               <DialogTitle>
-                {editingGoal ? "Edit Goal" : "Add New Goal"}
+                {editingGoal ? t("goals.edit_goal") : t("goals.add_new_goal")}
               </DialogTitle>
-              <DialogDescription>
-                Set a financial target to work towards
-              </DialogDescription>
+              <DialogDescription>{t("goals.set_target")}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="title">Goal Title *</Label>
+                <Label htmlFor="title">{t("goals.goal_title")} *</Label>
                 <Input
                   id="title"
                   value={formData.title}
                   onChange={(e) =>
                     setFormData({ ...formData, title: e.target.value })
                   }
-                  placeholder="e.g., Emergency Fund"
+                  placeholder={t("goals.goal_title_placeholder")}
                 />
               </div>
               <div>
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description">{t("goals.description")}</Label>
                 <Textarea
                   id="description"
                   value={formData.description}
                   onChange={(e) =>
                     setFormData({ ...formData, description: e.target.value })
                   }
-                  placeholder="Brief description of your goal"
+                  placeholder={t("goals.description_placeholder")}
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="targetAmount">Target Amount ($) *</Label>
+                  <Label htmlFor="targetAmount">
+                    {t("goals.target_amount")} *
+                  </Label>
                   <Input
                     id="targetAmount"
                     type="number"
@@ -287,11 +319,13 @@ const Goals = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, targetAmount: e.target.value })
                     }
-                    placeholder="10000"
+                    placeholder={t("goals.target_amount_placeholder")}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="currentAmount">Current Amount ($)</Label>
+                  <Label htmlFor="currentAmount">
+                    {t("goals.current_amount")}
+                  </Label>
                   <Input
                     id="currentAmount"
                     type="number"
@@ -302,13 +336,13 @@ const Goals = () => {
                         currentAmount: e.target.value,
                       })
                     }
-                    placeholder="0"
+                    placeholder={t("goals.current_amount_placeholder")}
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="deadline">Target Date *</Label>
+                  <Label htmlFor="deadline">{t("goals.target_date")} *</Label>
                   <Input
                     id="deadline"
                     type="date"
@@ -319,31 +353,37 @@ const Goals = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="priority">Priority</Label>
-                  <select
-                    id="priority"
+                  <Label htmlFor="priority">{t("goals.priority")}</Label>
+                  <Select
                     value={formData.priority}
-                    onChange={(e) =>
-                      setFormData({ ...formData, priority: e.target.value })
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, priority: value })
                     }
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <option value="High">High</option>
-                    <option value="Medium">Medium</option>
-                    <option value="Low">Low</option>
-                  </select>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="High">{t("goals.high")}</SelectItem>
+                      <SelectItem value="Medium">
+                        {t("goals.medium")}
+                      </SelectItem>
+                      <SelectItem value="Low">{t("goals.low")}</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button onClick={handleSave} disabled={submitting}>
                 {submitting && (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 )}
-                {editingGoal ? "Update" : "Create"} Goal
+                {editingGoal ? t("common.update") : t("common.create")}{" "}
+                {t("goals.goal")}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -355,13 +395,13 @@ const Goals = () => {
         {goals.length === 0 ? (
           <div className="col-span-2 text-center py-8">
             <Target className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">No goals yet</h3>
+            <h3 className="text-lg font-medium mb-2">{t("goals.no_goals")}</h3>
             <p className="text-muted-foreground mb-4">
-              Start by creating your first financial goal
+              {t("goals.start_creating")}
             </p>
             <Button onClick={() => setIsDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
-              Add Your First Goal
+              {t("goals.add_first_goal")}
             </Button>
           </div>
         ) : (
@@ -385,7 +425,7 @@ const Goals = () => {
                         {goal.goalName}
                         {isCompleted && (
                           <span className="text-success text-sm">
-                            ✓ Completed
+                            ✓ {t("goals.completed")}
                           </span>
                         )}
                       </CardTitle>
@@ -396,6 +436,7 @@ const Goals = () => {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleEdit(goal)}
+                        title={t("common.edit")}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -403,6 +444,7 @@ const Goals = () => {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDelete(goal.goalId)}
+                        title={t("common.delete")}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -413,12 +455,10 @@ const Goals = () => {
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="text-2xl font-bold">
-                        {/* ${goal.currentAmount.toLocaleString()} */}
-                        {goal.currentAmount.toLocaleString("vi-VN")} đ
+                        {formatCurrency(goal.currentAmount)}
                       </span>
                       <span className="text-sm text-muted-foreground">
-                        {/* of ${goal.targetAmount.toLocaleString()} */}
-                        of {goal.targetAmount.toLocaleString("vi-VN")} đ
+                        {t("goals.of")} {formatCurrency(goal.targetAmount)}
                       </span>
                     </div>
                     <Progress
@@ -426,11 +466,9 @@ const Goals = () => {
                       className="h-3"
                     />
                     <div className="text-sm text-muted-foreground">
-                      {percentage.toFixed(1)}% complete •{" "}
-                      {(goal.targetAmount - goal.currentAmount).toLocaleString(
-                        "vi-VN"
-                      )}{" "}
-                      đ remaining
+                      {percentage.toFixed(1)}% {t("goals.complete")} •{" "}
+                      {formatCurrency(goal.targetAmount - goal.currentAmount)}{" "}
+                      {t("goals.remaining")}
                     </div>
                   </div>
 
@@ -439,8 +477,8 @@ const Goals = () => {
                       <Calendar className="h-4 w-4" />
                       <span>
                         {daysRemaining > 0
-                          ? `${daysRemaining} days left`
-                          : "Overdue"}
+                          ? t("goals.days_left", { days: daysRemaining })
+                          : t("goals.overdue")}
                       </span>
                     </div>
                     <span
@@ -448,19 +486,19 @@ const Goals = () => {
                         goal.priority
                       )}`}
                     >
-                      {goal.priority} Priority
+                      {getPriorityText(goal.priority)} {t("goals.priority")}
                     </span>
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleAddMoney(goal.goalId, 50000)}
                       disabled={isCompleted}
                     >
-                      <DollarSign className="h-4 w-4 mr-1" />
-                      +50.000 đ
+                      <DollarSign className="h-4 w-4 mr-1" />+
+                      {formatCurrency(50000)}
                     </Button>
                     <Button
                       variant="outline"
@@ -468,17 +506,17 @@ const Goals = () => {
                       onClick={() => handleAddMoney(goal.goalId, 100000)}
                       disabled={isCompleted}
                     >
-                      <DollarSign className="h-4 w-4 mr-1" />
-                      +100.000 đ
+                      <DollarSign className="h-4 w-4 mr-1" />+
+                      {formatCurrency(100000)}
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleAddMoney(goal.goalId, 200000)}
+                      onClick={() => handleAddMoney(goal.goalId, 250000)}
                       disabled={isCompleted}
                     >
-                      <DollarSign className="h-4 w-4 mr-1" />
-                      +250.000 đ
+                      <DollarSign className="h-4 w-4 mr-1" />+
+                      {formatCurrency(250000)}
                     </Button>
                     <Button
                       variant="outline"
@@ -486,8 +524,8 @@ const Goals = () => {
                       onClick={() => handleAddMoney(goal.goalId, 500000)}
                       disabled={isCompleted}
                     >
-                      <DollarSign className="h-4 w-4 mr-1" />
-                      +500.000 đ
+                      <DollarSign className="h-4 w-4 mr-1" />+
+                      {formatCurrency(500000)}
                     </Button>
                   </div>
                 </CardContent>
