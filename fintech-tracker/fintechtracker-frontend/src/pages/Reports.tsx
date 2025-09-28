@@ -42,7 +42,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { reportService, ReportDashboardDto } from "@/services/reportService";
-import { formatCurrencyAmount } from "../../Utils/currencyUtils";
+import { formatCurrencyAmount } from "../../utils/currencyUtils";
 
 const Reports = () => {
   const [timeRange, setTimeRange] = useState("monthly");
