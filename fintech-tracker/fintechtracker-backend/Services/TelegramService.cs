@@ -25,13 +25,22 @@ namespace fintechtracker_backend.Services
             _httpClientFactory = httpClientFactory;
             _configuration = configuration;
             _logger = logger;
-            _botToken = _configuration["Telegram:BotToken"] ?? throw new InvalidOperationException("Telegram bot token not configured");
+            _botToken = _configuration["Telegram:BotToken"] ?? 
+                       throw new InvalidOperationException("Telegram bot token not configured");
         }
 
         public async Task<TelegramProcessResult> ProcessMessageAsync(TelegramMessageDto message)
         {
             try
             {
+                _logger.LogInformation($"Processing message from user {message.From.Id}: {message.Text}");
+
+                // Handle commands first
+                if (message.Text?.StartsWith("/") == true)
+                {
+                    return await HandleCommandAsync(message);
+                }
+
                 // Ensure user exists
                 var user = await EnsureUserExistsAsync(message.From);
                 
@@ -70,14 +79,28 @@ namespace fintechtracker_backend.Services
                 _context.Transactions.Add(transaction);
                 
                 // Update account balance
-                account.CurrentBalance += parseResult.Amount;
+                if (parseResult.TransactionType == "expense")
+                {
+                    account.CurrentBalance -= Math.Abs(parseResult.Amount);
+                }
+                else
+                {
+                    account.CurrentBalance += Math.Abs(parseResult.Amount);
+                }
+                
                 account.UpdatedAt = DateTime.UtcNow;
                 
                 await _context.SaveChangesAsync();
 
                 var responseMessage = parseResult.TransactionType == "expense"
-                    ? $"✅ Chi tiêu: {parseResult.Description} - {Math.Abs(parseResult.Amount):N0}đ\n📂 Danh mục: {parseResult.CategoryName}\n💰 Số dư: {account.CurrentBalance:N0}đ"
-                    : $"✅ Thu nhập: {parseResult.Description} - {parseResult.Amount:N0}đ\n📂 Danh mục: {parseResult.CategoryName}\n💰 Số dư: {account.CurrentBalance:N0}đ";
+                    ? $"✅ <b>Chi tiêu đã ghi nhận</b>\n" +
+                      $"💸 <b>{parseResult.Description}</b> - {Math.Abs(parseResult.Amount):N0}đ\n" +
+                      $"📂 Danh mục: {parseResult.CategoryName}\n" +
+                      $"💰 Số dư còn: <b>{account.CurrentBalance:N0}đ</b>"
+                    : $"✅ <b>Thu nhập đã ghi nhận</b>\n" +
+                      $"💰 <b>{parseResult.Description}</b> - {parseResult.Amount:N0}đ\n" +
+                      $"📂 Danh mục: {parseResult.CategoryName}\n" +
+                      $"💰 Số dư hiện tại: <b>{account.CurrentBalance:N0}đ</b>";
 
                 return new TelegramProcessResult
                 {
@@ -97,8 +120,157 @@ namespace fintechtracker_backend.Services
             }
         }
 
-        private MessageParseResult ParseTransactionMessage(string text)
+        private async Task<TelegramProcessResult> HandleCommandAsync(TelegramMessageDto message)
         {
+            var command = message.Text?.ToLower().Trim();
+            
+            return command switch
+            {
+                "/start" => new TelegramProcessResult
+                {
+                    ShouldRespond = true,
+                    ResponseMessage = "🎉 <b>Chào mừng đến với FinTech Tracker Bot!</b>\n\n" +
+                                    "💡 <b>Cách sử dụng:</b>\n" +
+                                    "• Ghi chi tiêu: <code>mua cafe 25k</code>\n" +
+                                    "• Ghi thu nhập: <code>lương tháng 15tr</code>\n" +
+                                    "• Xem số dư: <code>/balance</code>\n" +
+                                    "• Xem lịch sử: <code>/history</code>\n\n" +
+                                    "Hãy thử gửi: <code>mua cafe 20k</code>"
+                },
+                "/help" => new TelegramProcessResult
+                {
+                    ShouldRespond = true,
+                    ResponseMessage = "🤖 <b>Hướng dẫn sử dụng Bot</b>\n\n" +
+                                    "📝 <b>Ghi chi tiêu:</b>\n" +
+                                    "• <code>mua [mô tả] [số tiền]</code>\n" +
+                                    "• <code>chi [mô tả] [số tiền]</code>\n" +
+                                    "• Ví dụ: <code>mua cafe 25k</code>\n\n" +
+                                    "💰 <b>Ghi thu nhập:</b>\n" +
+                                    "• <code>lương [mô tả] [số tiền]</code>\n" +
+                                    "• <code>thu [mô tả] [số tiền]</code>\n" +
+                                    "• Ví dụ: <code>lương tháng 15tr</code>\n\n" +
+                                    "🔢 <b>Đơn vị tiền:</b>\n" +
+                                    "• <code>k</code> = nghìn (25k = 25,000)\n" +
+                                    "• <code>tr</code> = triệu (2tr = 2,000,000)"
+                },
+                "/balance" => await GetBalanceAsync(message),
+                "/history" => await GetHistoryAsync(message),
+                _ => new TelegramProcessResult
+                {
+                    ShouldRespond = true,
+                    ResponseMessage = "❓ Lệnh không hợp lệ. Gửi /help để xem hướng dẫn."
+                }
+            };
+        }
+
+        private async Task<TelegramProcessResult> GetBalanceAsync(TelegramMessageDto message)
+        {
+            try
+            {
+                var user = await EnsureUserExistsAsync(message.From);
+                var accounts = await _context.Accounts
+                    .Where(a => a.UserId == user.UserId && a.IsActive == true)
+                    .ToListAsync();
+
+                if (!accounts.Any())
+                {
+                    return new TelegramProcessResult
+                    {
+                        ShouldRespond = true,
+                        ResponseMessage = "💰 Bạn chưa có tài khoản nào. Hãy thử ghi một giao dịch đầu tiên!"
+                    };
+                }
+
+                var totalBalance = accounts.Sum(a => a.CurrentBalance);
+                var response = "💰 <b>Số dư tài khoản</b>\n\n";
+                
+                foreach (var account in accounts)
+                {
+                    response += $"📱 {account.AccountName}: <b>{account.CurrentBalance:N0}đ</b>\n";
+                }
+                
+                response += $"\n💎 <b>Tổng cộng: {totalBalance:N0}đ</b>";
+
+                return new TelegramProcessResult
+                {
+                    ShouldRespond = true,
+                    ResponseMessage = response
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting balance");
+                return new TelegramProcessResult
+                {
+                    ShouldRespond = true,
+                    ResponseMessage = "❌ Không thể lấy thông tin số dư."
+                };
+            }
+        }
+
+        private async Task<TelegramProcessResult> GetHistoryAsync(TelegramMessageDto message)
+        {
+            try
+            {
+                var user = await EnsureUserExistsAsync(message.From);
+                var transactions = await _context.Transactions
+                    .Include(t => t.Category)
+                    .Where(t => t.UserId == user.UserId)
+                    .OrderByDescending(t => t.TransactionDate)
+                    .Take(10)
+                    .ToListAsync();
+
+                if (!transactions.Any())
+                {
+                    return new TelegramProcessResult
+                    {
+                        ShouldRespond = true,
+                        ResponseMessage = "📝 Chưa có giao dịch nào. Hãy thử ghi một giao dịch đầu tiên!"
+                    };
+                }
+
+                var response = "📊 <b>10 giao dịch gần nhất</b>\n\n";
+                
+                foreach (var transaction in transactions)
+                {
+                    var icon = transaction.TransactionType == "expense" ? "💸" : "💰";
+                    var amount = transaction.TransactionType == "expense" 
+                        ? $"-{Math.Abs(transaction.Amount):N0}đ" 
+                        : $"+{Math.Abs(transaction.Amount):N0}đ";
+                    
+                    response += $"{icon} <b>{transaction.Description}</b>\n";
+                    response += $"   {amount} • {transaction.Category?.CategoryName}\n";
+                    response += $"   📅 {transaction.TransactionDate:dd/MM HH:mm}\n\n";
+                }
+
+                return new TelegramProcessResult
+                {
+                    ShouldRespond = true,
+                    ResponseMessage = response
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting history");
+                return new TelegramProcessResult
+                {
+                    ShouldRespond = true,
+                    ResponseMessage = "❌ Không thể lấy lịch sử giao dịch."
+                };
+            }
+        }
+
+        private MessageParseResult ParseTransactionMessage(string? text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                return new MessageParseResult
+                {
+                    IsValid = false,
+                    ErrorMessage = "❌ Tin nhắn trống. Hãy thử: <code>mua cafe 25k</code>"
+                };
+            }
+
             var normalizedText = text.ToLower().Trim();
 
             // Expense patterns
@@ -108,7 +280,7 @@ namespace fintechtracker_backend.Services
                 @"^(.+?)\s+(\d+)([ktr]?)$"
             };
 
-            // Income patterns
+            // Income patterns  
             var incomePatterns = new[]
             {
                 @"^(lương|thưởng|nhận|thu)\s*(.+?)?\s*(\d+)([ktr]?)$"
@@ -123,10 +295,19 @@ namespace fintechtracker_backend.Services
                     var description = ExtractDescription(match, normalizedText);
                     var amount = ParseAmount(match);
                     
+                    if (amount <= 0)
+                    {
+                        return new MessageParseResult
+                        {
+                            IsValid = false,
+                            ErrorMessage = "❌ Số tiền không hợp lệ. Ví dụ: <code>mua cafe 25k</code>"
+                        };
+                    }
+                    
                     return new MessageParseResult
                     {
                         IsValid = true,
-                        Amount = -Math.Abs(amount),
+                        Amount = amount,
                         Description = CapitalizeFirst(description),
                         TransactionType = "expense",
                         CategoryName = DetermineCategoryName(description, "expense")
@@ -143,10 +324,19 @@ namespace fintechtracker_backend.Services
                     var description = ExtractDescription(match, normalizedText) ?? "Thu nhập";
                     var amount = ParseAmount(match);
                     
+                    if (amount <= 0)
+                    {
+                        return new MessageParseResult
+                        {
+                            IsValid = false,
+                            ErrorMessage = "❌ Số tiền không hợp lệ. Ví dụ: <code>lương tháng 15tr</code>"
+                        };
+                    }
+                    
                     return new MessageParseResult
                     {
                         IsValid = true,
-                        Amount = Math.Abs(amount),
+                        Amount = amount,
                         Description = CapitalizeFirst(description),
                         TransactionType = "income",
                         CategoryName = "Salary"
@@ -157,23 +347,32 @@ namespace fintechtracker_backend.Services
             return new MessageParseResult
             {
                 IsValid = false,
-                ErrorMessage = "❌ Không hiểu tin nhắn.\n\n💡 Thử:\n• 'mua cafe 20k'\n• 'lương tháng 15tr'\n• 'xe grab 50k'"
+                ErrorMessage = "❌ Không hiểu tin nhắn.\n\n💡 <b>Thử:</b>\n" +
+                              "• <code>mua cafe 25k</code>\n" +
+                              "• <code>lương tháng 15tr</code>\n" +
+                              "• <code>xe grab 50k</code>\n\n" +
+                              "Gửi /help để xem hướng dẫn chi tiết."
             };
         }
 
-        // Helper methods
+        // Helper methods (ParseAmount, ExtractDescription, etc.)
         private decimal ParseAmount(Match match)
         {
             for (int i = match.Groups.Count - 2; i >= 1; i--)
             {
                 if (Regex.IsMatch(match.Groups[i].Value, @"^\d+$"))
                 {
-                    var amount = decimal.Parse(match.Groups[i].Value);
-                    var unit = match.Groups[i + 1].Value;
-                    
-                    if (unit == "k") return amount * 1000;
-                    if (unit == "tr") return amount * 1000000;
-                    return amount;
+                    if (decimal.TryParse(match.Groups[i].Value, out decimal amount))
+                    {
+                        var unit = match.Groups[i + 1].Value;
+                        
+                        return unit switch
+                        {
+                            "k" => amount * 1000,
+                            "tr" => amount * 1000000,
+                            _ => amount
+                        };
+                    }
                 }
             }
             return 0;
@@ -181,11 +380,12 @@ namespace fintechtracker_backend.Services
 
         private string ExtractDescription(Match match, string originalText)
         {
+            var excludeWords = new[] { "mua", "chi", "trả", "tiêu", "lương", "thưởng", "nhận", "thu" };
+            
             for (int i = 1; i < match.Groups.Count - 2; i++)
             {
                 var group = match.Groups[i].Value.Trim();
-                if (!string.IsNullOrEmpty(group) && 
-                    !new[] { "mua", "chi", "trả", "tiêu", "lương", "thưởng", "nhận", "thu" }.Contains(group))
+                if (!string.IsNullOrEmpty(group) && !excludeWords.Contains(group))
                 {
                     return group;
                 }
@@ -199,16 +399,17 @@ namespace fintechtracker_backend.Services
             {
                 var keywords = new Dictionary<string, string[]>
                 {
-                    {"Food & Dining", new[] {"cafe", "cà phê", "ăn", "uống", "cơm", "phở", "bún", "bánh"}},
-                    {"Transportation", new[] {"xe", "taxi", "grab", "xăng", "bus", "đi"}},
-                    {"Shopping", new[] {"mua", "shopping", "quần áo", "giày", "túi"}},
-                    {"Bills & Utilities", new[] {"điện", "nước", "internet", "wifi", "hóa đơn"}},
-                    {"Healthcare", new[] {"thuốc", "bệnh viện", "khám", "y tế"}}
+                    {"Food & Dining", new[] {"cafe", "cà phê", "ăn", "uống", "cơm", "phở", "bún", "bánh", "trà", "nước"}},
+                    {"Transportation", new[] {"xe", "taxi", "grab", "xăng", "bus", "đi", "uber", "motorbike", "oto"}},
+                    {"Shopping", new[] {"mua", "shopping", "quần áo", "giày", "túi", "đồ", "sách"}},
+                    {"Bills & Utilities", new[] {"điện", "nước", "internet", "wifi", "hóa đơn", "tiền nhà", "rent"}},
+                    {"Healthcare", new[] {"thuốc", "bệnh viện", "khám", "y tế", "doctor", "medicine"}},
+                    {"Entertainment", new[] {"phim", "game", "karaoke", "bar", "club", "vui chơi"}}
                 };
 
                 foreach (var category in keywords)
                 {
-                    if (category.Value.Any(keyword => description.Contains(keyword)))
+                    if (category.Value.Any(keyword => description.ToLower().Contains(keyword)))
                         return category.Key;
                 }
                 return "Other";
@@ -240,6 +441,10 @@ namespace fintechtracker_backend.Services
                 var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
                 
                 var response = await httpClient.PostAsync(url, content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+                
+                _logger.LogInformation($"Telegram API Response: {response.StatusCode} - {responseContent}");
+                
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)
@@ -265,12 +470,35 @@ namespace fintechtracker_backend.Services
                 var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
                 
                 var response = await httpClient.PostAsync(url, content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+                
+                _logger.LogInformation($"Set webhook response: {response.StatusCode} - {responseContent}");
+                
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error setting webhook");
                 return false;
+            }
+        }
+
+        public async Task<string> GetBotInfoAsync()
+        {
+            try
+            {
+                using var httpClient = _httpClientFactory.CreateClient();
+                var url = $"https://api.telegram.org/bot{_botToken}/getMe";
+                
+                var response = await httpClient.GetAsync(url);
+                var responseContent = await response.Content.ReadAsStringAsync();
+                
+                return responseContent;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting bot info");
+                return $"Error: {ex.Message}";
             }
         }
 
@@ -285,7 +513,7 @@ namespace fintechtracker_backend.Services
                 {
                     Username = telegramUser.Username ?? $"telegram_user_{telegramUser.Id}",
                     Email = $"{telegramUser.Id}@telegram.local",
-                    PasswordHash = "telegram_user", // Placeholder
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("telegram_user"),
                     TelegramUserId = telegramUser.Id.ToString(),
                     Role = "customer",
                     IsActive = true,
@@ -307,6 +535,8 @@ namespace fintechtracker_backend.Services
 
                 _context.Userprofiles.Add(profile);
                 await _context.SaveChangesAsync();
+
+                _logger.LogInformation($"Created new Telegram user: {user.UserId}");
             }
 
             return user;
@@ -315,7 +545,7 @@ namespace fintechtracker_backend.Services
         private async Task<Account> GetOrCreateDefaultAccountAsync(int userId)
         {
             var account = await _context.Accounts
-                .FirstOrDefaultAsync(a => a.UserId == userId);
+                .FirstOrDefaultAsync(a => a.UserId == userId && a.IsActive == true);
 
             if (account == null)
             {
@@ -333,6 +563,8 @@ namespace fintechtracker_backend.Services
 
                 _context.Accounts.Add(account);
                 await _context.SaveChangesAsync();
+
+                _logger.LogInformation($"Created default account for user: {userId}");
             }
 
             return account;
@@ -345,12 +577,29 @@ namespace fintechtracker_backend.Services
 
             if (category == null)
             {
+                // Try to find "Other" category as fallback
                 category = await _context.Categories
-                    .FirstOrDefaultAsync(c => c.CategoryName == "Other" && 
-                                            c.TransactionType == transactionType);
+                    .FirstOrDefaultAsync(c => c.CategoryName == "Other" && c.TransactionType == transactionType);
+
+                // If still null, create a new category
+                if (category == null)
+                {
+                    category = new Category
+                    {
+                        CategoryName = categoryName,
+                        TransactionType = transactionType,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+
+                    _context.Categories.Add(category);
+                    await _context.SaveChangesAsync();
+
+                    _logger.LogInformation($"Created new category: {categoryName} - {transactionType}");
+                }
             }
 
-            return category ?? throw new InvalidOperationException($"Category not found: {categoryName}");
+            return category;
         }
     }
 }

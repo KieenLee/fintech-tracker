@@ -7,5 +7,6 @@ namespace fintechtracker_backend.Services
         Task<TelegramProcessResult> ProcessMessageAsync(TelegramMessageDto message);
         Task<bool> SendMessageAsync(long chatId, string text);
         Task<bool> SetWebhookAsync(string webhookUrl);
+        Task<string> GetBotInfoAsync();
     }
 }
