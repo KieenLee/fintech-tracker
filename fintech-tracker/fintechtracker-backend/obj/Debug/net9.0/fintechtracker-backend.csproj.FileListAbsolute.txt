@@ -62,6 +62,7 @@ D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Deb
 D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Debug\net9.0\System.Composition.TypedParts.dll
 D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Debug\net9.0\System.IdentityModel.Tokens.Jwt.dll
 D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Debug\net9.0\System.Management.dll
+D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Debug\net9.0\System.Text.Json.dll
 D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Debug\net9.0\cs\Microsoft.CodeAnalysis.resources.dll
 D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Debug\net9.0\de\Microsoft.CodeAnalysis.resources.dll
 D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Debug\net9.0\es\Microsoft.CodeAnalysis.resources.dll
@@ -147,8 +148,3 @@ D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\obj\Deb
 D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\obj\Debug\net9.0\fintechtracker-backend.pdb
 D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\obj\Debug\net9.0\fintechtracker-backend.genruntimeconfig.cache
 D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\obj\Debug\net9.0\ref\fintechtracker-backend.dll
-D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\obj\Debug\net9.0\rpswa.dswa.cache.json
-D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\obj\Debug\net9.0\rjimswa.dswa.cache.json
-D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\obj\Debug\net9.0\rjsmrazor.dswa.cache.json
-D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\obj\Debug\net9.0\rjsmcshtml.dswa.cache.json
-D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\obj\Debug\net9.0\swae.build.ex.cache
