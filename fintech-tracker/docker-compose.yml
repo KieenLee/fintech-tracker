@@ -1,4 +1,4 @@
-version: "3.8"
+version: '3.8'
 
 services:
   # MySQL Database
@@ -7,8 +7,9 @@ services:
     container_name: fintech-mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_ROOT_PASSWORD: K1i2e3n4@
+      MYSQL_DATABASE: fintechdb
+      # Bỏ MYSQL_USER và MYSQL_PASSWORD
       MYSQL_CHARSET: utf8mb4
       MYSQL_COLLATION: utf8mb4_unicode_ci
     ports:
@@ -19,17 +20,7 @@ services:
     networks:
       - fintech-network
     healthcheck:
-      test:
-        [
-          "CMD",
-          "mysqladmin",
-          "ping",
-          "-h",
-          "localhost",
-          "-u",
-          "root",
-          "-p${MYSQL_ROOT_PASSWORD}",
-        ]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pK1i2e3n4@"]
       timeout: 20s
       retries: 10
       interval: 30s
@@ -44,49 +35,14 @@ services:
     container_name: fintech-backend
     restart: unless-stopped
     environment:
-      # Core Settings
-      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
+      - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8082
-      - TZ=${TZ}
-
-      # Database Connection
-      - ConnectionStrings__DefaultConnection=Server=mysql;Database=${MYSQL_DATABASE};Uid=${MYSQL_USER};Pwd=${MYSQL_PASSWORD};Port=3306;AllowUserVariables=True;UseAffectedRows=False;
-
-      # JWT Configuration
-      - JWT__Key=${JWT_KEY}
-      - JWT__Issuer=${JWT_ISSUER}
-      - JWT__Audience=${JWT_AUDIENCE}
-      - JWT__ExpireMinutes=${JWT_EXPIRE_MINUTES}
-
-      # Telegram Configuration
-      - Telegram__BotToken=${TELEGRAM_BOT_TOKEN}
-      - Telegram__WebhookUrl=${TELEGRAM_WEBHOOK_URL}
-
-      # Google Auth Configuration
-      - GoogleAuth__ClientId=${GOOGLE_CLIENT_ID}
-      - GoogleAuth__ClientSecret=${GOOGLE_CLIENT_SECRET}
-
-      # Email Settings
-      - EmailSettings__SmtpServer=${SMTP_HOST}
-      - EmailSettings__SmtpPort=${SMTP_PORT}
-      - EmailSettings__SenderEmail=${SMTP_FROM_EMAIL}
-      - EmailSettings__SenderPassword=${SMTP_PASSWORD}
-      - EmailSettings__SenderName=${SMTP_FROM_NAME}
-
-      # OTP Settings
-      - OtpSettings__ExpiryMinutes=${OTP_EXPIRY_MINUTES}
-      - OtpSettings__Length=${OTP_LENGTH}
-      - OtpSettings__MaxAttempts=${OTP_MAX_ATTEMPTS}
-      - OtpSettings__MaxRequestsPerHour=${OTP_MAX_REQUESTS_PER_HOUR}
-
-      # File Upload Settings
-      - FileUpload__MaxSizeInMB=${FILE_UPLOAD_MAX_SIZE_MB}
-      - FileUpload__AllowedExtensions=${FILE_UPLOAD_ALLOWED_EXTENSIONS}
-      - FileUpload__UploadPath=${FILE_UPLOAD_PATH}
-
-      # Other Settings
-      - AllowedHosts=${ALLOWED_HOSTS}
-
+      - ConnectionStrings__DefaultConnection=Server=mysql;Database=fintechdb;Uid=root;Pwd=K1i2e3n4@;Port=3306;AllowUserVariables=True;UseAffectedRows=False;
+      - JWT__Key=s7+ZL3Tf/1ZQ7zY9U+J1Qbkf4KsxuFHw5lG6wrGH3pY=
+      - JWT__Issuer=fintechtracker
+      - JWT__Audience=fintechtracker
+      - Telegram__BotToken=7773897547:AAG6KmwLMj4SnsC4Ixev91QZRUrbWBLNU28
+      - TZ=Asia/Ho_Chi_Minh
     ports:
       - "5013:8082"
     depends_on:
@@ -112,7 +68,7 @@ services:
     container_name: fintech-frontend
     restart: unless-stopped
     environment:
-      - TZ=${TZ}
+      - TZ=Asia/Ho_Chi_Minh
     ports:
       - "3000:8083"
     depends_on:

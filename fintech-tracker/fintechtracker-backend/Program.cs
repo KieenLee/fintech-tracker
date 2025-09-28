@@ -69,10 +69,6 @@ builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IOtpService, OtpService>();
 
-// Add HTTP client and Telegram service
-builder.Services.AddHttpClient();
-builder.Services.AddScoped<ITelegramService, TelegramService>();
-
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
