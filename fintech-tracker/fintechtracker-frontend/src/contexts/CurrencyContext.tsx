@@ -5,7 +5,7 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import { formatCurrencyAmount } from "../../utils/currencyUtils";
+import { formatCurrencyAmount } from "../../Utils/currencyUtils";
 
 interface CurrencyContextType {
   currency: string;

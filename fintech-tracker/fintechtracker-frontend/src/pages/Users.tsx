@@ -44,7 +44,7 @@ import {
   CreateUserDto,
   UpdateUserDto,
 } from "@/services/userService";
-import { formatCurrencyAmount } from "../../utils/currencyUtils";
+import { formatCurrencyAmount } from "../../Utils/currencyUtils";
 
 const Users = () => {
   const [users, setUsers] = useState<UserListDto[]>([]);
