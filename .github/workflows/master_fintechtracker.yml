@@ -27,7 +27,7 @@ jobs:
         run: dotnet build fintech-tracker/fintech-tracker.sln
 
       - name: dotnet publish
-        run: dotnet publish "D:\Workspace\Project_.Net\fintech\fintech-tracker\fintech-tracker.sln" -c Release -o "D:\Workspace\Project_.Net\FTRelease"
+        run: dotnet publish "D:\Workspace\Project_.Net\fintech\fintech-tracker" -c Release -o "D:\Workspace\Project_.Net\FTRelease"
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
