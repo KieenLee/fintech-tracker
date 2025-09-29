@@ -13,41 +13,63 @@ jobs:
   build:
     runs-on: windows-latest
     permissions:
-      contents: read #This is required for actions/checkout
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up .NET Core
+      # Build frontend
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+      - name: Install frontend dependencies
+        run: |
+          cd fintech-tracker/fintechtracker-frontend
+          npm install
+
+      - name: Build frontend
+        run: |
+          cd fintech-tracker/fintechtracker-frontend
+          npm run build
+
+      # Copy frontend build to backend wwwroot
+      - name: Copy frontend to backend wwwroot
+        run: |
+          xcopy /E /I /Y fintech-tracker\fintechtracker-frontend\dist fintech-tracker\fintechtracker-backend\wwwroot
+
+      # Build and publish backend
+      - name: Setup .NET Core
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.x'
 
-      - name: Build with dotnet
-        run: dotnet build fintech-tracker/fintech-tracker.sln
+      - name: Build backend
+        run: dotnet build fintech-tracker/fintechtracker-backend/fintechtracker-backend.csproj
 
-      - name: dotnet publish
-        run: dotnet publish "D:\Workspace\Project_.Net\fintech\fintech-tracker" -c Release -o "D:\Workspace\Project_.Net\FTRelease"
+      - name: Publish backend
+        run: dotnet publish fintech-tracker/fintechtracker-backend/fintechtracker-backend.csproj -c Release -o fintech-tracker/publish
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: .net-app
-          path: D:\Workspace\Project_.Net\FTRelease
+          path: fintech-tracker/publish
 
   deploy:
     runs-on: windows-latest
     needs: build
     permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+      id-token: write
+      contents: read
 
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
           name: .net-app
-      
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -56,10 +78,8 @@ jobs:
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_9AB6A541104843E6ACE33E50195E5C90 }}
 
       - name: Deploy to Azure Web App
-        id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'Fintechtracker'
           slot-name: 'Production'
           package: .
-          
