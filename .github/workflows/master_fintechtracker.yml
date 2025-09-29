@@ -27,13 +27,13 @@ jobs:
         run: dotnet build fintech-tracker/fintech-tracker.sln
 
       - name: dotnet publish
-        run: dotnet publish -c Release -o "D:\Workspace\Project_.Net\fintech\fintech-tracker"
+        run: dotnet publish "D:\Workspace\Project_.Net\fintech\fintech-tracker\fintech-tracker.sln" -c Release -o "D:\Workspace\Project_.Net\FTRelease"
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: .net-app
-          path: ${{env.DOTNET_ROOT}}/myapp
+          path: D:\Workspace\Project_.Net\FTRelease
 
   deploy:
     runs-on: windows-latest
