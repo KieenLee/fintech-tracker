@@ -78,6 +78,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseDefaultFiles();
 app.UseStaticFiles();
 app.UseCors("AllowFrontend");
 app.UseHttpsRedirection();
