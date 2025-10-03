@@ -4,7 +4,7 @@
 
 Trong bối cảnh nhu cầu quản lý tài chính cá nhân ngày càng tăng, đặc biệt ở giới trẻ, nhân viên văn phòng, freelancer tại Việt Nam, nhiều người gặp khó khăn trong việc kiểm soát chi tiêu, thường xuyên vượt ngân sách, và thiếu công cụ phân tích tài chính trực quan.
 
-Dự án **FinTech Mini App** được xây dựng nhằm giải quyết vấn đề này với định hướng:
+Dự án **FinTech Tracker** được xây dựng nhằm giải quyết vấn đề này với định hướng:
 
 * **Nhanh chóng**: Nhập liệu dễ dàng qua Telegram hoặc Mobile App.
 * **Thông minh**: Tích hợp AI để phân loại, dự báo, tư vấn.
@@ -81,8 +81,8 @@ Dự án **FinTech Mini App** được xây dựng nhằm giải quyết vấn �
 ---
 
 ## 6. Kiến trúc hệ thống & Công nghệ
-
-* **Backend**: ASP.NET Core (.NET 8).
+* **Domain**: fttk.io.vn (Đã đăng kí)
+* **Backend**: ASP.NET Core (.NET 9).
 * **Frontend**:
 
   * Giai đoạn 1: React (Vite/CRA) hoặc Blazor.
@@ -90,7 +90,7 @@ Dự án **FinTech Mini App** được xây dựng nhằm giải quyết vấn �
 * **Database**:
 
   * Dev: MySQL (Docker).
-  * Prod: Azure Database for MySQL.
+  * Prod: Azure Database.
 * **AI/ML**:
 
   * ML.NET (classification, regression).
