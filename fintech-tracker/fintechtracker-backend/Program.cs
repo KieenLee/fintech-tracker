@@ -40,18 +40,26 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 
 // CORS
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
 builder.Services.AddCors(options =>
 {
+    // options.AddPolicy("AllowFrontend", policy =>
+    // {
+    //     policy.WithOrigins(
+    //         "http://localhost:8080",
+    //         "http://10.207.1.232:8080",
+    //         "http://localhost:8081",
+    //         "http://localhost:5173"
+    //     )
+    //     .AllowAnyHeader()
+    //     .AllowAnyMethod();
+    // });
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins(
-            "http://localhost:8080",
-            "http://10.207.1.232:8080",
-            "http://localhost:8081",
-            "http://localhost:5173"
-        )
-        .AllowAnyHeader()
-        .AllowAnyMethod();
+        policy.WithOrigins(allowedOrigins ?? new[] { "*" })
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
 
@@ -71,6 +79,7 @@ builder.Services.AddScoped<IOtpService, OtpService>();
 
 var app = builder.Build();
 
+// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
@@ -78,15 +87,28 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// Force HTTPS in production
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+    app.UseHsts();
+}
+
 app.UseDefaultFiles();
 app.UseStaticFiles();
 app.UseCors("AllowFrontend");
-app.UseHttpsRedirection();
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
 
 app.MapControllers();
+
+// Health check endpoint
+app.MapGet("/health", () => Results.Ok(new
+{
+    status = "healthy",
+    timestamp = DateTime.UtcNow
+}));
 
 app.Run();

@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "9vJNfeSI8o4=",
+  "dgSpecHash": "rOXviP9dxzQ=",
   "success": true,
   "projectFilePath": "D:\\Workspace\\Project_.Net\\fintech\\fintech-tracker\\fintechtracker-backend\\fintechtracker-backend.csproj",
   "expectedPackageFiles": [
@@ -72,7 +72,8 @@
     "C:\\Users\\Administrator\\.nuget\\packages\\system.runtime.compilerservices.unsafe\\6.0.0\\system.runtime.compilerservices.unsafe.6.0.0.nupkg.sha512",
     "C:\\Users\\Administrator\\.nuget\\packages\\system.security.cryptography.pkcs\\8.0.1\\system.security.cryptography.pkcs.8.0.1.nupkg.sha512",
     "C:\\Users\\Administrator\\.nuget\\packages\\system.text.json\\9.0.9\\system.text.json.9.0.9.nupkg.sha512",
-    "C:\\Users\\Administrator\\.nuget\\packages\\system.threading.channels\\7.0.0\\system.threading.channels.7.0.0.nupkg.sha512"
+    "C:\\Users\\Administrator\\.nuget\\packages\\system.threading.channels\\7.0.0\\system.threading.channels.7.0.0.nupkg.sha512",
+    "C:\\Users\\Administrator\\.nuget\\packages\\microsoft.netcore.app.crossgen2.win-x64\\9.0.9\\microsoft.netcore.app.crossgen2.win-x64.9.0.9.nupkg.sha512"
   ],
   "logs": []
 }
