@@ -42,7 +42,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { reportService, ReportDashboardDto } from "@/services/reportService";
-import { formatCurrencyAmount } from "../../Utils/currencyUtils";
+import { formatCurrencyAmount } from "../../utils/currencyUtils";
 
 const Reports = () => {
   const [timeRange, setTimeRange] = useState("monthly");
@@ -172,7 +172,7 @@ const Reports = () => {
               </SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" onClick={handleExport} disabled={exporting}>
+          <Button onClick={handleExport} disabled={exporting}>
             {exporting ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
             ) : (

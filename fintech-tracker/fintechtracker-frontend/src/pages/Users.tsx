@@ -44,7 +44,7 @@ import {
   CreateUserDto,
   UpdateUserDto,
 } from "@/services/userService";
-import { formatCurrencyAmount } from "../../Utils/currencyUtils";
+import { formatCurrencyAmount } from "../../utils/currencyUtils";
 
 const Users = () => {
   const [users, setUsers] = useState<UserListDto[]>([]);
@@ -362,11 +362,7 @@ const Users = () => {
                 )}
               </div>
               <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsDialogOpen(false)}
-                >
+                <Button type="button" onClick={() => setIsDialogOpen(false)}>
                   {t("common.cancel")}
                 </Button>
                 <Button type="submit" disabled={submitting}>
@@ -498,8 +494,10 @@ const Users = () => {
                   </TableCell>
                   <TableCell>
                     <Badge
-                      variant={
-                        user.role === "admin" ? "destructive" : "default"
+                      className={
+                        user.role === "admin"
+                          ? "bg-red-600 text-white"
+                          : "bg-gray-100 text-gray-800"
                       }
                     >
                       {user.role === "admin"
@@ -509,10 +507,10 @@ const Users = () => {
                   </TableCell>
                   <TableCell>
                     <Badge
-                      variant={
+                      className={
                         user.subscription === "premium"
-                          ? "default"
-                          : "secondary"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : "bg-gray-100 text-gray-800"
                       }
                     >
                       {user.subscription === "premium"
@@ -532,15 +530,13 @@ const Users = () => {
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Button
-                        variant="ghost"
-                        size="sm"
+                        className="text-sm p-1"
                         onClick={() => handleEdit(user)}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button
-                        variant="ghost"
-                        size="sm"
+                        className="text-sm p-1"
                         onClick={() => handleDelete(user)}
                       >
                         <Trash2 className="h-4 w-4" />
