@@ -87,12 +87,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// Force HTTPS in production
-if (!app.Environment.IsDevelopment())
-{
-    app.UseHttpsRedirection();
-    app.UseHsts();
-}
+
+app.UseHttpsRedirection();
+app.UseHsts();
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
