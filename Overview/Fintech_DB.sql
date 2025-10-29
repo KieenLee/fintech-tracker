@@ -145,6 +145,34 @@ CREATE TABLE Logs (
     FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE SET NULL
 );
 
+CREATE TABLE `TelegramUsers` (
+    `Id` int NOT NULL AUTO_INCREMENT,
+    `TelegramUserId` bigint NOT NULL,
+    `UserId` int NOT NULL,
+    `ChatId` bigint NOT NULL,
+    `FirstName` varchar(100) NULL,
+    `LastName` varchar(100) NULL,
+    `Username` varchar(100) NULL,
+    `IsActive` tinyint(1) NOT NULL DEFAULT 1,
+    `CreatedAt` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT `PK_TelegramUsers` PRIMARY KEY (`Id`),
+    CONSTRAINT `FK_TelegramUsers_users_UserId` FOREIGN KEY (`UserId`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
+    UNIQUE INDEX `IX_TelegramUsers_TelegramUserId` (`TelegramUserId`),
+    UNIQUE INDEX `IX_TelegramUsers_UserId` (`UserId`)
+) CHARACTER SET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `TelegramMessages` (
+    `MessageId` bigint NOT NULL AUTO_INCREMENT,
+    `TelegramUserId` bigint NOT NULL,
+    `MessageText` text NULL,
+    `Processed` tinyint(1) NOT NULL DEFAULT 0,
+    `Response` text NULL,
+    `CreatedAt` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT `PK_TelegramMessages` PRIMARY KEY (`MessageId`),
+    CONSTRAINT `FK_TelegramMessages_TelegramUsers_TelegramUserId` FOREIGN KEY (`TelegramUserId`) REFERENCES `TelegramUsers` (`TelegramUserId`) ON DELETE CASCADE,
+    INDEX `IX_TelegramMessages_TelegramUserId` (`TelegramUserId`)
+) CHARACTER SET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 -- Tạo các chỉ mục để tối ưu hiệu suất truy vấn
 CREATE INDEX idx_users_email ON Users(email);
 CREATE INDEX idx_users_telegram ON Users(telegram_user_id);

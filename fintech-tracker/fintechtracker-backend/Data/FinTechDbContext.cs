@@ -35,6 +35,8 @@ public partial class FinTechDbContext : DbContext
     public virtual DbSet<User> Users { get; set; }
 
     public virtual DbSet<Userprofile> Userprofiles { get; set; }
+    public DbSet<TelegramUser> TelegramUsers { get; set; }
+    public DbSet<TelegramMessage> TelegramMessages { get; set; }
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
@@ -44,6 +46,8 @@ public partial class FinTechDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
+
         modelBuilder
             .UseCollation("utf8mb4_0900_ai_ci")
             .HasCharSet("utf8mb4");
@@ -463,6 +467,30 @@ public partial class FinTechDbContext : DbContext
             entity.HasOne(d => d.User).WithOne(p => p.Userprofile)
                 .HasForeignKey<Userprofile>(d => d.UserId)
                 .HasConstraintName("userprofiles_ibfk_1");
+        });
+
+        modelBuilder.Entity<TelegramUser>(entity =>
+        {
+            entity.HasKey(t => t.Id);
+
+            entity.HasIndex(t => t.TelegramUserId)
+                .IsUnique();
+
+            entity.HasOne(t => t.User)
+                .WithOne()
+                .HasForeignKey<TelegramUser>(t => t.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TelegramMessage>(entity =>
+        {
+            entity.HasKey(m => m.MessageId);
+
+            entity.HasOne(m => m.TelegramUser)
+                .WithMany()
+                .HasForeignKey(m => m.TelegramUserId)
+                .HasPrincipalKey(t => t.TelegramUserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         OnModelCreatingPartial(modelBuilder);
