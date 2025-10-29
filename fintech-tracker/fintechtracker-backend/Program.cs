@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Telegram.Bot;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -76,6 +77,18 @@ builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IOtpService, OtpService>();
+
+// Add Telegram Bot Client
+builder.Services.AddSingleton<ITelegramBotClient>(provider =>
+{
+    var token = builder.Configuration["Telegram:BotToken"];
+    return new TelegramBotClient(token);
+});
+
+// Register services
+builder.Services.AddScoped<IAIService, AIService>();
+builder.Services.AddScoped<ITelegramService, TelegramService>();
+builder.Services.AddHostedService<TelegramBotService>();
 
 var app = builder.Build();
 
