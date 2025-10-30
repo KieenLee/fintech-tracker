@@ -78,10 +78,15 @@ builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IOtpService, OtpService>();
 
+// Add HttpClient for AI Service
+builder.Services.AddHttpClient();
+
 // Add Telegram Bot Client
 builder.Services.AddSingleton<ITelegramBotClient>(provider =>
 {
     var token = builder.Configuration["Telegram:BotToken"];
+    if (string.IsNullOrWhiteSpace(token))
+        throw new InvalidOperationException("Telegram:BotToken is not configured. Please set 'Telegram:BotToken' in configuration.");
     return new TelegramBotClient(token);
 });
 

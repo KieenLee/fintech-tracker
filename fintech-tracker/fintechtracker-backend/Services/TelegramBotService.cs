@@ -2,7 +2,7 @@ using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using fintechtracker_backend.Services.Interfaces;
+using fintechtracker_backend.Services;
 
 namespace fintechtracker_backend.Services
 {
@@ -24,19 +24,31 @@ namespace fintechtracker_backend.Services
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var receiverOptions = new ReceiverOptions
+            try
             {
-                AllowedUpdates = new[] { UpdateType.Message, UpdateType.CallbackQuery }
-            };
+                // XÓA WEBHOOK TRƯỚC KHI DÙNG LONG POLLING
+                _logger.LogInformation("Deleting existing webhook...");
+                await _botClient.DeleteWebhookAsync(cancellationToken: stoppingToken);
 
-            _logger.LogInformation("Starting Telegram bot polling...");
+                var receiverOptions = new ReceiverOptions
+                {
+                    AllowedUpdates = new[] { UpdateType.Message, UpdateType.CallbackQuery },
+                    ThrowPendingUpdates = true // Bỏ qua messages cũ
+                };
 
-            await _botClient.ReceiveAsync(
-                HandleUpdateAsync,
-                HandleErrorAsync,
-                receiverOptions,
-                stoppingToken
-            );
+                _logger.LogInformation("Starting Telegram bot long polling...");
+
+                await _botClient.ReceiveAsync(
+                    HandleUpdateAsync,
+                    HandleErrorAsync,
+                    receiverOptions,
+                    stoppingToken
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Fatal error starting Telegram bot");
+            }
         }
 
         private async Task HandleUpdateAsync(
@@ -44,11 +56,11 @@ namespace fintechtracker_backend.Services
             Update update,
             CancellationToken cancellationToken)
         {
-            if (update.Message is not { } message || message.Text is not { } messageText || message.From is null)
+            if (update.Message is not { From: { } from, Text: { } messageText } message)
                 return;
 
             var chatId = message.Chat.Id;
-            var telegramUserId = message.From.Id;
+            var telegramUserId = from.Id;
 
             _logger.LogInformation("Received message from {UserId}: {Text}", telegramUserId, messageText);
 
@@ -57,17 +69,29 @@ namespace fintechtracker_backend.Services
 
             string response;
 
-            // Handle commands
-            if (messageText.StartsWith("/"))
+            try
             {
-                response = await HandleCommandAsync(messageText, telegramUserId, message.From, telegramService);
-            }
-            else
-            {
-                response = await telegramService.ProcessMessageAsync(telegramUserId, messageText);
-            }
+                // Handle commands
+                if (messageText.StartsWith("/"))
+                {
+                    response = await HandleCommandAsync(messageText, telegramUserId, message.From, telegramService);
+                }
+                else
+                {
+                    response = await telegramService.ProcessMessageAsync(telegramUserId, messageText);
+                }
 
-            await botClient.SendTextMessageAsync(chatId, response, cancellationToken: cancellationToken);
+                await botClient.SendTextMessageAsync(chatId, response, cancellationToken: cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing message from {UserId}", telegramUserId);
+                await botClient.SendTextMessageAsync(
+                    chatId,
+                    "❌ Đã xảy ra lỗi khi xử lý tin nhắn. Vui lòng thử lại sau.",
+                    cancellationToken: cancellationToken
+                );
+            }
         }
 
         private async Task<string> HandleCommandAsync(
@@ -76,25 +100,27 @@ namespace fintechtracker_backend.Services
             User user,
             ITelegramService telegramService)
         {
-            var parts = command.Split(' ');
+            var parts = command.Split(' ', StringSplitOptions.RemoveEmptyEntries);
             var cmd = parts[0].ToLower();
 
             return cmd switch
             {
                 "/start" => "🎉 Chào mừng đến với FinTech Tracker!\n\n" +
-                           "Để bắt đầu, vui lòng liên kết tài khoản của bạn bằng lệnh:\n" +
+                           "📝 Để bắt đầu ghi chép thu chi, vui lòng liên kết tài khoản:\n" +
                            "/link <token>\n\n" +
-                           "Bạn có thể lấy token từ trang web.",
+                           "💡 Bạn có thể lấy token từ trang web.",
 
                 "/link" => await HandleLinkCommandAsync(parts, telegramUserId, user, telegramService),
 
                 "/stats" => "📊 Tính năng thống kê đang được phát triển...",
 
-                "/help" => "📖 Hướng dẫn sử dụng:\n" +
-                          "/start - Bắt đầu\n" +
-                          "/link <token> - Liên kết tài khoản\n" +
-                          "/stats - Xem thống kê\n" +
-                          "/help - Hướng dẫn",
+                "/help" => "📖 **Hướng dẫn sử dụng Bot**\n\n" +
+                          "🔹 /start - Bắt đầu sử dụng bot\n" +
+                          "🔹 /link <token> - Liên kết tài khoản\n" +
+                          "🔹 /stats - Xem thống kê chi tiêu\n" +
+                          "🔹 /help - Xem hướng dẫn\n\n" +
+                          "💬 Gửi tin nhắn để ghi chép thu chi:\n" +
+                          "Ví dụ: 'Mua cà phê 25000'",
 
                 _ => "❓ Lệnh không hợp lệ. Sử dụng /help để xem hướng dẫn."
             };
@@ -108,27 +134,31 @@ namespace fintechtracker_backend.Services
         {
             if (parts.Length < 2)
             {
-                return "❌ Vui lòng cung cấp token: /link <token>";
+                return "❌ Vui lòng cung cấp token:\n/link <token>\n\n" +
+                       "💡 Bạn có thể lấy token từ trang Settings trên web.";
             }
 
             var token = parts[1];
-
-            // TODO: Validate token and get userId from your authentication service
-            // For now, this is a placeholder
-            var userId = 1; // Replace with actual user validation
+            var userId = 1; // Replace with actual validation logic
 
             var success = await telegramService.RegisterUserAsync(
                 telegramUserId,
                 userId,
                 user.Id,
-                user.FirstName ?? string.Empty,
-                user.LastName ?? string.Empty,
-                user.Username ?? string.Empty
+                user.FirstName ?? "",
+                user.LastName ?? "",
+                user.Username ?? ""
             );
 
             return success
-                ? "✅ Liên kết tài khoản thành công! Bạn có thể bắt đầu ghi chép thu chi."
-                : "❌ Liên kết thất bại. Token không hợp lệ hoặc tài khoản đã được liên kết.";
+                ? "✅ Liên kết tài khoản thành công!\n\n" +
+                  "🎉 Bây giờ bạn có thể gửi tin nhắn để ghi chép thu chi.\n" +
+                  "Ví dụ: 'Mua cà phê 25000'"
+                : "❌ Liên kết thất bại.\n\n" +
+                  "Lý do có thể:\n" +
+                  "• Token không hợp lệ\n" +
+                  "• Tài khoản đã được liên kết\n\n" +
+                  "Vui lòng lấy token mới từ trang web.";
         }
 
         private Task HandleErrorAsync(
@@ -136,7 +166,14 @@ namespace fintechtracker_backend.Services
             Exception exception,
             CancellationToken cancellationToken)
         {
-            _logger.LogError(exception, "Error in Telegram bot");
+            var errorMessage = exception switch
+            {
+                Telegram.Bot.Exceptions.ApiRequestException apiEx =>
+                    $"Telegram API Error: {apiEx.Message}",
+                _ => $"Error: {exception.Message}"
+            };
+
+            _logger.LogError(exception, "Error in Telegram bot: {ErrorMessage}", errorMessage);
             return Task.CompletedTask;
         }
     }

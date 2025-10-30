@@ -158,3 +158,16 @@ D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\obj\Deb
 D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\obj\Debug\net9.0\fintechtracker-backend.pdb
 D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\obj\Debug\net9.0\fintechtracker-backend.genruntimeconfig.cache
 D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\obj\Debug\net9.0\ref\fintechtracker-backend.dll
+D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Debug\net9.0\Google.Api.CommonProtos.dll
+D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Debug\net9.0\Google.Api.Gax.dll
+D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Debug\net9.0\Google.Api.Gax.Grpc.dll
+D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Debug\net9.0\Google.Cloud.AIPlatform.V1.dll
+D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Debug\net9.0\Google.Cloud.Iam.V1.dll
+D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Debug\net9.0\Google.Cloud.Location.dll
+D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Debug\net9.0\Google.LongRunning.dll
+D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Debug\net9.0\Google.Protobuf.dll
+D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Debug\net9.0\Grpc.Auth.dll
+D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Debug\net9.0\Grpc.Core.Api.dll
+D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Debug\net9.0\Grpc.Net.Client.dll
+D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Debug\net9.0\Grpc.Net.Common.dll
+D:\Workspace\Project_.Net\fintech\fintech-tracker\fintechtracker-backend\bin\Debug\net9.0\Telegram.Bot.dll

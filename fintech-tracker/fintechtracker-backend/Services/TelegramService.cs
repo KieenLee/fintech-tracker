@@ -1,6 +1,6 @@
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using fintechtracker_backend.Services.Interfaces;
+using fintechtracker_backend.Services;
 using fintechtracker_backend.Data;
 using fintechtracker_backend.Models;
 using fintechtracker_backend.DTOs;
@@ -15,6 +15,27 @@ namespace fintechtracker_backend.Services
         private readonly ITransactionService _transactionService;
         private readonly ITelegramBotClient _botClient;
         private readonly ILogger<TelegramService> _logger;
+
+        // Category mapping Vietnamese to English (matching your DB)
+        private readonly Dictionary<string, string> _categoryMapping = new()
+        {
+            // Expense categories
+            { "Ăn uống", "Food & Dining" },
+            { "Di chuyển", "Transportation" },
+            { "Mua sắm", "Shopping" },
+            { "Giải trí", "Entertainment" },
+            { "Hóa đơn", "Bills & Utilities" },
+            { "Sức khỏe", "Healthcare" },
+            { "Giáo dục", "Education" },
+            { "Du lịch", "Travel" },
+            { "Khác", "Other" },
+            
+            // Income categories
+            { "Lương", "Salary" },
+            { "Freelance", "Freelancing" },
+            { "Kinh doanh", "Business" },
+            { "Đầu tư", "Investment" }
+        };
 
         public TelegramService(
             FinTechDbContext context,
@@ -77,6 +98,8 @@ namespace fintechtracker_backend.Services
                     return "❌ Bạn chưa liên kết tài khoản. Vui lòng sử dụng /link <token>";
                 }
 
+                _logger.LogInformation("Processing message for user {UserId}: {Message}", telegramUser.UserId, messageText);
+
                 // Log message
                 var message = new TelegramMessage
                 {
@@ -87,52 +110,116 @@ namespace fintechtracker_backend.Services
                 _context.TelegramMessages.Add(message);
 
                 // Extract transaction data using AI
+                _logger.LogInformation("Calling AI service to extract transaction data...");
                 var transactionData = await _aiService.ExtractTransactionDataAsync(messageText);
+
+                _logger.LogInformation("AI extracted: Type={Type}, Amount={Amount}, Category={Category}, Description={Description}",
+                    transactionData.Type, transactionData.Amount, transactionData.Category, transactionData.Description);
 
                 // Get default account for user
                 var defaultAccount = await _context.Accounts
-                    .FirstOrDefaultAsync(a => a.UserId == telegramUser.UserId);
+                    .FirstOrDefaultAsync(a => a.UserId == telegramUser.UserId && a.IsActive == true);
 
                 if (defaultAccount == null)
                 {
-                    return "❌ Không tìm thấy tài khoản mặc định. Vui lòng tạo tài khoản trước.";
+                    _logger.LogWarning("No default account found for user {UserId}", telegramUser.UserId);
+                    return "❌ Không tìm thấy tài khoản. Vui lòng tạo tài khoản trước.";
                 }
 
-                // Get or create category
+                _logger.LogInformation("Using account: {AccountName} (ID: {AccountId})",
+                    defaultAccount.AccountName, defaultAccount.AccountId);
+
+                // Find category - FIX: Handle nullable bool properly
                 int? categoryId = null;
                 if (!string.IsNullOrEmpty(transactionData.Category))
                 {
+                    var transactionType = transactionData.Type.ToString().ToLower();
+
+                    // First try to find user-specific category
                     var category = await _context.Categories
-                        .FirstOrDefaultAsync(c => c.CategoryName == transactionData.Category
-                            && c.UserId == telegramUser.UserId);
-                    categoryId = category?.CategoryId;
+                        .Where(c => c.CategoryName == transactionData.Category
+                            && c.TransactionType == transactionType
+                            && c.UserId == telegramUser.UserId
+                            && c.IsActive == true)
+                        .FirstOrDefaultAsync();
+
+                    // If not found, try default category
+                    if (category == null)
+                    {
+                        category = await _context.Categories
+                            .Where(c => c.CategoryName == transactionData.Category
+                                && c.TransactionType == transactionType
+                                && c.IsDefault == true  // Compare nullable bool with true
+                                && c.IsActive == true)  // Compare bool with true
+                            .FirstOrDefaultAsync();
+                    }
+
+                    if (category != null)
+                    {
+                        categoryId = category.CategoryId;
+                        _logger.LogInformation("Found category: {CategoryName} (ID: {CategoryId})",
+                            category.CategoryName, categoryId);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Category '{CategoryName}' not found for type '{Type}'",
+                            transactionData.Category, transactionType);
+                    }
                 }
 
-                // Create transaction
+                // Validate amount
+                if (transactionData.Amount <= 0)
+                {
+                    _logger.LogError("Invalid amount from AI: {Amount}", transactionData.Amount);
+                    return "❌ Không thể xác định số tiền. Vui lòng thử lại với định dạng: 'Mua cà phê 25000'";
+                }
+
+                // Create transaction DTO
                 var transactionDto = new CreateTransactionDto
                 {
                     AccountId = defaultAccount.AccountId,
                     CategoryId = categoryId,
                     Amount = transactionData.Amount,
-                    TransactionType = transactionData.Type.ToString().ToLower(), // "income" or "expense"
+                    TransactionType = transactionData.Type.ToString().ToLower(),
                     Description = transactionData.Description,
                     TransactionDate = DateTime.Now
                 };
 
-                // FIX: Pass userId as first parameter
-                await _transactionService.CreateTransactionAsync(telegramUser.UserId, transactionDto);
+                _logger.LogInformation("Creating transaction: AccountId={AccountId}, CategoryId={CategoryId}, Amount={Amount}, Type={Type}",
+                    transactionDto.AccountId, transactionDto.CategoryId, transactionDto.Amount, transactionDto.TransactionType);
 
-                // Update message status
+                // Create transaction
+                var createdTransaction = await _transactionService.CreateTransactionAsync(
+                    telegramUser.UserId,
+                    transactionDto
+                );
+
+                _logger.LogInformation("Transaction created successfully with ID: {TransactionId}",
+                    createdTransaction.TransactionId);
+
+                // Format response message
+                var categoryDisplay = !string.IsNullOrEmpty(transactionData.Category)
+                    ? transactionData.Category
+                    : "Chưa phân loại";
+
+                var typeEmoji = transactionData.Type == TransactionType.Income ? "💰" : "💸";
+                var typeText = transactionData.Type == TransactionType.Income ? "thu nhập" : "chi tiêu";
+
                 message.Processed = true;
-                message.Response = $"✅ Ghi nhận {transactionData.Type.ToString().ToLower()} '{transactionData.Description} - {transactionData.Amount:N0}đ' (Danh mục: {transactionData.Category})";
+                message.Response = $"{typeEmoji} Ghi nhận {typeText}: '{transactionData.Description}' - {transactionData.Amount:N0}đ\n" +
+                                  $"📁 Danh mục: {categoryDisplay}\n" +
+                                  $"💼 Tài khoản: {defaultAccount.AccountName}";
+
                 await _context.SaveChangesAsync();
 
+                _logger.LogInformation("Message processed successfully for user {UserId}", telegramUser.UserId);
                 return message.Response;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing message from {TelegramUserId}", telegramUserId);
-                return "❌ Không thể xử lý. Vui lòng thử lại.";
+                _logger.LogError(ex, "Error processing message from {TelegramUserId}: {Message}",
+                    telegramUserId, ex.Message);
+                return $"❌ Lỗi xử lý: {ex.Message}\nVui lòng thử lại.";
             }
         }
 

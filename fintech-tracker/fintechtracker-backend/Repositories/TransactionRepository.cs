@@ -21,42 +21,70 @@ namespace fintechtracker_backend.Repositories
                 .Include(t => t.Account)
                 .Where(t => t.UserId == userId);
 
-            // FIXED: Apply filters using correct properties from TransactionFilterDto
-            query = ApplyFilters(query, filter);
+            // Apply filters
+            if (filter.CategoryId.HasValue)
+                query = query.Where(t => t.CategoryId == filter.CategoryId.Value);
 
-            // FIXED: Apply sorting using SortBy and SortOrder from DTO
-            query = ApplySorting(query, filter);
+            if (filter.AccountId.HasValue)
+                query = query.Where(t => t.AccountId == filter.AccountId.Value);
+
+            if (filter.FromDate.HasValue)
+                query = query.Where(t => t.TransactionDate >= filter.FromDate.Value);
+
+            if (filter.ToDate.HasValue)
+                query = query.Where(t => t.TransactionDate <= filter.ToDate.Value);
+
+            if (!string.IsNullOrEmpty(filter.TransactionType))
+                query = query.Where(t => t.TransactionType == filter.TransactionType);
+
+            if (filter.MinAmount.HasValue)
+                query = query.Where(t => t.Amount >= filter.MinAmount.Value);
+
+            if (filter.MaxAmount.HasValue)
+                query = query.Where(t => t.Amount <= filter.MaxAmount.Value);
 
             // Get total count before pagination
             var totalCount = await query.CountAsync();
+
+            // Apply sorting
+            query = filter.SortBy?.ToLower() switch
+            {
+                "amount" => filter.SortOrder?.ToLower() == "asc"
+                    ? query.OrderBy(t => t.Amount)
+                    : query.OrderByDescending(t => t.Amount),
+                "description" => filter.SortOrder?.ToLower() == "asc"
+                    ? query.OrderBy(t => t.Description)
+                    : query.OrderByDescending(t => t.Description),
+                _ => filter.SortOrder?.ToLower() == "asc"
+                    ? query.OrderBy(t => t.TransactionDate)
+                    : query.OrderByDescending(t => t.TransactionDate)
+            };
 
             // Apply pagination
             var transactions = await query
                 .Skip((filter.Page - 1) * filter.PageSize)
                 .Take(filter.PageSize)
+                .Select(t => new TransactionDto
+                {
+                    TransactionId = t.TransactionId,
+                    UserId = t.UserId,
+                    AccountId = t.AccountId,
+                    AccountName = t.Account.AccountName,
+                    CategoryId = t.CategoryId,
+                    CategoryName = t.Category != null ? t.Category.CategoryName : null,
+                    Amount = t.Amount,
+                    TransactionType = t.TransactionType,
+                    Description = t.Description,
+                    TransactionDate = t.TransactionDate,
+                    Location = t.Location,
+                    CreatedAt = t.CreatedAt,
+                    UpdatedAt = t.UpdatedAt
+                })
                 .ToListAsync();
-
-            // Map to DTOs
-            var transactionDtos = transactions.Select(t => new TransactionDto
-            {
-                TransactionId = t.TransactionId,
-                UserId = t.UserId,
-                AccountId = t.AccountId,
-                AccountName = t.Account.AccountName,
-                CategoryId = t.CategoryId,
-                CategoryName = t.Category?.CategoryName ?? "Uncategorized",
-                Amount = t.Amount,
-                TransactionType = t.TransactionType,
-                TransactionDate = t.TransactionDate,
-                Description = t.Description,
-                Location = t.Location,
-                CreatedAt = t.CreatedAt ?? DateTime.UtcNow,
-                UpdatedAt = t.UpdatedAt ?? DateTime.UtcNow
-            }).ToList();
 
             return new TransactionResponseDto
             {
-                Transactions = transactionDtos,
+                Transactions = transactions,
                 TotalCount = totalCount,
                 Page = filter.Page,
                 PageSize = filter.PageSize,
@@ -66,10 +94,8 @@ namespace fintechtracker_backend.Repositories
 
         public async Task<TransactionDto?> GetTransactionByIdAsync(long transactionId, int userId)
         {
-            var transaction = await _context.Transactions
-                .Include(t => t.Account)
-                .Include(t => t.Category)
-                .Where(t => t.TransactionId == transactionId && t.Account.UserId == userId)
+            return await _context.Transactions
+                .Where(t => t.TransactionId == transactionId && t.UserId == userId)
                 .Select(t => new TransactionDto
                 {
                     TransactionId = t.TransactionId,
@@ -87,19 +113,10 @@ namespace fintechtracker_backend.Repositories
                     UpdatedAt = t.UpdatedAt
                 })
                 .FirstOrDefaultAsync();
-
-            return transaction;
         }
 
         public async Task<TransactionDto> CreateTransactionAsync(int userId, CreateTransactionDto dto)
         {
-            // Validate account belongs to user
-            var account = await _context.Accounts
-                .FirstOrDefaultAsync(a => a.AccountId == dto.AccountId && a.UserId == userId);
-
-            if (account == null)
-                throw new ArgumentException("Account not found or doesn't belong to user");
-
             var transaction = new Transaction
             {
                 UserId = userId,
@@ -110,74 +127,33 @@ namespace fintechtracker_backend.Repositories
                 Description = dto.Description,
                 TransactionDate = dto.TransactionDate,
                 Location = dto.Location,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow
             };
 
             _context.Transactions.Add(transaction);
-
-            // Update account balance
-            if (dto.TransactionType.ToLower() == "income")
-            {
-                account.CurrentBalance += dto.Amount;
-            }
-            else if (dto.TransactionType.ToLower() == "expense")
-            {
-                account.CurrentBalance -= dto.Amount;
-            }
-
             await _context.SaveChangesAsync();
 
-            var created = await GetTransactionByIdAsync(transaction.TransactionId, userId);
-            if (created == null)
-                throw new InvalidOperationException("Transaction was not found after creation.");
-            return created;
+            // Return the created transaction with related data
+            return await GetTransactionByIdAsync(transaction.TransactionId, userId)
+                ?? throw new InvalidOperationException("Failed to retrieve created transaction");
         }
 
         public async Task<TransactionDto?> UpdateTransactionAsync(long transactionId, int userId, UpdateTransactionDto dto)
         {
-            var existingTransaction = await _context.Transactions
-                .Include(t => t.Account)
-                .FirstOrDefaultAsync(t => t.TransactionId == transactionId && t.Account.UserId == userId);
+            var transaction = await _context.Transactions
+                .FirstOrDefaultAsync(t => t.TransactionId == transactionId && t.UserId == userId);
 
-            if (existingTransaction == null)
+            if (transaction == null)
                 return null;
 
-            // Revert old balance change
-            if (existingTransaction.TransactionType.ToLower() == "income")
-            {
-                existingTransaction.Account.CurrentBalance -= existingTransaction.Amount;
-            }
-            else if (existingTransaction.TransactionType.ToLower() == "expense")
-            {
-                existingTransaction.Account.CurrentBalance += existingTransaction.Amount;
-            }
-
-            // Update transaction
-            existingTransaction.AccountId = dto.AccountId;
-            existingTransaction.CategoryId = dto.CategoryId;
-            existingTransaction.Amount = dto.Amount;
-            existingTransaction.TransactionType = dto.TransactionType;
-            existingTransaction.Description = dto.Description;
-            existingTransaction.TransactionDate = dto.TransactionDate;
-            existingTransaction.Location = dto.Location;
-            existingTransaction.UpdatedAt = DateTime.UtcNow;
-
-            // Apply new balance change
-            var newAccount = await _context.Accounts
-                .FirstOrDefaultAsync(a => a.AccountId == dto.AccountId && a.UserId == userId);
-
-            if (newAccount != null)
-            {
-                if (dto.TransactionType.ToLower() == "income")
-                {
-                    newAccount.CurrentBalance += dto.Amount;
-                }
-                else if (dto.TransactionType.ToLower() == "expense")
-                {
-                    newAccount.CurrentBalance -= dto.Amount;
-                }
-            }
+            transaction.AccountId = dto.AccountId;
+            transaction.CategoryId = dto.CategoryId;
+            transaction.Amount = dto.Amount;
+            transaction.TransactionType = dto.TransactionType;
+            transaction.Description = dto.Description;
+            transaction.TransactionDate = dto.TransactionDate;
+            transaction.Location = dto.Location;
+            transaction.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
 
@@ -187,21 +163,10 @@ namespace fintechtracker_backend.Repositories
         public async Task<bool> DeleteTransactionAsync(long transactionId, int userId)
         {
             var transaction = await _context.Transactions
-                .Include(t => t.Account)
-                .FirstOrDefaultAsync(t => t.TransactionId == transactionId && t.Account.UserId == userId);
+                .FirstOrDefaultAsync(t => t.TransactionId == transactionId && t.UserId == userId);
 
             if (transaction == null)
                 return false;
-
-            // Revert balance change
-            if (transaction.TransactionType.ToLower() == "income")
-            {
-                transaction.Account.CurrentBalance -= transaction.Amount;
-            }
-            else if (transaction.TransactionType.ToLower() == "expense")
-            {
-                transaction.Account.CurrentBalance += transaction.Amount;
-            }
 
             _context.Transactions.Remove(transaction);
             await _context.SaveChangesAsync();
@@ -209,117 +174,18 @@ namespace fintechtracker_backend.Repositories
             return true;
         }
 
-        public async Task<int> GetTotalCountAsync(int userId, TransactionFilterDto filter)
+        public async Task<Account?> GetAccountByIdAsync(int accountId, int userId)
         {
-            var query = _context.Transactions
-                .Include(t => t.Account)
-                .Include(t => t.Category)
-                .Where(t => t.Account.UserId == userId);
-
-            // FIXED: Apply same filters as GetUserTransactionsAsync method
-            query = ApplyFilters(query, filter);
-
-            return await query.CountAsync();
+            return await _context.Accounts
+                .Where(a => a.AccountId == accountId && a.UserId == userId && a.IsActive == true)
+                .FirstOrDefaultAsync();
         }
 
-        // Update ApplyFilters method with better logging and null handling
-        private IQueryable<Transaction> ApplyFilters(IQueryable<Transaction> query, TransactionFilterDto filter)
+        public async Task<Category?> GetCategoryByIdAsync(int categoryId)
         {
-            Console.WriteLine($"ApplyFilters - Input filter: CategoryId={filter.CategoryId}, AccountId={filter.AccountId}");
-
-            // Filter by CategoryId (int?)
-            if (filter.CategoryId.HasValue && filter.CategoryId.Value > 0)
-            {
-                Console.WriteLine($"Applying CategoryId filter: {filter.CategoryId.Value}");
-                query = query.Where(t => t.CategoryId == filter.CategoryId.Value);
-            }
-
-            // Filter by AccountId (int?)
-            if (filter.AccountId.HasValue && filter.AccountId.Value > 0)
-            {
-                Console.WriteLine($"Applying AccountId filter: {filter.AccountId.Value}");
-                query = query.Where(t => t.AccountId == filter.AccountId.Value);
-            }
-
-            // Filter by FromDate
-            if (filter.FromDate.HasValue)
-            {
-                Console.WriteLine($"Applying FromDate filter: {filter.FromDate.Value}");
-                query = query.Where(t => t.TransactionDate >= filter.FromDate.Value);
-            }
-
-            // Filter by ToDate
-            if (filter.ToDate.HasValue)
-            {
-                Console.WriteLine($"Applying ToDate filter: {filter.ToDate.Value}");
-                query = query.Where(t => t.TransactionDate <= filter.ToDate.Value);
-            }
-
-            // Filter by TransactionType
-            if (!string.IsNullOrEmpty(filter.TransactionType) && filter.TransactionType.ToLower() != "all")
-            {
-                Console.WriteLine($"Applying TransactionType filter: {filter.TransactionType}");
-                query = query.Where(t => t.TransactionType.ToLower() == filter.TransactionType.ToLower());
-            }
-
-            // Filter by MinAmount
-            if (filter.MinAmount.HasValue && filter.MinAmount.Value > 0)
-            {
-                Console.WriteLine($"Applying MinAmount filter: {filter.MinAmount.Value}");
-                query = query.Where(t => t.Amount >= filter.MinAmount.Value);
-            }
-
-            // Filter by MaxAmount
-            if (filter.MaxAmount.HasValue && filter.MaxAmount.Value > 0)
-            {
-                Console.WriteLine($"Applying MaxAmount filter: {filter.MaxAmount.Value}");
-                query = query.Where(t => t.Amount <= filter.MaxAmount.Value);
-            }
-
-            return query;
-        }
-
-        // NEW: Helper method for sorting
-        private IQueryable<Transaction> ApplySorting(IQueryable<Transaction> query, TransactionFilterDto filter)
-        {
-            var sortBy = filter.SortBy?.ToLower() ?? "transactiondate";
-            var sortOrder = filter.SortOrder?.ToLower() ?? "desc";
-
-            switch (sortBy)
-            {
-                case "amount":
-                    query = sortOrder == "asc"
-                        ? query.OrderBy(t => t.Amount)
-                        : query.OrderByDescending(t => t.Amount);
-                    break;
-                case "transactiontype":
-                    query = sortOrder == "asc"
-                        ? query.OrderBy(t => t.TransactionType)
-                        : query.OrderByDescending(t => t.TransactionType);
-                    break;
-                case "category":
-                    query = sortOrder == "asc"
-                        ? query.OrderBy(t => t.Category != null ? t.Category.CategoryName : "")
-                        : query.OrderByDescending(t => t.Category != null ? t.Category.CategoryName : "");
-                    break;
-                case "account":
-                    query = sortOrder == "asc"
-                        ? query.OrderBy(t => t.Account.AccountName)
-                        : query.OrderByDescending(t => t.Account.AccountName);
-                    break;
-                case "description":
-                    query = sortOrder == "asc"
-                        ? query.OrderBy(t => t.Description ?? "")
-                        : query.OrderByDescending(t => t.Description ?? "");
-                    break;
-                default: // transactiondate
-                    query = sortOrder == "asc"
-                        ? query.OrderBy(t => t.TransactionDate)
-                        : query.OrderByDescending(t => t.TransactionDate);
-                    break;
-            }
-
-            return query;
+            return await _context.Categories
+                .Where(c => c.CategoryId == categoryId && c.IsActive == true)
+                .FirstOrDefaultAsync();
         }
     }
 }

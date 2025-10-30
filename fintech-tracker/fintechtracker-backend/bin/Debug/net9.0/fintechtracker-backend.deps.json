@@ -10,6 +10,7 @@
         "dependencies": {
           "BCrypt.Net-Next": "4.0.3",
           "Google.Apis.Auth": "1.71.0",
+          "Google.Cloud.AIPlatform.V1": "2.15.0",
           "MailKit": "4.13.0",
           "Microsoft.AspNetCore.Authentication.Google": "9.0.9",
           "Microsoft.AspNetCore.Authentication.JwtBearer": "9.0.9",
@@ -17,7 +18,8 @@
           "Microsoft.EntityFrameworkCore.Design": "9.0.9",
           "MimeKit": "4.13.0",
           "Pomelo.EntityFrameworkCore.MySql": "9.0.0",
-          "Swashbuckle.AspNetCore": "9.0.4"
+          "Swashbuckle.AspNetCore": "9.0.4",
+          "Telegram.Bot": "19.0.0"
         },
         "runtime": {
           "fintechtracker-backend.dll": {}
@@ -36,6 +38,46 @@
           "lib/net6.0/BouncyCastle.Cryptography.dll": {
             "assemblyVersion": "2.0.0.0",
             "fileVersion": "2.5.1.28965"
+          }
+        }
+      },
+      "Google.Api.CommonProtos/2.10.0": {
+        "dependencies": {
+          "Google.Protobuf": "3.23.0"
+        },
+        "runtime": {
+          "lib/netstandard2.0/Google.Api.CommonProtos.dll": {
+            "assemblyVersion": "2.10.0.0",
+            "fileVersion": "2.10.0.0"
+          }
+        }
+      },
+      "Google.Api.Gax/4.4.0": {
+        "dependencies": {
+          "Microsoft.Bcl.AsyncInterfaces": "7.0.0",
+          "Newtonsoft.Json": "13.0.3"
+        },
+        "runtime": {
+          "lib/netstandard2.1/Google.Api.Gax.dll": {
+            "assemblyVersion": "4.4.0.0",
+            "fileVersion": "4.4.0.0"
+          }
+        }
+      },
+      "Google.Api.Gax.Grpc/4.4.0": {
+        "dependencies": {
+          "Google.Api.CommonProtos": "2.10.0",
+          "Google.Api.Gax": "4.4.0",
+          "Google.Apis.Auth": "1.71.0",
+          "Grpc.Auth": "2.53.0",
+          "Grpc.Core.Api": "2.53.0",
+          "Grpc.Net.Client": "2.53.0",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.9"
+        },
+        "runtime": {
+          "lib/netstandard2.1/Google.Api.Gax.Grpc.dll": {
+            "assemblyVersion": "4.4.0.0",
+            "fileVersion": "4.4.0.0"
           }
         }
       },
@@ -71,6 +113,104 @@
           "lib/net6.0/Google.Apis.Core.dll": {
             "assemblyVersion": "1.71.0.0",
             "fileVersion": "1.71.0.0"
+          }
+        }
+      },
+      "Google.Cloud.AIPlatform.V1/2.15.0": {
+        "dependencies": {
+          "Google.Api.Gax.Grpc": "4.4.0",
+          "Google.Cloud.Iam.V1": "3.0.0",
+          "Google.Cloud.Location": "2.0.0",
+          "Google.LongRunning": "3.0.0"
+        },
+        "runtime": {
+          "lib/netstandard2.1/Google.Cloud.AIPlatform.V1.dll": {
+            "assemblyVersion": "2.15.0.0",
+            "fileVersion": "2.15.0.0"
+          }
+        }
+      },
+      "Google.Cloud.Iam.V1/3.0.0": {
+        "dependencies": {
+          "Google.Api.Gax.Grpc": "4.4.0"
+        },
+        "runtime": {
+          "lib/netstandard2.1/Google.Cloud.Iam.V1.dll": {
+            "assemblyVersion": "3.0.0.0",
+            "fileVersion": "3.0.0.0"
+          }
+        }
+      },
+      "Google.Cloud.Location/2.0.0": {
+        "dependencies": {
+          "Google.Api.Gax.Grpc": "4.4.0"
+        },
+        "runtime": {
+          "lib/netstandard2.1/Google.Cloud.Location.dll": {
+            "assemblyVersion": "2.0.0.0",
+            "fileVersion": "2.0.0.0"
+          }
+        }
+      },
+      "Google.LongRunning/3.0.0": {
+        "dependencies": {
+          "Google.Api.Gax.Grpc": "4.4.0"
+        },
+        "runtime": {
+          "lib/netstandard2.1/Google.LongRunning.dll": {
+            "assemblyVersion": "3.0.0.0",
+            "fileVersion": "3.0.0.0"
+          }
+        }
+      },
+      "Google.Protobuf/3.23.0": {
+        "runtime": {
+          "lib/net5.0/Google.Protobuf.dll": {
+            "assemblyVersion": "3.23.0.0",
+            "fileVersion": "3.23.0.0"
+          }
+        }
+      },
+      "Grpc.Auth/2.53.0": {
+        "dependencies": {
+          "Google.Apis.Auth": "1.71.0",
+          "Grpc.Core.Api": "2.53.0"
+        },
+        "runtime": {
+          "lib/netstandard2.0/Grpc.Auth.dll": {
+            "assemblyVersion": "2.0.0.0",
+            "fileVersion": "2.53.0.0"
+          }
+        }
+      },
+      "Grpc.Core.Api/2.53.0": {
+        "runtime": {
+          "lib/netstandard2.1/Grpc.Core.Api.dll": {
+            "assemblyVersion": "2.0.0.0",
+            "fileVersion": "2.53.0.0"
+          }
+        }
+      },
+      "Grpc.Net.Client/2.53.0": {
+        "dependencies": {
+          "Grpc.Net.Common": "2.53.0",
+          "Microsoft.Extensions.Logging.Abstractions": "9.0.9"
+        },
+        "runtime": {
+          "lib/net7.0/Grpc.Net.Client.dll": {
+            "assemblyVersion": "2.0.0.0",
+            "fileVersion": "2.53.0.0"
+          }
+        }
+      },
+      "Grpc.Net.Common/2.53.0": {
+        "dependencies": {
+          "Grpc.Core.Api": "2.53.0"
+        },
+        "runtime": {
+          "lib/net7.0/Grpc.Net.Common.dll": {
+            "assemblyVersion": "2.0.0.0",
+            "fileVersion": "2.53.0.0"
           }
         }
       },
@@ -832,6 +972,17 @@
             "fileVersion": "7.0.723.27404"
           }
         }
+      },
+      "Telegram.Bot/19.0.0": {
+        "dependencies": {
+          "Newtonsoft.Json": "13.0.3"
+        },
+        "runtime": {
+          "lib/net6.0/Telegram.Bot.dll": {
+            "assemblyVersion": "19.0.0.0",
+            "fileVersion": "19.0.0.0"
+          }
+        }
       }
     }
   },
@@ -855,6 +1006,27 @@
       "path": "bouncycastle.cryptography/2.5.1",
       "hashPath": "bouncycastle.cryptography.2.5.1.nupkg.sha512"
     },
+    "Google.Api.CommonProtos/2.10.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-qKMPAkOBzUdSv4oP9n9w57QtYSOfosHBsF6uR8zDiIxUI2EO6iSswnqk9TBF7ivfY92a5XqK5aZzYxQmznnNmQ==",
+      "path": "google.api.commonprotos/2.10.0",
+      "hashPath": "google.api.commonprotos.2.10.0.nupkg.sha512"
+    },
+    "Google.Api.Gax/4.4.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-vkqxzz54dRdl3uUmz0hOhMfR9EjGrWJI+SeOl3UC1Gr/mHfHOwYiRPnJbub+77/xS0lAJBs02iOh3ay9zgzW4Q==",
+      "path": "google.api.gax/4.4.0",
+      "hashPath": "google.api.gax.4.4.0.nupkg.sha512"
+    },
+    "Google.Api.Gax.Grpc/4.4.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-nqEaG8U08vVFrRMVfxbvtXsfYb9PxczavKQmXiqiqsfTfojMV6iJ371nA5y+gMfoixRjqrVAWo87kIPDu1a9DQ==",
+      "path": "google.api.gax.grpc/4.4.0",
+      "hashPath": "google.api.gax.grpc.4.4.0.nupkg.sha512"
+    },
     "Google.Apis/1.71.0": {
       "type": "package",
       "serviceable": true,
@@ -875,6 +1047,69 @@
       "sha512": "sha512-tCsg4USOGBVCIrSOyLht1akZe/+ioH7+LVWix6XuxP5fFiw5kEFSBXL+Of93aK/ztJa1dQI+p03dJ+AKgViRuw==",
       "path": "google.apis.core/1.71.0",
       "hashPath": "google.apis.core.1.71.0.nupkg.sha512"
+    },
+    "Google.Cloud.AIPlatform.V1/2.15.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-Ceei0S2ZZxreCDIVli5mzdB5nzeSfSognMbCDJqnRTzmSbUMEwBfH2iiK/ANnqUPEfqyh974Heb/DjdBEgRjwA==",
+      "path": "google.cloud.aiplatform.v1/2.15.0",
+      "hashPath": "google.cloud.aiplatform.v1.2.15.0.nupkg.sha512"
+    },
+    "Google.Cloud.Iam.V1/3.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-uZI2PbIj6njiW7dAdlbyGtAFO3oRPXa1o90w9p+aWcuOGTZPJkEShGATcGVXIXtdnQ+pXLfnXhreiRgkgkyx4Q==",
+      "path": "google.cloud.iam.v1/3.0.0",
+      "hashPath": "google.cloud.iam.v1.3.0.0.nupkg.sha512"
+    },
+    "Google.Cloud.Location/2.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-qxJ6dATru5XYQzuE8f3izGKPE14Zpc5mEBEROMM/FXYzMug+3ezoRktcD00l2nmMeJ7CIwWZjx9uRpDIiZTLEA==",
+      "path": "google.cloud.location/2.0.0",
+      "hashPath": "google.cloud.location.2.0.0.nupkg.sha512"
+    },
+    "Google.LongRunning/3.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-8+ctm1v0P90BX1fqQqyTaIrc/5zTTou3kyOsiLUJ6b1vfS/VtzF+L5onJoUDRAY0NWARSQBe73tewFm3ijWpYw==",
+      "path": "google.longrunning/3.0.0",
+      "hashPath": "google.longrunning.3.0.0.nupkg.sha512"
+    },
+    "Google.Protobuf/3.23.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-sH4Jlv/vJQCqvYR9//Ia6RaDgG1HMTFlddBhSz5sbr9rQYYUuJ38SpOBv/m3mKkRfC6/ZdUtFQNczvAiYnIeqw==",
+      "path": "google.protobuf/3.23.0",
+      "hashPath": "google.protobuf.3.23.0.nupkg.sha512"
+    },
+    "Grpc.Auth/2.53.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-i50OJ4jW/o5VHfi/3Xc9D9Tkn+8WrFNmbxAtFOFl1RiZDvI9K/XNoSi/o/jYY8sSuWr5DzHk6EEkwCEEJdkf5Q==",
+      "path": "grpc.auth/2.53.0",
+      "hashPath": "grpc.auth.2.53.0.nupkg.sha512"
+    },
+    "Grpc.Core.Api/2.53.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-aIFksGygmlmijcLjcPcKR3FVSCpm5OZH8r81MjSlU+rNLW1i9zVszAivxUpiun/5nHq0Ycg1RrUCzA5xLfVuIw==",
+      "path": "grpc.core.api/2.53.0",
+      "hashPath": "grpc.core.api.2.53.0.nupkg.sha512"
+    },
+    "Grpc.Net.Client/2.53.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-tH23ds+jJvx9dpvacQ5/EYIv7M7LJHPvIlOmlq4u0SflMRv07UXcg16KVUKKBUwNLR/uoLk8RtBiC7NKEHXbpg==",
+      "path": "grpc.net.client/2.53.0",
+      "hashPath": "grpc.net.client.2.53.0.nupkg.sha512"
+    },
+    "Grpc.Net.Common/2.53.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-AcjscRF+QNpCZB2ITbl1b2zsCWM281+qPNTwLur+bA2FuhEvywfUZgJaKsP1NanOvkBetO1ai16LWcqnnUKZEA==",
+      "path": "grpc.net.common/2.53.0",
+      "hashPath": "grpc.net.common.2.53.0.nupkg.sha512"
     },
     "Humanizer.Core/2.14.1": {
       "type": "package",
@@ -1232,6 +1467,13 @@
       "sha512": "sha512-/qEUN91mP/MUQmJnM5y5BdT7ZoPuVrtxnFlbJ8a3kBJGhe2wCzBfnPFtK2wTtEEcf3DMGR9J00GZZfg6HRI6yA==",
       "path": "system.management/7.0.2",
       "hashPath": "system.management.7.0.2.nupkg.sha512"
+    },
+    "Telegram.Bot/19.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-Q16IOitgjGoaJOuqgKQy0FeF+hr/ncmlX2esrhCC7aiyhSX7roYEriWaGAHkQZR8QzbImjFfl4eQh2IxcnOrPg==",
+      "path": "telegram.bot/19.0.0",
+      "hashPath": "telegram.bot.19.0.0.nupkg.sha512"
     }
   }
 }

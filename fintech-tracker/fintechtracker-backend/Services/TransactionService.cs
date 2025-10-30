@@ -45,7 +45,32 @@ namespace fintechtracker_backend.Services
 
         public async Task<TransactionDto> CreateTransactionAsync(int userId, CreateTransactionDto dto)
         {
-            return await _transactionRepository.CreateTransactionAsync(userId, dto);
+            // Validate account belongs to user
+            var account = await _transactionRepository.GetAccountByIdAsync(dto.AccountId, userId);
+            if (account == null)
+            {
+                throw new UnauthorizedAccessException("Account not found or does not belong to user");
+            }
+
+            // Validate category if provided
+            if (dto.CategoryId.HasValue)
+            {
+                var category = await _transactionRepository.GetCategoryByIdAsync(dto.CategoryId.Value);
+                if (category == null)
+                {
+                    throw new ArgumentException("Category not found");
+                }
+            }
+
+            // Create transaction
+            var createdTransaction = await _transactionRepository.CreateTransactionAsync(userId, dto);
+
+            if (createdTransaction == null)
+            {
+                throw new InvalidOperationException("Failed to create transaction");
+            }
+
+            return createdTransaction;
         }
 
         public async Task<TransactionDto?> UpdateTransactionAsync(int transactionId, int userId, UpdateTransactionDto dto)

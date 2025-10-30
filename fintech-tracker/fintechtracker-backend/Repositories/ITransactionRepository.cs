@@ -1,4 +1,5 @@
 using fintechtracker_backend.DTOs;
+using fintechtracker_backend.Models;
 
 namespace fintechtracker_backend.Repositories
 {
@@ -9,5 +10,9 @@ namespace fintechtracker_backend.Repositories
         Task<TransactionDto> CreateTransactionAsync(int userId, CreateTransactionDto dto);
         Task<TransactionDto?> UpdateTransactionAsync(long transactionId, int userId, UpdateTransactionDto dto);
         Task<bool> DeleteTransactionAsync(long transactionId, int userId);
+
+        // Add validation helper methods
+        Task<Account?> GetAccountByIdAsync(int accountId, int userId);
+        Task<Category?> GetCategoryByIdAsync(int categoryId);
     }
 }

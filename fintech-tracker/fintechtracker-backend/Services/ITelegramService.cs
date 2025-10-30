@@ -1,7 +1,7 @@
 using fintechtracker_backend.DTOs;
 using fintechtracker_backend.Models;
 
-namespace fintechtracker_backend.Services.Interfaces
+namespace fintechtracker_backend.Services
 {
     public interface ITelegramService
     {

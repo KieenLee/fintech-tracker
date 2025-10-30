@@ -1,6 +1,6 @@
 using fintechtracker_backend.DTOs;
 
-namespace fintechtracker_backend.Services.Interfaces
+namespace fintechtracker_backend.Services
 {
     public interface IAIService
     {

@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Telegram.Bot.Types;
-using fintechtracker_backend.Services.Interfaces;
+using fintechtracker_backend.Services;
 
 namespace fintechtracker_backend.Controllers
 {
@@ -60,15 +60,13 @@ namespace fintechtracker_backend.Controllers
         {
             try
             {
-                // TODO: Validate token and get user info
-
                 var success = await _telegramService.RegisterUserAsync(
                     request.TelegramUserId,
                     request.UserId,
                     request.ChatId,
-                    request.FirstName,
-                    request.LastName,
-                    request.Username
+                    request.FirstName ?? string.Empty,
+                    request.LastName ?? string.Empty,
+                    request.Username ?? string.Empty
                 );
 
                 return Ok(new { success, message = success ? "Registered successfully" : "Registration failed" });
