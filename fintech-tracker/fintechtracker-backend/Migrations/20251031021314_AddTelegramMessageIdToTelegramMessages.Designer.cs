@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using fintechtracker_backend.Data;
 
@@ -11,9 +12,11 @@ using fintechtracker_backend.Data;
 namespace fintechtracker_backend.Migrations
 {
     [DbContext(typeof(FinTechDbContext))]
-    partial class FinTechDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251031021314_AddTelegramMessageIdToTelegramMessages")]
+    partial class AddTelegramMessageIdToTelegramMessages
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

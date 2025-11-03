@@ -8,7 +8,7 @@ namespace fintechtracker_backend.Services
         Task<bool> RegisterUserAsync(long telegramUserId, int userId, long chatId,
             string firstName, string lastName, string username);
 
-        Task<string> ProcessMessageAsync(long telegramUserId, string messageText);
+        Task<string> ProcessMessageAsync(long telegramUserId, string messageText, int? telegramMessageId = null);
 
         Task<bool> SendMessageAsync(long chatId, string message);
 

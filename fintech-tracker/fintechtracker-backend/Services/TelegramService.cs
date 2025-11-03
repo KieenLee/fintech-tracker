@@ -87,10 +87,25 @@ namespace fintechtracker_backend.Services
             }
         }
 
-        public async Task<string> ProcessMessageAsync(long telegramUserId, string messageText)
+        public async Task<string> ProcessMessageAsync(long telegramUserId, string messageText, int? telegramMessageId = null)
         {
             try
             {
+                // DEDUPLICATION: Check if message already processed
+                if (telegramMessageId.HasValue)
+                {
+                    var existing = await _context.TelegramMessages
+                        .Where(m => m.TelegramUserId == telegramUserId && m.TelegramMessageId == telegramMessageId)
+                        .FirstOrDefaultAsync();
+
+                    if (existing != null)
+                    {
+                        _logger.LogWarning("Duplicate message {MessageId} from user {UserId} - returning cached response",
+                            telegramMessageId, telegramUserId);
+                        return existing.Response ?? "✅ Giao dịch đã được ghi nhận trước đó.";
+                    }
+                }
+
                 // Check if user exists
                 var telegramUser = await GetTelegramUserAsync(telegramUserId);
                 if (telegramUser == null)
@@ -98,13 +113,14 @@ namespace fintechtracker_backend.Services
                     return "❌ Bạn chưa liên kết tài khoản. Vui lòng sử dụng /link <token>";
                 }
 
-                _logger.LogInformation("Processing message for user {UserId}: {Message}", telegramUser.UserId, messageText);
+                _logger.LogInformation("Processing NEW message for user {UserId}: {Message}", telegramUser.UserId, messageText);
 
-                // Log message
+                // Log message with Telegram message ID
                 var message = new TelegramMessage
                 {
                     TelegramUserId = telegramUserId,
                     MessageText = messageText,
+                    TelegramMessageId = telegramMessageId,
                     Processed = false
                 };
                 _context.TelegramMessages.Add(message);
@@ -129,13 +145,13 @@ namespace fintechtracker_backend.Services
                 _logger.LogInformation("Using account: {AccountName} (ID: {AccountId})",
                     defaultAccount.AccountName, defaultAccount.AccountId);
 
-                // Find category - FIX: Handle nullable bool properly
+                // Find category
                 int? categoryId = null;
                 if (!string.IsNullOrEmpty(transactionData.Category))
                 {
                     var transactionType = transactionData.Type.ToString().ToLower();
 
-                    // First try to find user-specific category
+                    // First try user-specific category
                     var category = await _context.Categories
                         .Where(c => c.CategoryName == transactionData.Category
                             && c.TransactionType == transactionType
@@ -149,8 +165,8 @@ namespace fintechtracker_backend.Services
                         category = await _context.Categories
                             .Where(c => c.CategoryName == transactionData.Category
                                 && c.TransactionType == transactionType
-                                && c.IsDefault == true  // Compare nullable bool with true
-                                && c.IsActive == true)  // Compare bool with true
+                                && c.IsDefault == true
+                                && c.IsActive == true)
                             .FirstOrDefaultAsync();
                     }
 
@@ -212,13 +228,15 @@ namespace fintechtracker_backend.Services
 
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Message processed successfully for user {UserId}", telegramUser.UserId);
+                _logger.LogInformation("Message {MessageId} processed successfully for user {UserId}",
+                    telegramMessageId, telegramUser.UserId);
+
                 return message.Response;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing message from {TelegramUserId}: {Message}",
-                    telegramUserId, ex.Message);
+                _logger.LogError(ex, "Error processing message {MessageId} from {TelegramUserId}: {Message}",
+                    telegramMessageId, telegramUserId, ex.Message);
                 return $"❌ Lỗi xử lý: {ex.Message}\nVui lòng thử lại.";
             }
         }
