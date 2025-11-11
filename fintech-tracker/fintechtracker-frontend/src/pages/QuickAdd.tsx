@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MessageCircle, Send, Bot, User, ArrowLeft, Zap } from "lucide-react";
+import { Send, Bot, User, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
+import { quickAddService } from "@/services/quickAddService";
 
 interface Message {
   id: number;
@@ -16,7 +16,7 @@ interface Message {
 }
 
 const QuickAdd = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
@@ -29,7 +29,6 @@ const QuickAdd = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showQuickQuestions, setShowQuickQuestions] = useState(true);
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   const quickQuestions = [
     t("quick_add.todays_spending"),
@@ -43,10 +42,14 @@ const QuickAdd = () => {
     t("quick_add.evaluate_month"),
   ];
 
-  const handleQuickQuestion = (question: string) => {
+  const handleQuickQuestion = async (question: string) => {
+    await processUserMessage(question);
+  };
+
+  const processUserMessage = async (text: string) => {
     const userMessage: Message = {
       id: Date.now(),
-      text: question,
+      text,
       sender: "user",
       timestamp: new Date(),
     };
@@ -55,182 +58,47 @@ const QuickAdd = () => {
     setIsProcessing(true);
     setShowQuickQuestions(false);
 
-    // Simulate bot response for analysis questions
-    setTimeout(() => {
-      const botResponse = t("quick_add.analyzing", {
-        question: question.toLowerCase(),
+    try {
+      const response = await quickAddService.processMessage({
+        message: text,
+        language: i18n.language,
       });
 
       const botMessage: Message = {
         id: Date.now() + 1,
-        text: botResponse,
+        text: response.response,
         sender: "bot",
         timestamp: new Date(),
       };
 
       setMessages((prev) => [...prev, botMessage]);
-      setIsProcessing(false);
-    }, 1000);
-  };
 
-  const parseTransactionFromText = (text: string) => {
-    const lowerText = text.toLowerCase();
-
-    // Extract amount
-    const amountMatch = text.match(/\$?(\d+(?:\.\d{2})?)/);
-    const amount = amountMatch ? parseFloat(amountMatch[1]) : null;
-
-    if (!amount) {
-      return null;
-    }
-
-    // Determine transaction type
-    const isIncome =
-      lowerText.includes("received") ||
-      lowerText.includes("earned") ||
-      lowerText.includes("salary") ||
-      lowerText.includes("payment") ||
-      lowerText.includes("income");
-
-    const type = isIncome ? "income" : "expense";
-
-    // Extract description/vendor
-    let description = "";
-    const atMatch = text.match(/at\s+([^$\d]+?)(?:\s|$)/i);
-    const forMatch = text.match(/for\s+([^$\d]+?)(?:\s|$)/i);
-    const onMatch = text.match(/on\s+([^$\d]+?)(?:\s|$)/i);
-
-    if (atMatch) description = atMatch[1].trim();
-    else if (forMatch) description = forMatch[1].trim();
-    else if (onMatch) description = onMatch[1].trim();
-    else description = text.replace(/\$?\d+(?:\.\d{2})?/, "").trim();
-
-    // Categorize based on keywords
-    let category = "Other";
-    if (isIncome) {
-      if (lowerText.includes("salary") || lowerText.includes("work"))
-        category = "Salary";
-      else if (lowerText.includes("freelanc")) category = "Freelancing";
-      else category = "Income";
-    } else {
-      if (
-        lowerText.includes("food") ||
-        lowerText.includes("lunch") ||
-        lowerText.includes("dinner") ||
-        lowerText.includes("restaurant") ||
-        lowerText.includes("coffee") ||
-        lowerText.includes("mcdonald")
-      ) {
-        category = "Food & Dining";
-      } else if (
-        lowerText.includes("gas") ||
-        lowerText.includes("uber") ||
-        lowerText.includes("taxi") ||
-        lowerText.includes("bus") ||
-        lowerText.includes("transport")
-      ) {
-        category = "Transportation";
-      } else if (
-        lowerText.includes("movie") ||
-        lowerText.includes("netflix") ||
-        lowerText.includes("entertainment") ||
-        lowerText.includes("game")
-      ) {
-        category = "Entertainment";
-      } else if (
-        lowerText.includes("electric") ||
-        lowerText.includes("water") ||
-        lowerText.includes("internet") ||
-        lowerText.includes("phone") ||
-        lowerText.includes("bill")
-      ) {
-        category = "Bills & Utilities";
-      } else if (
-        lowerText.includes("shop") ||
-        lowerText.includes("amazon") ||
-        lowerText.includes("clothes")
-      ) {
-        category = "Shopping";
+      // Nếu là transaction, show toast
+      if (response.type === "transaction" && response.transaction) {
+        toast({
+          title: t("transactions.add_transaction"),
+          description: t("quick_add.transaction_added_toast", {
+            type: response.transaction.transactionType,
+            amount: response.transaction.amount,
+          }),
+        });
       }
+    } catch (error) {
+      const errorMessage: Message = {
+        id: Date.now() + 1,
+        text: t("quick_add.error_occurred"),
+        sender: "bot",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsProcessing(false);
     }
-
-    return {
-      type,
-      amount: type === "expense" ? amount : amount,
-      category,
-      description:
-        description ||
-        `${type === "income" ? "Income" : "Expense"} transaction`,
-      date: new Date().toISOString().split("T")[0],
-    };
   };
 
   const handleSendMessage = async () => {
     if (!inputText.trim()) return;
-
-    const userMessage: Message = {
-      id: Date.now(),
-      text: inputText,
-      sender: "user",
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setIsProcessing(true);
-    setShowQuickQuestions(false);
-
-    // Try to parse transaction from user input
-    const transaction = parseTransactionFromText(inputText);
-
-    setTimeout(() => {
-      let botResponse = "";
-
-      if (transaction) {
-        botResponse = t("quick_add.understood_transaction", {
-          type: transaction.type,
-          amount: transaction.amount,
-          description: transaction.description,
-          category: transaction.category,
-        });
-
-        // Save to localStorage
-        const existingTransactions = JSON.parse(
-          localStorage.getItem("transactions") || "[]"
-        );
-        const newTransaction = {
-          ...transaction,
-          id: Date.now(),
-        };
-        existingTransactions.unshift(newTransaction);
-        localStorage.setItem(
-          "transactions",
-          JSON.stringify(existingTransactions)
-        );
-
-        toast({
-          title: t("transactions.add_transaction"),
-          description: t("quick_add.transaction_added_toast", {
-            type: transaction.type,
-            amount: transaction.amount,
-          }),
-        });
-
-        botResponse += " " + t("quick_add.transaction_added");
-      } else {
-        botResponse = t("quick_add.parse_failed");
-      }
-
-      const botMessage: Message = {
-        id: Date.now() + 1,
-        text: botResponse,
-        sender: "bot",
-        timestamp: new Date(),
-      };
-
-      setMessages((prev) => [...prev, botMessage]);
-      setIsProcessing(false);
-    }, 1000);
-
+    await processUserMessage(inputText);
     setInputText("");
   };
 

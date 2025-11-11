@@ -5,9 +5,8 @@ namespace fintechtracker_backend.Services
     public interface IAIService
     {
         Task<TransactionType> ClassifyTransactionAsync(string messageText);
-
         Task<TransactionDataDto> ExtractTransactionDataAsync(string messageText);
-
         Task<string> GenerateResponseAsync(object queryData);
+        Task<QuickAddResponseDto> ProcessQuickAddMessageAsync(AIPromptContext context);
     }
 }

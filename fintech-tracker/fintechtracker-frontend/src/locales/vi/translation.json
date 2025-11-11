@@ -481,7 +481,8 @@
     "understood_transaction": "Tuyệt! Tôi hiểu đó là {{type}} {{amount}}$ cho \"{{description}}\" trong danh mục {{category}}. Tôi có nên thêm giao dịch này cho bạn không?",
     "transaction_added": "✅ Giao dịch đã được thêm thành công!",
     "parse_failed": "Tôi không thể phân tích đó như một giao dịch. Vui lòng thử như: 'Tôi đã chi 25$ ăn trưa tại McDonald's' hoặc 'Tôi nhận được 500$ từ công việc'. Đảm bảo bao gồm số tiền và mục đích.",
-    "transaction_added_toast": "Đã thêm {{type}} {{amount}}$"
+    "transaction_added_toast": "Đã thêm {{type}} {{amount}}$",
+    "error_occurred": "Xin lỗi, đã xảy ra lỗi. Vui lòng thử lại."
   },
   "budgets": {
     "title": "Ngân sách",

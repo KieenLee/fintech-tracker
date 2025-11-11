@@ -488,7 +488,8 @@
     "understood_transaction": "Great! I understood that as a {{type}} of ${{amount}} for \"{{description}}\" in the {{category}} category. Should I add this transaction for you?",
     "transaction_added": "✅ Transaction has been added successfully!",
     "parse_failed": "I couldn't parse that as a transaction. Please try something like: 'I spent $25 on lunch at McDonald's' or 'I received $500 from my job'. Make sure to include the amount and what it was for.",
-    "transaction_added_toast": "Added {{type}} of ${{amount}}"
+    "transaction_added_toast": "Added {{type}} of ${{amount}}",
+    "error_occurred": "Sorry, an error occurred. Please try again."
   },
   "budgets": {
     "title": "Budgets",

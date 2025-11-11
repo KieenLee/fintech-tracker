@@ -147,6 +147,140 @@ Keep it concise and use emojis appropriately.";
             return await CallGeminiAsync(prompt);
         }
 
+        public async Task<QuickAddResponseDto> ProcessQuickAddMessageAsync(AIPromptContext context)
+        {
+            var prompt = BuildQuickAddPrompt(context);
+            var response = await CallGeminiAsync(prompt);
+
+            try
+            {
+                _logger.LogInformation("QuickAdd AI Response: {Response}", response);
+
+                // Clean response
+                var cleanedResponse = response.Trim();
+                if (cleanedResponse.StartsWith("```json"))
+                    cleanedResponse = cleanedResponse.Substring(7);
+                if (cleanedResponse.StartsWith("```"))
+                    cleanedResponse = cleanedResponse.Substring(3);
+                if (cleanedResponse.EndsWith("```"))
+                    cleanedResponse = cleanedResponse.Substring(0, cleanedResponse.Length - 3);
+                cleanedResponse = cleanedResponse.Trim();
+
+                var result = JsonSerializer.Deserialize<QuickAddResponseDto>(cleanedResponse, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+                if (result == null)
+                {
+                    _logger.LogWarning("Failed to parse QuickAdd response, returning fallback");
+                    return new QuickAddResponseDto
+                    {
+                        Type = "query",
+                        Response = context.Language == "vi"
+                            ? "Xin lỗi, tôi không hiểu câu hỏi của bạn. Vui lòng thử lại."
+                            : "Sorry, I don't understand your question. Please try again."
+                    };
+                }
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing QuickAdd message: {Message}", context.UserMessage);
+                return new QuickAddResponseDto
+                {
+                    Type = "query",
+                    Response = context.Language == "vi"
+                        ? "Đã xảy ra lỗi khi xử lý. Vui lòng thử lại."
+                        : "An error occurred. Please try again."
+                };
+            }
+        }
+
+        private string BuildQuickAddPrompt(AIPromptContext context)
+        {
+            var accountsList = context.UserAccounts != null && context.UserAccounts.Any()
+                ? string.Join(", ", context.UserAccounts.Select(a => $"{a.AccountName} (ID: {a.AccountId}, Balance: ${a.CurrentBalance})"))
+                : "No accounts";
+
+            var categoriesList = context.UserCategories != null && context.UserCategories.Any()
+                ? string.Join(", ", context.UserCategories.Select(c => $"{c.CategoryName} (ID: {c.CategoryId}, Type: {c.TransactionType})"))
+                : "No categories";
+
+            var recentTransactionsInfo = context.RecentTransactions != null && context.RecentTransactions.Any()
+                ? $"Last {context.RecentTransactions.Count} transactions available for analysis"
+                : "No recent transactions";
+
+            return $@"You are a financial assistant AI. Respond in {context.Language} language.
+
+**USER CONTEXT:**
+- User ID: {context.UserId}
+- Accounts: {accountsList}
+- Categories: {categoriesList}
+- Recent Data: {recentTransactionsInfo}
+
+**YOUR TASKS:**
+
+### 1. QUERY HANDLING (User asks about their finances)
+Examples:
+- ""How much did I spend this week?""
+- ""What's my balance?""
+- ""Which category did I spend most on?""
+- ""Tôi chi bao nhiêu tiền tuần này?""
+
+For queries:
+- Analyze user's transactions and accounts
+- Calculate relevant metrics
+- Provide insights
+- Return: {{""type"": ""query"", ""response"": ""your answer""}}
+
+### 2. TRANSACTION CREATION (User describes a transaction)
+Examples:
+- ""I spent $50 on lunch""
+- ""Received $1000 salary""
+- ""Chi 200k tiền cafe""
+
+For transactions:
+- Parse transaction details
+- Use FIRST account ID: {context.UserAccounts?.FirstOrDefault()?.AccountId ?? 1}
+- Match category from keywords
+- Return: {{""type"": ""transaction"", ""response"": ""confirmation"", ""transaction"": {{...}}}}
+
+**TRANSACTION PARSING RULES:**
+1. **amount**: Extract number (handle k=1000, tr/triệu=1000000)
+2. **transactionType**: 
+   - ""income"" if: salary, received, earned, thu, nhận, lương
+   - ""expense"" otherwise
+3. **categoryId**: Match from available categories or null
+4. **accountId**: Use {context.UserAccounts?.FirstOrDefault()?.AccountId ?? 1}
+5. **description**: Keep original text or extracted purpose
+6. **transactionDate**: Use today's date: ""{DateTime.Now:yyyy-MM-dd}""
+
+**OUTPUT FORMAT (MUST BE VALID JSON ONLY):**
+{{
+  ""type"": ""query"" or ""transaction"",
+  ""response"": ""Your message in {context.Language}"",
+  ""transaction"": {{
+    ""accountId"": number,
+    ""categoryId"": number or null,
+    ""amount"": number,
+    ""transactionType"": ""income"" or ""expense"",
+    ""description"": ""string"",
+    ""transactionDate"": ""YYYY-MM-DD""
+  }}
+}}
+
+**CRITICAL RULES:**
+1. Return ONLY valid JSON
+2. NO markdown code blocks
+3. NO explanations outside JSON
+4. Keep responses concise
+5. If uncertain: type=""query"" with polite response
+
+**USER MESSAGE:** {context.UserMessage}";
+        }
+
         private async Task<string> CallGeminiAsync(string prompt)
         {
             try

@@ -90,6 +90,9 @@ builder.Services.AddSingleton<ITelegramBotClient>(provider =>
     return new TelegramBotClient(token);
 });
 
+// QuickAdd Service (sử dụng AIService có sẵn)
+builder.Services.AddScoped<IQuickAddService, QuickAddService>();
+
 // Register services
 builder.Services.AddScoped<IAIService, AIService>();
 builder.Services.AddScoped<ITelegramService, TelegramService>();
