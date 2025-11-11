@@ -55,7 +55,7 @@ namespace fintechtracker_backend.Services
                     AllowedUpdates = new[] { UpdateType.Message },
                     ThrowPendingUpdates = true,
                     Limit = 100
-                }; 
+                };
 
                 // Step 5: Start polling
                 await _botClient.ReceiveAsync(
@@ -162,16 +162,46 @@ namespace fintechtracker_backend.Services
 
             var response = cmd switch
             {
-                "/start" => "🎉 Chào mừng đến với FinTech Tracker!\n\n" +
-                           "📝 Gửi tin nhắn để ghi chép thu chi:\n" +
-                           "Ví dụ: 'Mua cà phê 25000'\n\n" +
-                           "💡 Dùng /help để xem hướng dẫn.",
+                "/start" =>
+                    "🎉 **Chào mừng đến với FinTech Tracker Bot!**\n\n" +
+                    "💬 **Tính năng mới:**\n" +
+                    "✅ Ghi chép thu chi tự động\n" +
+                    "✅ Xem thống kê tài chính\n" +
+                    "✅ Hỏi đáp về chi tiêu\n\n" +
+                    "📝 **Ví dụ:**\n" +
+                    "• \"Mua cafe 25k\"\n" +
+                    "• \"Hôm nay tôi chi bao nhiêu?\"\n" +
+                    "• \"Tuần này tôi chi bao nhiêu?\"\n" +
+                    "• \"Số dư tài khoản của tôi?\"\n\n" +
+                    "💡 Dùng /help để xem thêm hướng dẫn.",
 
-                "/help" => "📖 **Hướng dẫn sử dụng Bot**\n\n" +
-                          "🔹 /start - Bắt đầu sử dụng bot\n" +
-                          "🔹 /help - Xem hướng dẫn\n\n" +
-                          "💬 Gửi tin nhắn để ghi chép thu chi:\n" +
-                          "Ví dụ: 'Mua cà phê 25000', 'Đổ xăng 150k'",
+                "/help" =>
+                    "📖 **Hướng dẫn sử dụng Bot**\n\n" +
+                    "**1️⃣ GHI CHÉP THU CHI:**\n" +
+                    "• \"Mua cà phê 25000\"\n" +
+                    "• \"Đổ xăng 150k\"\n" +
+                    "• \"Ăn sáng 50k\"\n" +
+                    "• \"Nhận lương 10tr\"\n\n" +
+                    "**2️⃣ XEM THỐNG KÊ:**\n" +
+                    "• \"Hôm nay tôi chi bao nhiêu?\"\n" +
+                    "• \"Tuần này tôi chi bao nhiêu?\"\n" +
+                    "• \"Tháng này tôi chi bao nhiêu?\"\n" +
+                    "• \"Thu nhập tháng này?\"\n" +
+                    "• \"Số dư tài khoản?\"\n" +
+                    "• \"Tôi chi nhiều nhất vào danh mục nào?\"\n\n" +
+                    "**3️⃣ LỆNH:**\n" +
+                    "• /start - Bắt đầu sử dụng\n" +
+                    "• /help - Xem hướng dẫn\n" +
+                    "• /stats - Thống kê tổng quan\n\n" +
+                    "💬 Hỏi bất cứ điều gì về tài chính của bạn!",
+
+                "/stats" =>
+                    "📊 **Thống kê nhanh**\n\n" +
+                    "Gửi tin nhắn:\n" +
+                    "• \"Thống kê tuần này\"\n" +
+                    "• \"Thống kê tháng này\"\n" +
+                    "• \"Chi tiêu theo danh mục\"\n" +
+                    "• \"Số dư các tài khoản\"",
 
                 _ => "❓ Lệnh không hợp lệ. Sử dụng /help để xem hướng dẫn."
             };

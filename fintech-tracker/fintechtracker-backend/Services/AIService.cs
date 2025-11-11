@@ -201,33 +201,73 @@ Keep it concise and use emojis appropriately.";
         private string BuildQuickAddPrompt(AIPromptContext context)
         {
             var accountsList = context.UserAccounts != null && context.UserAccounts.Any()
-                ? string.Join("\n   ", context.UserAccounts.Select(a => $"- {a.AccountName} (ID: {a.AccountId}, Balance: {a.CurrentBalance:N0}, Type: {a.AccountType})"))
+                ? string.Join("\n   ", context.UserAccounts.Select(a =>
+                    $"- {a.AccountName} (ID: {a.AccountId}, Balance: {a.CurrentBalance:N0}đ, Type: {a.AccountType})"))
                 : "No accounts";
 
             var categoriesList = context.UserCategories != null && context.UserCategories.Any()
-                ? string.Join("\n   ", context.UserCategories.Select(c => $"- {c.CategoryName} (ID: {c.CategoryId}, Type: {c.TransactionType})"))
+                ? string.Join("\n   ", context.UserCategories.Select(c =>
+                    $"- {c.CategoryName} (ID: {c.CategoryId}, Type: {c.TransactionType})"))
                 : "No categories";
 
-            var recentTransactionsSummary = "";
-            if (context.RecentTransactions != null && context.RecentTransactions.Any())
-            {
-                var totalIncome = context.RecentTransactions
-                    .Where(t => t.TransactionType == "income")
-                    .Sum(t => t.Amount);
-                var totalExpense = context.RecentTransactions
-                    .Where(t => t.TransactionType == "expense")
-                    .Sum(t => t.Amount);
-                var transactionCount = context.RecentTransactions.Count;
+            // ===== SỬA PHẦN NÀY: Detailed statistics =====
+            var statisticsSummary = "";
 
-                recentTransactionsSummary = $@"
-   - Total transactions: {transactionCount}
-   - Total income: {totalIncome:N0}
-   - Total expense: {totalExpense:N0}
-   - Net balance: {(totalIncome - totalExpense):N0}";
-            }
-            else
+            if (context.TodayStatistics != null)
             {
-                recentTransactionsSummary = "No recent transactions";
+                statisticsSummary += $@"
+**TODAY ({context.TodayStatistics.StartDate:dd/MM/yyyy}):**
+   - Transactions: {context.TodayStatistics.TotalTransactions}
+   - Income: {context.TodayStatistics.TotalIncome:N0}đ ({context.TodayStatistics.IncomeCount} transactions)
+   - Expense: {context.TodayStatistics.TotalExpense:N0}đ ({context.TodayStatistics.ExpenseCount} transactions)
+   - Net: {context.TodayStatistics.NetBalance:N0}đ";
+
+                if (context.TodayStatistics.CategoryBreakdown.Any())
+                {
+                    statisticsSummary += "\n   Top expenses today:\n";
+                    foreach (var cat in context.TodayStatistics.CategoryBreakdown.Take(3))
+                    {
+                        statisticsSummary += $"      • {cat.CategoryName}: {cat.TotalAmount:N0}đ ({cat.Percentage:F1}%)\n";
+                    }
+                }
+            }
+
+            if (context.WeekStatistics != null)
+            {
+                statisticsSummary += $@"
+**THIS WEEK ({context.WeekStatistics.StartDate:dd/MM} - {context.WeekStatistics.EndDate:dd/MM}):**
+   - Transactions: {context.WeekStatistics.TotalTransactions}
+   - Income: {context.WeekStatistics.TotalIncome:N0}đ
+   - Expense: {context.WeekStatistics.TotalExpense:N0}đ
+   - Net: {context.WeekStatistics.NetBalance:N0}đ";
+
+                if (context.WeekStatistics.CategoryBreakdown.Any())
+                {
+                    statisticsSummary += "\n   Top expenses this week:\n";
+                    foreach (var cat in context.WeekStatistics.CategoryBreakdown.Take(5))
+                    {
+                        statisticsSummary += $"      • {cat.CategoryName}: {cat.TotalAmount:N0}đ ({cat.TransactionCount} trans, {cat.Percentage:F1}%)\n";
+                    }
+                }
+            }
+
+            if (context.MonthStatistics != null)
+            {
+                statisticsSummary += $@"
+**THIS MONTH ({context.MonthStatistics.StartDate:dd/MM} - {context.MonthStatistics.EndDate:dd/MM}):**
+   - Transactions: {context.MonthStatistics.TotalTransactions}
+   - Income: {context.MonthStatistics.TotalIncome:N0}đ
+   - Expense: {context.MonthStatistics.TotalExpense:N0}đ
+   - Net: {context.MonthStatistics.NetBalance:N0}đ";
+
+                if (context.MonthStatistics.CategoryBreakdown.Any())
+                {
+                    statisticsSummary += "\n   Top expenses this month:\n";
+                    foreach (var cat in context.MonthStatistics.CategoryBreakdown.Take(5))
+                    {
+                        statisticsSummary += $"      • {cat.CategoryName}: {cat.TotalAmount:N0}đ ({cat.TransactionCount} trans, {cat.Percentage:F1}%)\n";
+                    }
+                }
             }
 
             var defaultAccountId = context.UserAccounts?.FirstOrDefault(a => a.AccountId == 1)?.AccountId
@@ -235,8 +275,6 @@ Keep it concise and use emojis appropriately.";
                                   ?? 1;
 
             var today = DateTime.Now.ToString("yyyy-MM-dd");
-            var thisWeekStart = DateTime.Now.AddDays(-(int)DateTime.Now.DayOfWeek).ToString("yyyy-MM-dd");
-            var thisMonthStart = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1).ToString("yyyy-MM-dd");
 
             return $@"You are a personal finance assistant AI for User ID {context.UserId}. 
 Respond in {context.Language} language.
@@ -250,104 +288,79 @@ Today's date: {today}
 **Categories:**
    {categoriesList}
 
-**Recent Transactions Summary (Last {context.RecentTransactions?.Count ?? 0} transactions):**
-   {recentTransactionsSummary}
+**STATISTICS:**
+{statisticsSummary}
 
 ---
 
 **YOUR CAPABILITIES:**
 
 ### 1️⃣ FINANCIAL STATISTICS & QUERIES
-You can answer questions about:
-- **Time-based spending/income**: ""How much did I spend this week/month/year?""
-- **Account balances**: ""What's my current balance?"", ""Balance in each account?""
-- **Category analysis**: ""Which category did I spend most on?"", ""Food expenses this month?""
-- **Transaction counts**: ""How many transactions this week?""
-- **Comparisons**: ""Did I spend more this month or last month?""
-- **Trends**: ""Am I spending too much?"", ""Evaluate my finances""
+You have REAL DATA above. Use it to answer questions accurately:
+
+**Examples of what you can answer:**
+- ""Hôm nay tôi chi bao nhiêu?"" → Use TODAY section
+- ""Tuần này tôi chi vào danh mục nào nhiều nhất?"" → Use THIS WEEK category breakdown
+- ""So sánh chi tiêu tuần này với tuần trước"" → Compare THIS WEEK with previous data
+- ""Số dư tài khoản?"" → Use Accounts section
 
 **Time Period Keywords:**
-- ""today"" / ""hôm nay"" → {today}
-- ""this week"" / ""tuần này"" → from {thisWeekStart} to {today}
-- ""this month"" / ""tháng này"" → from {thisMonthStart} to {today}
-- ""last week"" / ""tuần trước"" → calculate from context
-- ""last month"" / ""tháng trước"" → calculate from context
+- ""hôm nay"" / ""today"" → Use TODAY statistics
+- ""tuần này"" / ""this week"" → Use THIS WEEK statistics
+- ""tháng này"" / ""this month"" → Use THIS MONTH statistics
 
-**CRITICAL SECURITY RULE:**
-- You can ONLY access and show data for User ID {context.UserId}
-- NEVER show data from other users
-- If asked about other users, respond: ""I can only show your personal financial data""
+**CRITICAL RULES:**
+1. Use ONLY the data provided above
+2. NEVER make up numbers
+3. If data is not available, say ""I don't have that data yet""
+4. Format numbers with thousand separators (123,456đ)
+5. Include percentages when showing category breakdowns
 
 **Response Format for Queries:**
 {{
   ""type"": ""query"",
-  ""response"": ""Your detailed analysis in {context.Language} with numbers, comparisons, and insights""
+  ""response"": ""Your detailed analysis based on REAL DATA above""
 }}
 
 **Example Query Responses:**
-- ""Tuần này bạn đã chi 450,000đ, bao gồm: Ăn uống 200k, Di chuyển 150k, Giải trí 100k. Cao hơn 20% so với tuần trước.""
-- ""You spent $1,234 this month. Top categories: Food ($450), Transport ($300). You're 15% over budget.""
+- ""Hôm nay bạn đã chi 125,000đ với 5 giao dịch. Chi tiêu nhiều nhất vào Ăn uống (75,000đ).""
+- ""Tuần này bạn chi 450,000đ, bao gồm: Ăn uống 200k (44%), Di chuyển 150k (33%), Giải trí 100k (23%).""
 
 ---
 
 ### 2️⃣ TRANSACTION CREATION
 When user describes a transaction:
 
-**Examples:**
-- ""I spent $50 on lunch""
-- ""Received $1000 salary""
-- ""Chi 200k tiền cafe""
-- ""Nạp 500k vào ví Momo""
-
 **Parsing Rules:**
 1. **amount**: Extract number
    - ""50k"" → 50000
-   - ""1.5tr"" / ""1.5 triệu"" → 1500000
-   - ""$50"" → 50
+   - ""1.5tr"" → 1500000
 
 2. **transactionType**:
-   - ""income"" if: received, earned, salary, thu, nhận, lương, được
+   - ""income"" if: thu, nhận, lương, được
    - ""expense"" otherwise
 
-3. **categoryId**: Match from available categories:
-{string.Join("\n   ", context.UserCategories?.Select(c => $"- {c.CategoryName} ({c.TransactionType}): keywords like {GetCategoryKeywords(c.CategoryName)}") ?? new List<string>())}
-   - If no match: use null
+3. **categoryId**: Match from Categories section above
 
-4. **accountId**: 
-   - Default: {defaultAccountId} (Primary cash account)
-   - If user mentions account name, match from: {string.Join(", ", context.UserAccounts?.Select(a => a.AccountName) ?? new List<string>())}
+4. **accountId**: Default = {defaultAccountId}
 
-5. **description**: Keep original user text
+5. **description**: Keep original text
 
-6. **transactionDate**: ""{today}"" (unless user specifies date)
+6. **transactionDate**: ""{today}""
 
-**Response Format for Transactions:**
+**Response Format:**
 {{
   ""type"": ""transaction"",
-  ""response"": ""Confirmation message in {context.Language}"",
+  ""response"": ""Confirmation in {context.Language}"",
   ""transaction"": {{
     ""accountId"": {defaultAccountId},
     ""categoryId"": number or null,
     ""amount"": number,
     ""transactionType"": ""income"" or ""expense"",
-    ""description"": ""original text"",
+    ""description"": ""text"",
     ""transactionDate"": ""{today}""
   }}
 }}
-
-**Example Transaction Responses:**
-- ""Đã ghi nhận: Chi 50,000đ cho Ăn uống vào tài khoản Tiền mặt""
-- ""Transaction recorded: $50 expense for Food & Dining in Cash account""
-
----
-
-**OUTPUT REQUIREMENTS:**
-1. Return ONLY valid JSON (no markdown blocks)
-2. Choose type: ""query"" or ""transaction""
-3. Provide helpful, accurate responses
-4. Use user's preferred language ({context.Language})
-5. Include numbers with thousand separators for readability
-6. Keep responses concise but informative
 
 ---
 

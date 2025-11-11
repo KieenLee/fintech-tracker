@@ -10,9 +10,10 @@ namespace fintechtracker_backend.Repositories
         Task<TransactionDto> CreateTransactionAsync(int userId, CreateTransactionDto dto);
         Task<TransactionDto?> UpdateTransactionAsync(long transactionId, int userId, UpdateTransactionDto dto);
         Task<bool> DeleteTransactionAsync(long transactionId, int userId);
-
-        // Add validation helper methods
         Task<Account?> GetAccountByIdAsync(int accountId, int userId);
         Task<Category?> GetCategoryByIdAsync(int categoryId);
+        Task<TransactionStatisticsDto> GetStatisticsByPeriodAsync(int userId, DateTime startDate, DateTime endDate);
+        Task<List<CategoriesSpendingDto>> GetSpendingByCategoryAsync(int userId, DateTime startDate, DateTime endDate);
+        Task<List<DailyTransactionSummaryDto>> GetDailyTransactionsAsync(int userId, DateTime startDate, DateTime endDate);
     }
 }

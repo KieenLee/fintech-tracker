@@ -35,5 +35,8 @@ namespace fintechtracker_backend.DTOs
         public List<TransactionDto>? RecentTransactions { get; set; }
         public List<AccountDto>? UserAccounts { get; set; }
         public List<CategoryDto>? UserCategories { get; set; }
+        public TransactionStatisticsDto? TodayStatistics { get; set; }
+        public TransactionStatisticsDto? WeekStatistics { get; set; }
+        public TransactionStatisticsDto? MonthStatistics { get; set; }
     }
 }

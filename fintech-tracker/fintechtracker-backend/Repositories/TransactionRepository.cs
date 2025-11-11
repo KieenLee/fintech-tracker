@@ -187,5 +187,125 @@ namespace fintechtracker_backend.Repositories
                 .Where(c => c.CategoryId == categoryId && c.IsActive == true)
                 .FirstOrDefaultAsync();
         }
+
+        public async Task<TransactionStatisticsDto> GetStatisticsByPeriodAsync(int userId, DateTime startDate, DateTime endDate)
+        {
+            // Normalize dates: Start of day for startDate, end of current moment for endDate
+            var start = startDate.Date; // 00:00:00
+            var end = endDate <= DateTime.Now ? endDate : DateTime.Now; // Don't include future
+
+            var transactions = await _context.Transactions
+                .Include(t => t.Category)
+                .Where(t => t.UserId == userId
+                    && t.TransactionDate >= start
+                    && t.TransactionDate <= end)
+                .ToListAsync();
+
+            var totalIncome = transactions
+                .Where(t => t.TransactionType == "income")
+                .Sum(t => t.Amount);
+
+            var totalExpense = transactions
+                .Where(t => t.TransactionType == "expense")
+                .Sum(t => t.Amount);
+
+            // Category breakdown
+            var categoryBreakdown = transactions
+                .Where(t => t.TransactionType == "expense") // Focus on expenses
+                .GroupBy(t => new { t.CategoryId, CategoryName = t.Category != null ? t.Category.CategoryName : null, t.TransactionType })
+                .Select(g => new CategoriesSpendingDto
+                {
+                    CategoryId = g.Key.CategoryId ?? 0,
+                    CategoryName = g.Key.CategoryName ?? "Uncategorized",
+                    TransactionType = g.Key.TransactionType,
+                    TotalAmount = g.Sum(t => t.Amount),
+                    TransactionCount = g.Count(),
+                    Percentage = totalExpense > 0 ? (g.Sum(t => t.Amount) / totalExpense * 100) : 0
+                })
+                .OrderByDescending(c => c.TotalAmount)
+                .ToList();
+
+            // Daily breakdown
+            var dailyBreakdown = transactions
+                .GroupBy(t => t.TransactionDate.Date)
+                .Select(g => new DailyTransactionSummaryDto
+                {
+                    Date = g.Key,
+                    TransactionCount = g.Count(),
+                    TotalIncome = g.Where(t => t.TransactionType == "income").Sum(t => t.Amount),
+                    TotalExpense = g.Where(t => t.TransactionType == "expense").Sum(t => t.Amount),
+                    NetBalance = g.Where(t => t.TransactionType == "income").Sum(t => t.Amount) -
+                                g.Where(t => t.TransactionType == "expense").Sum(t => t.Amount)
+                })
+                .OrderBy(d => d.Date)
+                .ToList();
+
+            return new TransactionStatisticsDto
+            {
+                UserId = userId,
+                StartDate = start,
+                EndDate = end,
+                TotalTransactions = transactions.Count,
+                TotalIncome = totalIncome,
+                TotalExpense = totalExpense,
+                NetBalance = totalIncome - totalExpense,
+                IncomeCount = transactions.Count(t => t.TransactionType == "income"),
+                ExpenseCount = transactions.Count(t => t.TransactionType == "expense"),
+                CategoryBreakdown = categoryBreakdown,
+                DailyBreakdown = dailyBreakdown
+            };
+        }
+
+        public async Task<List<CategoriesSpendingDto>> GetSpendingByCategoryAsync(int userId, DateTime startDate, DateTime endDate)
+        {
+            var start = startDate.Date;
+            var end = endDate <= DateTime.Now ? endDate : DateTime.Now;
+
+            var result = await _context.Transactions
+                .Include(t => t.Category)
+                .Where(t => t.UserId == userId
+                    && t.TransactionDate >= start
+                    && t.TransactionDate <= end
+                    && t.TransactionType == "expense")
+                .GroupBy(t => new { t.CategoryId, CategoryName = t.Category != null ? t.Category.CategoryName : null, t.TransactionType })
+                .Select(g => new CategoriesSpendingDto
+                {
+                    CategoryId = g.Key.CategoryId ?? 0,
+                    CategoryName = g.Key.CategoryName ?? "Uncategorized",
+                    TransactionType = g.Key.TransactionType,
+                    TotalAmount = g.Sum(t => t.Amount),
+                    TransactionCount = g.Count()
+                })
+                .OrderByDescending(c => c.TotalAmount)
+                .ToListAsync();
+
+            var totalExpense = result.Sum(c => c.TotalAmount);
+            result.ForEach(c => c.Percentage = totalExpense > 0 ? (c.TotalAmount / totalExpense * 100) : 0);
+
+            return result;
+        }
+
+        public async Task<List<DailyTransactionSummaryDto>> GetDailyTransactionsAsync(int userId, DateTime startDate, DateTime endDate)
+        {
+            var start = startDate.Date;
+            var end = endDate <= DateTime.Now ? endDate : DateTime.Now;
+
+            return await _context.Transactions
+                .Where(t => t.UserId == userId
+                    && t.TransactionDate >= start
+                    && t.TransactionDate <= end)
+                .GroupBy(t => t.TransactionDate.Date)
+                .Select(g => new DailyTransactionSummaryDto
+                {
+                    Date = g.Key,
+                    TransactionCount = g.Count(),
+                    TotalIncome = g.Where(t => t.TransactionType == "income").Sum(t => t.Amount),
+                    TotalExpense = g.Where(t => t.TransactionType == "expense").Sum(t => t.Amount),
+                    NetBalance = g.Where(t => t.TransactionType == "income").Sum(t => t.Amount) -
+                                g.Where(t => t.TransactionType == "expense").Sum(t => t.Amount)
+                })
+                .OrderBy(d => d.Date)
+                .ToListAsync();
+        }
     }
 }
