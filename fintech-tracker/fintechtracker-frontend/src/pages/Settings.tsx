@@ -34,6 +34,10 @@ import {
   Lock,
   Eye,
   EyeOff,
+  Link as LinkIcon,
+  Unlink,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -42,8 +46,21 @@ import {
   type ChangePasswordRequest,
   type NotificationSettings,
   type PrivacySettings,
+  type TelegramLinkResponse,
 } from "@/services/settingsService";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { TelegramLoginButton } from "@/components/TelegramLoginButton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const Settings = () => {
   const { theme, setTheme } = useTheme();
@@ -55,6 +72,15 @@ const Settings = () => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // ===== THÊM STATE CHO TELEGRAM =====
+  const [telegramLink, setTelegramLink] = useState<TelegramLinkResponse>({
+    isLinked: false,
+  });
+  const [unlinkingTelegram, setUnlinkingTelegram] = useState(false);
+
+  // ===== CẤU HÌNH BOT USERNAME =====
+  const TELEGRAM_BOT_USERNAME = "@Fintech_Tracker_Bot";
 
   const [profile, setProfile] = useState({
     firstName: "",
@@ -282,7 +308,10 @@ const Settings = () => {
       setLoading(true);
       setSettingsError(null);
 
-      const settings = await settingsService.getUserSettings();
+      const [settings, telegram] = await Promise.all([
+        settingsService.getUserSettings(),
+        settingsService.getTelegramLink(),
+      ]);
 
       setProfile({
         firstName: settings.firstName,
@@ -306,6 +335,8 @@ const Settings = () => {
       const fullName = `${settings.firstName} ${settings.lastName}`.trim();
       localStorage.setItem("userName", fullName);
       localStorage.setItem("userEmail", settings.email);
+
+      setTelegramLink(telegram);
     } catch (error: any) {
       console.error("Failed to fetch settings:", error);
       setSettingsError(t("settings.failed_to_load_settings"));
@@ -324,6 +355,29 @@ const Settings = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUnlinkTelegram = async () => {
+    try {
+      setUnlinkingTelegram(true);
+      await settingsService.unlinkTelegram();
+
+      setTelegramLink({ isLinked: false });
+
+      toast({
+        title: "✅ Hủy liên kết thành công",
+        description: "Tài khoản Telegram đã được hủy liên kết.",
+      });
+    } catch (error: any) {
+      console.error("Failed to unlink Telegram:", error);
+      toast({
+        title: "❌ Lỗi",
+        description: "Không thể hủy liên kết tài khoản Telegram.",
+        variant: "destructive",
+      });
+    } finally {
+      setUnlinkingTelegram(false);
     }
   };
 
@@ -504,6 +558,118 @@ const Settings = () => {
             </Button>
           </CardContent>
         </Card>
+
+        {/* ===== THÊM TELEGRAM INTEGRATION CARD ===== */}
+        <Card className="transition-all hover:shadow-md">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <LinkIcon className="h-5 w-5" />
+              Liên kết Telegram
+            </CardTitle>
+            <CardDescription>
+              Kết nối tài khoản Telegram để sử dụng bot trực tiếp
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {telegramLink.isLinked ? (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                  <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                  <div className="flex-1">
+                    <p className="font-medium text-green-900 dark:text-green-100">
+                      Đã liên kết
+                    </p>
+                    <p className="text-sm text-green-700 dark:text-green-300">
+                      {telegramLink.telegramFirstName}{" "}
+                      {telegramLink.telegramLastName}
+                      {telegramLink.telegramUsername &&
+                        ` (@${telegramLink.telegramUsername})`}
+                    </p>
+                    <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                      User ID: {telegramLink.telegramUserId}
+                    </p>
+                  </div>
+                  {telegramLink.telegramPhotoUrl && (
+                    <img
+                      src={telegramLink.telegramPhotoUrl}
+                      alt="Telegram Avatar"
+                      className="h-12 w-12 rounded-full"
+                    />
+                  )}
+                </div>
+
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      disabled={unlinkingTelegram}
+                    >
+                      {unlinkingTelegram ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Unlink className="h-4 w-4 mr-2" />
+                      )}
+                      Hủy liên kết
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Xác nhận hủy liên kết</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Bạn có chắc chắn muốn hủy liên kết tài khoản Telegram?
+                        Bạn sẽ không thể sử dụng bot cho đến khi liên kết lại.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Hủy</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleUnlinkTelegram}>
+                        Xác nhận
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+                  <XCircle className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                  <div>
+                    <p className="font-medium text-orange-900 dark:text-orange-100">
+                      Chưa liên kết
+                    </p>
+                    <p className="text-sm text-orange-700 dark:text-orange-300">
+                      Liên kết Telegram để sử dụng FinTech Tracker Bot
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    Nhấn nút bên dưới để liên kết tài khoản Telegram của bạn:
+                  </p>
+                  <TelegramLoginButton
+                    botUsername={TELEGRAM_BOT_USERNAME}
+                    onSuccess={fetchSettings}
+                  />
+                </div>
+
+                <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <p className="text-xs text-blue-900 dark:text-blue-100 font-medium mb-1">
+                    💡 Lợi ích khi liên kết:
+                  </p>
+                  <ul className="text-xs text-blue-800 dark:text-blue-200 space-y-1 ml-4 list-disc">
+                    <li>Ghi chép thu chi ngay trên Telegram</li>
+                    <li>Xem thống kê tài chính mọi lúc mọi nơi</li>
+                    <li>Nhận thông báo ngân sách, mục tiêu</li>
+                    <li>Không cần nhập token phức tạp</li>
+                  </ul>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        {/* ===== KẾT THÚC TELEGRAM CARD ===== */}
 
         {/* Change Password */}
         <Card className="transition-all hover:shadow-md">

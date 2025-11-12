@@ -50,7 +50,8 @@ builder.Services.AddCors(options =>
     //         "http://localhost:8080",
     //         "http://10.207.1.232:8080",
     //         "http://localhost:8081",
-    //         "http://localhost:5173"
+    //         "http://localhost:5173",
+    //         "https://fintech-tracker.vercel.app/"
     //     )
     //     .AllowAnyHeader()
     //     .AllowAnyMethod();
@@ -97,6 +98,7 @@ builder.Services.AddScoped<IQuickAddService, QuickAddService>();
 builder.Services.AddScoped<IAIService, AIService>();
 builder.Services.AddScoped<ITelegramService, TelegramService>();
 builder.Services.AddHostedService<TelegramBotService>();
+builder.Services.AddScoped<ITelegramAuthService, TelegramAuthService>();
 
 var app = builder.Build();
 

@@ -173,7 +173,19 @@
     "currency_cny": "CNY - Nhân dân tệ",
     "currency_vnd": "VND - Việt Nam đồng",
     "account_deletion": "Xóa tài khoản",
-    "failed_to_load_settings": "Không thể tải cài đặt. Sử dụng giá trị mặc định."
+    "failed_to_load_settings": "Không thể tải cài đặt. Sử dụng giá trị mặc định.",
+    "telegram_integration": "Liên kết Telegram",
+    "telegram_desc": "Kết nối tài khoản Telegram để sử dụng bot",
+    "telegram_linked": "Đã liên kết",
+    "telegram_not_linked": "Chưa liên kết",
+    "link_telegram": "Liên kết Telegram",
+    "unlink_telegram": "Hủy liên kết",
+    "telegram_user_id": "Telegram User ID",
+    "telegram_benefits": "Lợi ích khi liên kết Telegram:",
+    "telegram_benefit_1": "Ghi chép thu chi trên Telegram",
+    "telegram_benefit_2": "Xem thống kê mọi lúc mọi nơi",
+    "telegram_benefit_3": "Nhận thông báo ngân sách, mục tiêu",
+    "telegram_benefit_4": "Không cần nhập token phức tạp"
   },
   "analytics": {
     "title": "Phân tích",

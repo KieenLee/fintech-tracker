@@ -43,6 +43,26 @@ export interface UserSettingsResponse {
   privacy: PrivacySettings;
 }
 
+export interface TelegramLoginData {
+  id: number;
+  first_name?: string;
+  last_name?: string;
+  username?: string;
+  photo_url?: string;
+  auth_date: number;
+  hash: string;
+}
+
+export interface TelegramLinkResponse {
+  isLinked: boolean;
+  telegramUserId?: string;
+  telegramUsername?: string;
+  telegramFirstName?: string;
+  telegramLastName?: string;
+  telegramPhotoUrl?: string;
+  linkedAt?: string;
+}
+
 // Axios instance với authentication
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -80,5 +100,18 @@ export const settingsService = {
 
   updatePrivacy: async (privacyData: PrivacySettings): Promise<void> => {
     await api.put("/Setting/privacy", privacyData);
+  },
+
+  getTelegramLink: async (): Promise<TelegramLinkResponse> => {
+    const response = await api.get("/Setting/telegram");
+    return response.data;
+  },
+
+  linkTelegram: async (telegramData: TelegramLoginData): Promise<void> => {
+    await api.post("/Setting/telegram/link", telegramData);
+  },
+
+  unlinkTelegram: async (): Promise<void> => {
+    await api.delete("/Setting/telegram/unlink");
   },
 };

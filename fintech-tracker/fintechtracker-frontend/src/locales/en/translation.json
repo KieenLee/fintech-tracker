@@ -180,7 +180,19 @@
     "currency_cny": "CNY - Chinese Yuan",
     "currency_vnd": "VND - Vietnamese Dong",
     "account_deletion": "Account deletion",
-    "failed_to_load_settings": "Failed to load settings. Using default values."
+    "failed_to_load_settings": "Failed to load settings. Using default values.",
+    "telegram_integration": "Telegram Integration",
+    "telegram_desc": "Connect your Telegram account to use bot features",
+    "telegram_linked": "Linked",
+    "telegram_not_linked": "Not Linked",
+    "link_telegram": "Link Telegram",
+    "unlink_telegram": "Unlink Telegram",
+    "telegram_user_id": "Telegram User ID",
+    "telegram_benefits": "Benefits of linking Telegram:",
+    "telegram_benefit_1": "Record transactions on Telegram",
+    "telegram_benefit_2": "View statistics anytime",
+    "telegram_benefit_3": "Receive budget & goal notifications",
+    "telegram_benefit_4": "No complex token needed"
   },
   "analytics": {
     "title": "Analytics",

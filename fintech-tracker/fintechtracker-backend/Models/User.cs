@@ -11,6 +11,11 @@ public partial class User
     public string PasswordHash { get; set; } = null!;
     public string Role { get; set; } = null!;
     public string? TelegramUserId { get; set; }
+    public string? TelegramUsername { get; set; }
+    public string? TelegramFirstName { get; set; }
+    public string? TelegramLastName { get; set; }
+    public string? TelegramPhotoUrl { get; set; }
+    public DateTime? TelegramLinkedAt { get; set; }
     public bool? IsActive { get; set; }
     public DateTime? CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }

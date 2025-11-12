@@ -4,9 +4,11 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using fintechtracker_backend.Data;
 using fintechtracker_backend.DTOs;
+using fintechtracker_backend.Services;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using BCrypt.Net;
+using Telegram.Bot;
 
 namespace fintechtracker_backend.Controllers
 {
@@ -16,10 +18,20 @@ namespace fintechtracker_backend.Controllers
     public class SettingController : ControllerBase
     {
         private readonly FinTechDbContext _context;
+        private readonly ITelegramAuthService _telegramAuthService;
+        private readonly ITelegramBotClient _botClient;
+        private readonly ILogger<SettingController> _logger;
 
-        public SettingController(FinTechDbContext context)
+        public SettingController(
+            FinTechDbContext context,
+            ITelegramAuthService telegramAuthService,
+            ITelegramBotClient botClient,
+            ILogger<SettingController> logger)
         {
             _context = context;
+            _telegramAuthService = telegramAuthService;
+            _botClient = botClient;
+            _logger = logger;
         }
 
         private int GetCurrentUserId()
@@ -251,6 +263,173 @@ namespace fintechtracker_backend.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Privacy settings updated successfully." });
+        }
+
+        // ===== TELEGRAM INTEGRATION ENDPOINTS =====
+
+        // GET: api/Setting/telegram
+        [HttpGet("telegram")]
+        public async Task<ActionResult<TelegramLinkResponseDto>> GetTelegramLink()
+        {
+            var userId = GetCurrentUserId();
+            var user = await _context.Users.FindAsync(userId);
+
+            if (user == null)
+                return NotFound("User not found.");
+
+            var response = new TelegramLinkResponseDto
+            {
+                IsLinked = !string.IsNullOrEmpty(user.TelegramUserId),
+                TelegramUserId = user.TelegramUserId,
+                TelegramUsername = user.TelegramUsername,
+                TelegramFirstName = user.TelegramFirstName,
+                TelegramLastName = user.TelegramLastName,
+                TelegramPhotoUrl = user.TelegramPhotoUrl,
+                LinkedAt = user.TelegramLinkedAt
+            };
+
+            return Ok(response);
+        }
+
+        // POST: api/Setting/telegram/link
+        [HttpPost("telegram/link")]
+        public async Task<IActionResult> LinkTelegram([FromBody] TelegramLoginDto telegramData)
+        {
+            try
+            {
+                // 1. Verify hash từ Telegram
+                if (!_telegramAuthService.VerifyTelegramAuth(telegramData))
+                {
+                    return BadRequest("Invalid Telegram authentication data.");
+                }
+
+                var userId = GetCurrentUserId();
+                var user = await _context.Users.FindAsync(userId);
+
+                if (user == null)
+                    return NotFound("User not found.");
+
+                // 2. Check xem Telegram ID này đã được link chưa
+                var existingLink = await _context.Users
+                    .AnyAsync(u => u.TelegramUserId == telegramData.Id.ToString() && u.UserId != userId);
+
+                if (existingLink)
+                {
+                    return BadRequest("This Telegram account is already linked to another user.");
+                }
+
+                // 3. Update user với thông tin Telegram
+                user.TelegramUserId = telegramData.Id.ToString();
+                user.TelegramUsername = telegramData.Username;
+                user.TelegramFirstName = telegramData.FirstName;
+                user.TelegramLastName = telegramData.LastName;
+                user.TelegramPhotoUrl = telegramData.PhotoUrl;
+                user.TelegramLinkedAt = DateTime.UtcNow;
+                user.UpdatedAt = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+
+                // 4. Tạo/Cập nhật TelegramUsers record
+                var telegramUser = await _context.TelegramUsers
+                    .FirstOrDefaultAsync(t => t.TelegramUserId == telegramData.Id);
+
+                if (telegramUser == null)
+                {
+                    telegramUser = new Models.TelegramUser
+                    {
+                        TelegramUserId = telegramData.Id,
+                        UserId = userId,
+                        ChatId = telegramData.Id, // Sẽ update khi user gửi message đầu tiên
+                        FirstName = telegramData.FirstName,
+                        LastName = telegramData.LastName,
+                        Username = telegramData.Username,
+                        IsActive = true
+                    };
+                    _context.TelegramUsers.Add(telegramUser);
+                }
+                else
+                {
+                    telegramUser.UserId = userId;
+                    telegramUser.FirstName = telegramData.FirstName;
+                    telegramUser.LastName = telegramData.LastName;
+                    telegramUser.Username = telegramData.Username;
+                    telegramUser.IsActive = true;
+                }
+
+                await _context.SaveChangesAsync();
+
+                // 5. Gửi welcome message qua Bot
+                try
+                {
+                    var welcomeMessage = $"🎉 **Chào mừng đến với FinTech Tracker!**\n\n" +
+                                       $"Xin chào {telegramData.FirstName}! Tài khoản của bạn đã được liên kết thành công.\n\n" +
+                                       $"✅ Bạn có thể bắt đầu sử dụng bot ngay bây giờ:\n" +
+                                       $"• Ghi chép thu chi: \"Mua cafe 25k\"\n" +
+                                       $"• Xem thống kê: \"Hôm nay tôi chi bao nhiêu?\"\n" +
+                                       $"• Kiểm tra số dư: \"Số dư tài khoản?\"\n\n" +
+                                       $"💡 Gửi /help để xem hướng dẫn chi tiết.";
+
+                    await _botClient.SendTextMessageAsync(
+                        chatId: telegramData.Id,
+                        text: welcomeMessage,
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown
+                    );
+
+                    _logger.LogInformation("Welcome message sent to Telegram user {TelegramId}", telegramData.Id);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to send welcome message to {TelegramId}", telegramData.Id);
+                    // Don't fail the request if message sending fails
+                }
+
+                return Ok(new { message = "Telegram account linked successfully." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error linking Telegram account");
+                return StatusCode(500, "An error occurred while linking Telegram account.");
+            }
+        }
+
+        // DELETE: api/Setting/telegram/unlink
+        [HttpDelete("telegram/unlink")]
+        public async Task<IActionResult> UnlinkTelegram()
+        {
+            var userId = GetCurrentUserId();
+            var user = await _context.Users.FindAsync(userId);
+
+            if (user == null)
+                return NotFound("User not found.");
+
+            if (string.IsNullOrEmpty(user.TelegramUserId))
+                return BadRequest("No Telegram account linked.");
+
+            // Remove Telegram link
+            var telegramUserId = user.TelegramUserId;
+
+            user.TelegramUserId = null;
+            user.TelegramUsername = null;
+            user.TelegramFirstName = null;
+            user.TelegramLastName = null;
+            user.TelegramPhotoUrl = null;
+            user.TelegramLinkedAt = null;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            // Deactivate TelegramUsers record
+            var telegramUser = await _context.TelegramUsers
+                .FirstOrDefaultAsync(t => t.TelegramUserId == long.Parse(telegramUserId));
+
+            if (telegramUser != null)
+            {
+                telegramUser.IsActive = false;
+            }
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("User {UserId} unlinked Telegram account {TelegramId}", userId, telegramUserId);
+
+            return Ok(new { message = "Telegram account unlinked successfully." });
         }
     }
 }
