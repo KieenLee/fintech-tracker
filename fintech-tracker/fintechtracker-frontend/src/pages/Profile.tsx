@@ -402,7 +402,7 @@ const Profile = () => {
                     <AvatarImage
                       src={
                         profileData.avatarUrl
-                          ? `http://localhost:5013${profileData.avatarUrl}`
+                          ? `${import.meta.env.VITE_API_URL}${profileData.avatarUrl}`
                           : "/placeholder.svg"
                       }
                       alt={displayName}
