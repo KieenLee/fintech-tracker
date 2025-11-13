@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import { authService, PendingRegistration } from "@/services/authService";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -47,9 +47,8 @@ const Register = () => {
 
   const checkEmailAvailability = async (email: string) => {
     if (!email || !email.includes("@")) return;
-
     try {
-      await axios.post("http://localhost:5013/api/auth/check-email", { email });
+      await authService.checkEmail(email);
       setValidationErrors((prev) => ({ ...prev, email: "" }));
     } catch (error: any) {
       if (error.response?.status === 409) {
@@ -63,11 +62,8 @@ const Register = () => {
 
   const checkUsernameAvailability = async (username: string) => {
     if (!username || username.length < 3) return;
-
     try {
-      await axios.post("http://localhost:5013/api/auth/check-username", {
-        username,
-      });
+      await authService.checkUsername(username);
       setValidationErrors((prev) => ({ ...prev, username: "" }));
     } catch (error: any) {
       if (error.response?.status === 409) {
@@ -118,16 +114,15 @@ const Register = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post(
-        "http://localhost:5013/api/auth/register",
-        {
-          username: formData.username,
-          email: formData.email,
-          password: formData.password,
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-        }
-      );
+      const registerPayload = {
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+      };
+
+      await authService.register(registerPayload);
 
       localStorage.setItem(
         "pendingRegistration",
@@ -186,9 +181,9 @@ const Register = () => {
           });
         }, 2000);
       }
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
   return (

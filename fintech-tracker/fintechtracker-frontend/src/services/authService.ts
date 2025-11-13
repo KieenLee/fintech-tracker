@@ -42,4 +42,12 @@ export const authService = {
     const response = await api.post<ResendOtpResponse>("/Auth/resend-otp", data);
     return response.data;
   },
+
+  checkEmail: async (email: string) => {
+    await api.post("/Auth/check-email", { email });
+  },
+  
+  checkUsername: async (username: string) => {
+    await api.post("/Auth/check-username", { username });
+  },
 };
