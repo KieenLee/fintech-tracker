@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import { authService } from "@/services/authService";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -30,29 +30,23 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      // Xác định là email hay username
       const isEmail = emailOrUsername.includes("@");
       const payload = {
         email: isEmail ? emailOrUsername : undefined,
         username: !isEmail ? emailOrUsername : undefined,
         password,
       };
+      const res = await authService.login(payload);
 
-      const res = await axios.post(
-        "http://localhost:5013/api/Auth/login",
-        payload
-      );
-
-      // Lưu token và thông tin user
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("userRole", res.data.role);
-      localStorage.setItem("userEmail", res.data.email);
-      localStorage.setItem("userName", res.data.username);
+      localStorage.setItem("token", res.token);
+      localStorage.setItem("userRole", res.role);
+      localStorage.setItem("userEmail", res.email);
+      localStorage.setItem("userName", res.username);
       localStorage.setItem("isAuthenticated", "true");
 
       toast({
         title: "Login successful!",
-        description: `Welcome back, ${res.data.username}`,
+        description: `Welcome back, ${res.username}`,
       });
 
       navigate("/dashboard");
