@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import { authService } from "@/services/authService";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -85,23 +85,16 @@ const VerifyOTP = () => {
     setIsVerifying(true);
 
     try {
-      const response = await axios.post(
-        "http://localhost:5013/api/auth/verify-otp",
-        {
-          email: email,
-          otpCode: otp,
-        }
-      );
+      await authService.verifyOtp({
+        email: email,
+        otp: otp,
+      });
 
-      // Clear pending registration data
       localStorage.removeItem("pendingRegistration");
-
       toast({
         title: "Email verified successfully!",
         description: "Your account has been created. You can now sign in.",
       });
-
-      // Navigate to login page
       navigate("/login");
     } catch (error: any) {
       const errorMessage =
@@ -111,9 +104,9 @@ const VerifyOTP = () => {
         description: errorMessage,
         variant: "destructive",
       });
+    } finally {
+      setIsVerifying(false);
     }
-
-    setIsVerifying(false);
   };
 
   const handleResend = async () => {
@@ -129,16 +122,10 @@ const VerifyOTP = () => {
     setIsResending(true);
 
     try {
-      const response = await axios.post(
-        "http://localhost:5013/api/auth/resend-otp",
-        {
-          email: email,
-        }
-      );
+      await authService.resendOtp({ email: email });
 
-      setTimeLeft(300); // Reset timer to 5 minutes
-      setOtp(""); // Clear current OTP
-
+      setTimeLeft(300);
+      setOtp("");
       toast({
         title: "Code resent!",
         description: `A new verification code has been sent to ${email}`,
@@ -151,9 +138,9 @@ const VerifyOTP = () => {
         description: errorMessage,
         variant: "destructive",
       });
+    } finally {
+      setIsResending(false);
     }
-
-    setIsResending(false);
   };
 
   const handleBackToRegister = () => {
