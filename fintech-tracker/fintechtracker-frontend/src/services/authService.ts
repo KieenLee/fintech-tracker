@@ -50,4 +50,9 @@ export const authService = {
   checkUsername: async (username: string) => {
     await api.post("/Auth/check-username", { username });
   },
+
+  loginWithGoogle: async (idToken: string) => {
+    const response = await api.post("/Auth/google", { idToken });
+    return response.data;
+  },
 };
