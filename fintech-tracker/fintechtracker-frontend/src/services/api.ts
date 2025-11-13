@@ -1,6 +1,5 @@
 import axios from "axios";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5013/api";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5013";
 
 const api = axios.create({
   baseURL: API_URL,
@@ -10,7 +9,7 @@ const api = axios.create({
   },
 });
 
-// Request interceptor (add JWT token)
+// Request interceptor
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
@@ -24,12 +23,11 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor (handle errors)
+// Response interceptor
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Redirect to login
       localStorage.removeItem("token");
       window.location.href = "/login";
     }
@@ -39,7 +37,6 @@ api.interceptors.response.use(
 
 export default api;
 
-// Example usage:
 export const userAPI = {
   login: (credentials) => api.post("/api/auth/login", credentials),
   register: (data) => api.post("/api/auth/register", data),

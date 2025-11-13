@@ -1,6 +1,4 @@
-import axios from "axios";
-
-const API_BASE_URL = "http://localhost:5013/api";
+import api from "./api";
 
 export interface ProfileResponse {
   userId: number;
@@ -18,7 +16,6 @@ export interface ProfileResponse {
   accountLevel: AccountLevel;
   achievements: Achievement[];
 }
-
 export interface UpdateProfileRequest {
   username: string;
   email: string;
@@ -28,21 +25,18 @@ export interface UpdateProfileRequest {
   address?: string;
   dateOfBirth?: string;
 }
-
 export interface QuickStats {
   totalTransactions: number;
   budgetsCreated: number;
   goalsAchieved: number;
   daysActive: number;
 }
-
 export interface AccountLevel {
   currentLevel: string;
   progress: number;
   nextLevel: string;
   points: number;
 }
-
 export interface Achievement {
   id: number;
   title: string;
@@ -53,28 +47,14 @@ export interface Achievement {
   progress: number;
 }
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
-});
-
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
 export const profileService = {
   getProfile: async (): Promise<ProfileResponse> => {
     const response = await api.get("/Profile");
     return response.data;
   },
-
   updateProfile: async (profileData: UpdateProfileRequest): Promise<void> => {
     await api.put("/Profile", profileData);
   },
-
   uploadAvatar: async (
     avatarFile: File
   ): Promise<{ avatarUrl: string; message: string }> => {
@@ -88,7 +68,6 @@ export const profileService = {
     });
     return response.data;
   },
-
   deleteAvatar: async (): Promise<void> => {
     await api.delete("/Profile/avatar");
   },

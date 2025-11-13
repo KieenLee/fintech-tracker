@@ -1,23 +1,4 @@
-import axios from "axios";
-
-const API_BASE_URL = "http://localhost:5013/api";
-
-// Tạo axios instance với config chung
-const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-// Thêm interceptor để tự động thêm token
-apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+import api from "./api";
 
 export interface ReportMetricsDto {
   totalRevenue: number;
@@ -66,28 +47,20 @@ export interface ReportDashboardDto {
 }
 
 export const reportService = {
-  // Lấy dashboard data
   async getDashboard(timeRange?: string): Promise<ReportDashboardDto> {
-    const params = timeRange ? `?timeRange=${timeRange}` : "";
-    const response = await apiClient.get(`/Report/dashboard${params}`);
+    const response = await api.get("/Report/dashboard", { params: { timeRange } });
     return response.data;
   },
 
-  // Export report (placeholder)
+  // Export report
   async exportReport(
     timeRange?: string,
     format: "csv" | "pdf" = "csv"
   ): Promise<Blob> {
-    const params = new URLSearchParams();
-    if (timeRange) params.append("timeRange", timeRange);
-    params.append("format", format);
-
-    const response = await apiClient.get(
-      `/Report/export?${params.toString()}`,
-      {
-        responseType: "blob",
-      }
-    );
+    const response = await api.get("/Report/export", {
+      params: { timeRange, format },
+      responseType: "blob",
+    });
     return response.data;
   },
 };

@@ -1,6 +1,4 @@
-import axios from "axios";
-
-const API_BASE_URL = "http://localhost:5013/api";
+import api from "./api";
 
 export interface Goal {
   goalId: number;
@@ -17,7 +15,6 @@ export interface Goal {
   daysRemaining: number;
   isCompleted: boolean;
 }
-
 export interface CreateGoalRequest {
   goalName: string;
   targetAmount: number;
@@ -26,7 +23,6 @@ export interface CreateGoalRequest {
   description?: string;
   priority: string;
 }
-
 export interface UpdateGoalRequest {
   goalName: string;
   targetAmount: number;
@@ -35,63 +31,31 @@ export interface UpdateGoalRequest {
   description?: string;
   priority: string;
 }
-
 export interface AddMoneyRequest {
   amount: number;
 }
 
-class GoalService {
-  private getAuthHeaders() {
-    const token = localStorage.getItem("token");
-    return {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    };
-  }
-
+export const goalService = {
   async getAllGoals(): Promise<Goal[]> {
-    const response = await axios.get(
-      `${API_BASE_URL}/Goal`,
-      this.getAuthHeaders()
-    );
+    const response = await api.get("/Goal");
     return response.data;
-  }
-
+  },
   async getGoal(id: number): Promise<Goal> {
-    const response = await axios.get(
-      `${API_BASE_URL}/Goal/${id}`,
-      this.getAuthHeaders()
-    );
+    const response = await api.get(`/Goal/${id}`);
     return response.data;
-  }
-
+  },
   async createGoal(goal: CreateGoalRequest): Promise<Goal> {
-    const response = await axios.post(
-      `${API_BASE_URL}/Goal`,
-      goal,
-      this.getAuthHeaders()
-    );
+    const response = await api.post("/Goal", goal);
     return response.data;
-  }
-
+  },
   async updateGoal(id: number, goal: UpdateGoalRequest): Promise<void> {
-    await axios.put(`${API_BASE_URL}/Goal/${id}`, goal, this.getAuthHeaders());
-  }
-
+    await api.put(`/Goal/${id}`, goal);
+  },
   async deleteGoal(id: number): Promise<void> {
-    await axios.delete(`${API_BASE_URL}/Goal/${id}`, this.getAuthHeaders());
-  }
-
+    await api.delete(`/Goal/${id}`);
+  },
   async addMoneyToGoal(id: number, amount: number): Promise<Goal> {
-    const response = await axios.post(
-      `${API_BASE_URL}/Goal/${id}/add-money`,
-      { amount },
-      this.getAuthHeaders()
-    );
+    const response = await api.post(`/Goal/${id}/add-money`, { amount });
     return response.data;
-  }
-}
-
-export const goalService = new GoalService();
+  },
+};

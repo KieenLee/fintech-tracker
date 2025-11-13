@@ -4,7 +4,6 @@ export interface QuickAddRequest {
   message: string;
   language: string;
 }
-
 export interface TransactionParsed {
   accountId: number;
   categoryId?: number;
@@ -13,7 +12,6 @@ export interface TransactionParsed {
   description?: string;
   transactionDate: string;
 }
-
 export interface QuickAddResponse {
   response: string;
   type: string;

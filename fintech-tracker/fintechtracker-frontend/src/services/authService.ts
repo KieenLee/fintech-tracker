@@ -1,43 +1,45 @@
-const API_URL = "http://localhost:5013/api/Auth/login";
-
-export async function login({
-  email,
-  username,
-  password,
-}: {
-  email?: string;
-  username?: string;
-  password: string;
-}) {
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, username, password }),
-  });
-  if (!res.ok) {
-    const error = await res.json();
-    throw new Error(error.message || "Login failed");
-  }
-  return res.json();
-}
+import api from "./api";
 
 export interface RegisterResponse {
   message: string;
   email: string;
 }
-
 export interface VerifyOtpResponse {
   message: string;
 }
-
 export interface ResendOtpResponse {
   message: string;
   email: string;
 }
-
 export interface PendingRegistration {
   email: string;
   firstName: string;
   lastName: string;
   username: string;
 }
+
+export const authService = {
+  login: async (credentials: {
+    email?: string;
+    username?: string;
+    password?: string;
+  }) => {
+    const response = await api.post("/Auth/login", credentials);
+    return response.data;
+  },
+
+  register: async (data: PendingRegistration) => {
+    const response = await api.post<RegisterResponse>("/Auth/register", data);
+    return response.data;
+  },
+
+  verifyOtp: async (data: { email: string; otp: string }) => {
+    const response = await api.post<VerifyOtpResponse>("/Auth/verify-otp", data);
+    return response.data;
+  },
+
+  resendOtp: async (data: { email: string }) => {
+    const response = await api.post<ResendOtpResponse>("/Auth/resend-otp", data);
+    return response.data;
+  },
+};

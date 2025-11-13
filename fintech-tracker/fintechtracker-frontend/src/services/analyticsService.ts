@@ -1,6 +1,4 @@
-import axios from "axios";
-
-const API_BASE_URL = "http://localhost:5013/api";
+import api from "./api";
 
 export interface AnalyticsOverview {
   totalIncome: number;
@@ -34,19 +32,6 @@ export interface NetWorthData {
 export interface AnalyticsFilter {
   timeRange: string;
 }
-
-// Axios instance với authentication
-const api = axios.create({
-  baseURL: API_BASE_URL,
-});
-
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
 
 export const analyticsService = {
   getAnalyticsOverview: async (
