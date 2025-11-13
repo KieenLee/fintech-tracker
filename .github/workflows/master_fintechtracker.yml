@@ -22,7 +22,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: "20.x"
 
       - name: Install frontend dependencies
         run: |
@@ -43,7 +43,7 @@ jobs:
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.x'
+          dotnet-version: "9.x"
 
       - name: Build backend
         run: dotnet build fintech-tracker/fintechtracker-backend/fintechtracker-backend.csproj
@@ -73,13 +73,13 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_7ED82C5551834B1B88C2F7CC933E135C }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_CC94A2FC302D4754AD3D59737CF9CE2F }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_9AB6A541104843E6ACE33E50195E5C90 }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID}}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID}}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID}}
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'Fintechtracker'
-          slot-name: 'Production'
+          app-name: "Fintechtracker"
+          slot-name: "Production"
           package: .
